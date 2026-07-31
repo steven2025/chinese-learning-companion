@@ -98,6 +98,9 @@ const state = {
   recordingPlaybackAudio: null,
   discardRecording: false,
   recordingAssessment: { status: "idle", result: null, message: "" },
+  assessmentUsage: {},
+  aiWork: { active: false, phase: "" },
+  lastAssessmentSubmissions: {},
   voiceOrbs: {},
   deepAssist: {},
   wordWriting: {
@@ -143,7 +146,98 @@ const elements = {
   writingContent: document.querySelector("#wordWritingContent"),
   practiceWritingPanel: document.querySelector("#practiceWritingPanel"),
   practiceWritingContent: document.querySelector("#practiceWritingContent"),
+  aiWorkIndicator: document.querySelector("#aiWorkIndicator"),
 };
+
+const assessmentPhaseLabels = {
+  preparing: ["正在准备作品", "Preparing work"],
+  uploading: ["正在安全上传", "Uploading securely"],
+  submitting: ["正在提交任务", "Submitting task"],
+  assessing: ["智聆测评中", "Assessing pronunciation"],
+  advising: ["正在生成母语建议", "Preparing feedback"],
+  saving: ["正在保存结果", "Saving results"],
+};
+
+const buttonTranslations = new Map(Object.entries({
+  "词语": "Vocabulary", "课文": "Text", "练习": "Practice",
+  "中文沉浸": "Chinese only", "母语辅助": "Native-language aid", "双语对照": "Bilingual",
+  "理解": "Meaning", "跟读": "Repeat", "跟写": "Writing", "小练习": "Quiz", "表达": "Express",
+  "理解题意": "Understand", "思考方向": "Thinking", "相似实例": "Similar example", "母语解释": "Native-language help",
+  "播放": "Play", "播放本句": "Play sentence", "进入跟读": "Start shadowing",
+  "已掌握": "Mastered", "待复习": "Review", "收藏": "Save",
+  "打开跟写练习": "Open writing", "重新演示": "Replay demo", "清空": "Clear",
+  "确认这个字": "Confirm character", "生成整词图片": "Create word image", "下载图片": "Download image",
+  "打开手写板": "Open writing pad", "清空本格": "Clear cell", "确认此字": "Confirm character",
+  "撤销上一格": "Undo last cell", "保存手写答案": "Save handwriting",
+  "键盘输入": "Type answer", "手写作答": "Handwrite", "提交作答": "Submit answer",
+  "AI 评估与建议": "AI review", "重新测评": "Assess again", "测评中…": "Assessing…",
+  "测评次数已用完": "Assessment limit reached",
+  "AI深度解释": "AI deep explanation", "重新尝试": "Try again",
+  "暂不跟读，进入练习": "Skip to practice", "第一段": "Paragraph 1", "第二段": "Paragraph 2",
+  "第三段": "Paragraph 3", "第四段": "Paragraph 4", "第五段": "Paragraph 5", "第六段": "Paragraph 6",
+  "上一个": "Previous", "下一个": "Next", "关闭": "Close", "全屏": "Full screen", "恢复": "Restore",
+  "开始跟读": "Start recording", "开始段落跟读": "Record paragraph", "停止录音": "Stop recording",
+  "试听录音": "Play recording", "播放课文": "Play model", "连续播放": "Continuous play", "循环当前单元": "Loop unit",
+}));
+
+function splitButtonIcon(label) {
+  const match = String(label).trim().match(/^([▶✓☆↺‹›×⛶❐⇥↻■●]+)\s*(.*)$/u);
+  return match ? { icon: match[1], text: match[2] } : { icon: "", text: String(label).trim() };
+}
+
+function bilingualizeButtons(root = document) {
+  root.querySelectorAll("button:not([data-bilingualized])").forEach((button) => {
+    if (button.matches("[data-quiz-option], [data-writing-character], .voice-orb-button")) return;
+    const compact = button.matches(".icon-button, .audio-main-button, .writing-close-button, .practice-writing-window-actions button");
+    const original = button.textContent.replace(/\s+/g, " ").trim();
+    const { icon, text } = splitButtonIcon(original);
+    const english = buttonTranslations.get(text) || buttonTranslations.get(original);
+    if (!english) return;
+    const chinese = text || original;
+    button.dataset.bilingualized = "true";
+    button.setAttribute("aria-label", `${chinese} / ${english}`);
+    button.title = `${chinese} / ${english}`;
+    if (compact) return;
+    button.innerHTML = `${icon ? `<span class="button-icon" aria-hidden="true">${escapeHtml(icon)}</span>` : ""}<span class="bilingual-button-label"><strong>${escapeHtml(chinese)}</strong><small>${escapeHtml(english)}</small></span>`;
+  });
+}
+
+function observeBilingualButtons() {
+  const observer = new MutationObserver((mutations) => {
+    if (mutations.some((mutation) => mutation.addedNodes.length)) bilingualizeButtons();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+function mechanicalClock(phase = "assessing", compact = false) {
+  const now = new Date();
+  const second = now.getSeconds() + now.getMilliseconds() / 1000;
+  const minute = now.getMinutes() + second / 60;
+  const hour = (now.getHours() % 12) + minute / 60;
+  const [zh, en] = assessmentPhaseLabels[phase] || ["AI 正在工作", "AI is working"];
+  const marks = Array.from({ length: 12 }, (_, index) => `<i style="--mark:${index}">${[0, 3, 6, 9].includes(index) ? [12, 3, 6, 9][[0, 3, 6, 9].indexOf(index)] : ""}</i>`).join("");
+  return `<div class="ai-mechanical-clock${compact ? " is-compact" : ""}" role="status" aria-live="polite">
+    <div class="clock-face" style="--second-angle:${second * 6}deg;--minute-angle:${minute * 6}deg;--hour-angle:${hour * 30}deg">
+      ${marks}<span class="clock-hand hour-hand"></span><span class="clock-hand minute-hand"></span><span class="clock-hand second-hand"></span><b class="clock-pin"></b>
+    </div>
+    <div class="clock-status"><strong>${zh}</strong><small>${en}</small></div>
+  </div>`;
+}
+
+function pauseAllLearningAudio() {
+  elements.audio.pause();
+  if (state.recordingPlaybackAudio) state.recordingPlaybackAudio.pause();
+}
+
+function setAiWork(active, phase = "") {
+  state.aiWork = { active, phase };
+  document.documentElement.classList.toggle("ai-working", active);
+  if (active) pauseAllLearningAudio();
+  if (elements.aiWorkIndicator) {
+    elements.aiWorkIndicator.hidden = !active;
+    elements.aiWorkIndicator.innerHTML = active ? mechanicalClock(phase, true) : "";
+  }
+}
 
 async function checkResponse(response) {
   if (!response.ok) throw new Error(`数据加载失败：${response.status}`);
@@ -488,6 +582,7 @@ function render() {
   }
   updateAudioLabels();
   initializeVoiceOrbs();
+  bilingualizeButtons();
 }
 
 function renderPartTitle(item) {
@@ -666,39 +761,69 @@ function handwritingDraft(itemId) {
   return state.handwriting[itemId];
 }
 
+function assessmentUsageKey(record) {
+  if (!record) return "";
+  return [record.lessonId, record.unitType, record.unitId].join(":");
+}
+
+function recordingQuota() {
+  const key = assessmentUsageKey(state.recordingRecord);
+  const used = Math.min(2, Number(state.assessmentUsage[key] || 0));
+  return { key, used, limit: 2, remaining: Math.max(0, 2 - used) };
+}
+
+async function loadAssessmentUsage() {
+  if (!window.LearningApi?.isConfigured() || !window.LearningApi.token()) return;
+  try {
+    const history = await window.LearningApi.assessmentHistory();
+    const usage = {};
+    (history.records || []).filter((record) => record.type === "pronunciation-assess" && record.status === "completed").forEach((record) => {
+      const key = assessmentUsageKey(record);
+      usage[key] = Math.min(2, Number(usage[key] || 0) + 1);
+    });
+    state.assessmentUsage = usage;
+  } catch {
+    state.assessmentUsage = {};
+  }
+}
+
 function renderAssessmentResult(assessment) {
   if (!assessment || assessment.status === "idle") return "";
-  if (assessment.status === "working") return '<div class="assessment-panel is-working"><strong>AI 正在测评</strong><p>作品已安全上传，正在生成评估和练习建议，请稍候。</p></div>';
-  if (assessment.status === "error") return `<div class="assessment-panel is-error"><strong>本次测评未完成</strong><p>${escapeHtml(assessment.message || "请稍后重试")}</p></div>`;
+  if (assessment.status === "working") return `<div class="assessment-panel is-working">${mechanicalClock(assessment.phase || "assessing")}<p>程序已进入静默状态，云端正在完成测评和母语建议。</p><small>The app is silent while the cloud assessment is running.</small></div>`;
+  if (assessment.status === "error") return `<div class="assessment-panel is-error"><strong>本次测评未完成 <small>Assessment incomplete</small></strong><p>${escapeHtml(assessment.message || "请稍后重试")}</p></div>`;
   const result = assessment.result || {};
   const scores = result.scores || {};
   const advice = result.advice || {};
   const scoreEntries = [
-    ["建议分", scores.suggestedScore],
-    ["准确度", scores.accuracy],
-    ["流利度", scores.fluency],
-    ["完整度", scores.completion],
-  ].filter(([, value]) => value !== null && value !== undefined);
+    ["建议分", "Score", scores.suggestedScore],
+    ["准确度", "Accuracy", scores.accuracy],
+    ["流利度", "Fluency", scores.fluency],
+    ["完整度", "Completion", scores.completion],
+  ].filter(([, , value]) => value !== null && value !== undefined);
   const adviceList = (key) => Array.isArray(advice[key]) && advice[key].length
     ? `<ul>${advice[key].map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
     : "";
   return `<div class="assessment-panel is-ready">
-    <div class="assessment-title"><span>AI 测评完成</span><strong>${escapeHtml(advice.summary || "本次学习作品已完成评估。")}</strong></div>
-    ${scoreEntries.length ? `<div class="assessment-scores">${scoreEntries.map(([label, value]) => `<div><strong>${escapeHtml(value)}</strong><span>${label}</span></div>`).join("")}</div>` : ""}
-    ${adviceList("strengths") ? `<section><strong>做得较好</strong>${adviceList("strengths")}</section>` : ""}
-    ${adviceList("priorities") ? `<section><strong>优先改进</strong>${adviceList("priorities")}</section>` : ""}
-    ${adviceList("practiceSteps") ? `<section><strong>练习建议</strong>${adviceList("practiceSteps")}</section>` : ""}
+    <div class="assessment-title"><span>AI 测评完成 / Assessment complete</span><strong>${escapeHtml(advice.summary || "本次学习作品已完成评估。")}</strong></div>
+    ${scoreEntries.length ? `<div class="assessment-scores">${scoreEntries.map(([label, english, value]) => `<div><strong>${escapeHtml(value)}</strong><span>${label}<small>${english}</small></span></div>`).join("")}</div>` : ""}
+    ${adviceList("strengths") ? `<section><strong>做得较好 <small>Strengths</small></strong>${adviceList("strengths")}</section>` : ""}
+    ${adviceList("priorities") ? `<section><strong>优先改进 <small>Priorities</small></strong>${adviceList("priorities")}</section>` : ""}
+    ${adviceList("practiceSteps") ? `<section><strong>练习建议 <small>Practice steps</small></strong>${adviceList("practiceSteps")}</section>` : ""}
     ${advice.reviewBasis ? `<p class="assessment-basis">${escapeHtml(advice.reviewBasis)}</p>` : ""}
   </div>`;
 }
 
 function renderAssessmentConsent(kind, assessment) {
   const working = assessment?.status === "working";
+  const quota = kind === "recording" ? recordingQuota() : null;
+  const exhausted = Boolean(quota && quota.remaining <= 0);
   const command = kind === "recording" ? "assess-recording" : kind === "word-writing" ? "assess-word-writing" : "assess-practice-handwriting";
   const commandAttribute = kind === "word-writing" ? `data-writing-command="${command}"` : `data-command="${command}"`;
   return `<div class="assessment-consent">
-    <label><input type="checkbox" data-assessment-consent="${kind}"> <span>同意将本次作品保存到我的 COS 学习记录，并用于 AI 测评</span></label>
-    <button class="command-button" type="button" ${commandAttribute} ${working ? "disabled" : ""}>${working ? "测评中…" : assessment?.status === "ready" ? "重新测评" : "AI 评估与建议"}</button>
+    <div class="assessment-quota ${quota ? "is-limited" : "is-unlimited"}">${quota ? `<strong>本学习点剩余 ${quota.remaining} / 2 次</strong><small>${quota.remaining} of 2 assessments remaining</small>` : `<strong>书写测评次数不限</strong><small>Unlimited handwriting reviews</small>`}</div>
+    <p class="assessment-language">评价与建议将直接使用：<strong>${escapeHtml(languageLabels[state.locale] || "English")}</strong><small> Feedback will be written directly in the selected support language.</small></p>
+    <label><input type="checkbox" data-assessment-consent="${kind}" ${exhausted ? "disabled" : ""}> <span>同意将本次作品保存到我的 COS 学习记录，并用于 AI 测评<br><small>I agree to save this work to my private COS learning record for AI assessment.</small></span></label>
+    <button class="command-button" type="button" ${commandAttribute} ${working || exhausted ? "disabled" : ""}>${exhausted ? "测评次数已用完" : working ? "测评中…" : assessment?.status === "ready" ? "重新测评" : "AI 评估与建议"}</button>
   </div>${renderAssessmentResult(assessment)}`;
 }
 
@@ -724,8 +849,8 @@ function renderHandwritingWorkspace(item) {
         <h2 id="practiceWritingTitle">手写作答</h2>
       </div>
       <div class="practice-writing-window-actions">
-        <button type="button" data-command="toggle-practice-writing-fullscreen" aria-label="${state.practiceWritingFullscreen ? "恢复手写板大小" : "全屏显示手写板"}" title="${state.practiceWritingFullscreen ? "恢复" : "全屏"}">${state.practiceWritingFullscreen ? "❐" : "⛶"}</button>
-        <button type="button" data-command="close-practice-writing" aria-label="关闭手写板" title="关闭">×</button>
+        <button type="button" data-command="toggle-practice-writing-fullscreen" aria-label="${state.practiceWritingFullscreen ? "恢复手写板大小 / Restore writing pad" : "全屏显示手写板 / Full-screen writing pad"}" title="${state.practiceWritingFullscreen ? "恢复 / Restore" : "全屏 / Full screen"}">${state.practiceWritingFullscreen ? "❐" : "⛶"}</button>
+        <button type="button" data-command="close-practice-writing" aria-label="关闭手写板 / Close writing pad" title="关闭 / Close">×</button>
       </div>
     </header>
     <div class="handwriting-workspace practice-writing-panel-body">
@@ -756,6 +881,7 @@ function openPracticeWritingPanel() {
   if (item.questionNumber < 47) return;
   state.practiceWritingItemId = item.id;
   elements.practiceWritingContent.innerHTML = renderHandwritingWorkspace(item);
+  bilingualizeButtons(elements.practiceWritingContent);
   elements.practiceWritingPanel.hidden = false;
   setupHandwritingCanvas(item.id);
 }
@@ -787,8 +913,8 @@ function setPracticeWritingFullscreen(fullscreen) {
   const button = panel.querySelector('[data-command="toggle-practice-writing-fullscreen"]');
   if (!button) return;
   button.textContent = fullscreen ? "❐" : "⛶";
-  button.setAttribute("aria-label", fullscreen ? "恢复手写板大小" : "全屏显示手写板");
-  button.title = fullscreen ? "恢复" : "全屏";
+  button.setAttribute("aria-label", fullscreen ? "恢复手写板大小 / Restore writing pad" : "全屏显示手写板 / Full-screen writing pad");
+  button.title = fullscreen ? "恢复 / Restore" : "全屏 / Full screen";
 }
 
 function togglePracticeWritingFullscreen() {
@@ -800,6 +926,7 @@ function refreshPracticeWritingPanel() {
   renderPracticeUnit(item);
   if (state.practiceWritingItemId !== item.id || elements.practiceWritingPanel.hidden) return;
   elements.practiceWritingContent.innerHTML = renderHandwritingWorkspace(item);
+  bilingualizeButtons(elements.practiceWritingContent);
   setupHandwritingCanvas(item.id);
 }
 
@@ -935,6 +1062,7 @@ function renderAssistContent() {
   if (state.section === "vocabulary") renderWordAssist();
   else if (state.section === "text") renderTextAssist();
   else renderPracticeAssist();
+  bilingualizeButtons(elements.assistContent);
 }
 
 function renderWordAssist() {
@@ -1019,7 +1147,7 @@ function renderWordWritingDialog(word = currentItem()) {
           <span>词语跟写</span>
           <h2 id="wordWritingTitle">${escapeHtml(word.hanzi)} · 第 ${writing.characterIndex + 1} / ${writing.characters.length} 个字</h2>
         </div>
-        <button class="writing-close-button" type="button" data-writing-command="close" aria-label="关闭跟写弹窗" title="关闭">×</button>
+        <button class="writing-close-button" type="button" data-writing-command="close" aria-label="关闭跟写弹窗 / Close writing dialog" title="关闭 / Close">×</button>
       </header>
       <nav class="writing-character-tabs" aria-label="选择要练习的汉字">
         ${writing.characters.map((item, index) => `<button type="button" data-writing-character="${index}" class="${index === writing.characterIndex ? "active" : ""}"><strong>${escapeHtml(item)}</strong><span>${writing.images[index] ? "已完成" : `第${index + 1}字`}</span></button>`).join("")}
@@ -1047,6 +1175,7 @@ function renderWordWritingDialog(word = currentItem()) {
       </div>
       ${writing.artifactUrl ? `<div class="writing-result"><div><span>已生成</span><strong>${escapeHtml(word.hanzi)}书写图片</strong></div><img src="${writing.artifactUrl}" alt="${escapeAttribute(word.hanzi)}书写结果"><button class="quiet-button" type="button" data-writing-command="download">下载图片</button></div>${renderAssessmentConsent("word-writing", writing.assessment)}` : ""}
     </div>`;
+  bilingualizeButtons(elements.writingContent);
 }
 
 function initializeWordWritingCharacter() {
@@ -1379,15 +1508,17 @@ function renderShadowAssist(label) {
 }
 
 function voiceOrbButton(id, theme, glyph, label, command) {
+  const englishLabel = buttonTranslations.get(label)
+    || (label.startsWith("播放课文第") ? "Play sentence" : label.startsWith("播放“") ? "Play model" : label.startsWith("听第") ? "Play paragraph" : "Voice action");
   return `
     <div class="voice-orb-unit">
-      <button class="voice-orb-button voice-orb-medium" type="button" data-command="${command}" aria-label="${escapeAttribute(label)}">
+      <button class="voice-orb-button voice-orb-medium" type="button" data-command="${command}" aria-label="${escapeAttribute(`${label} / ${englishLabel}`)}" title="${escapeAttribute(`${label} / ${englishLabel}`)}">
         <span class="voice-orb" data-orb-id="${id}" data-orb-theme="${theme}">
           <canvas></canvas>
           <span class="orb-glyph">${glyph}</span>
         </span>
       </button>
-      <strong>${escapeHtml(label)}</strong>
+      <strong>${escapeHtml(label)}<small>${escapeHtml(englishLabel)}</small></strong>
     </div>`;
 }
 
@@ -1739,6 +1870,7 @@ async function ensureAudioSource(source) {
 }
 
 async function playCurrent(mode = "single") {
+  if (state.aiWork.active) return;
   const source = audioSourceForSection();
   if (!source) return;
   const item = currentItem();
@@ -1885,6 +2017,7 @@ function submitPractice() {
 }
 
 async function toggleRecording() {
+  if (state.aiWork.active) return;
   if (state.mediaRecorder?.state === "recording") {
     state.recordingWavBlob = await stopPcmCapture();
     state.mediaRecorder.stop();
@@ -2059,12 +2192,14 @@ function refreshRecordingView() {
 
 function createRecordingRecord(blob) {
   const item = currentItem();
-  const unitType = item.unitType === "paragraphReading" ? "paragraphReading" : "sentence";
+  const unitType = item.unitType === "paragraphReading" ? "paragraphReading" : item.unitType === "word" ? "vocabulary" : "sentence";
   const paragraph = unitType === "paragraphReading" ? currentReadingParagraph() : null;
   const referenceText =
     unitType === "paragraphReading"
       ? paragraph.text
-      : item.texts?.["zh-CN"] || "";
+      : unitType === "vocabulary"
+        ? item.hanzi
+        : item.texts?.["zh-CN"] || "";
   const id =
     window.crypto?.randomUUID?.() ||
     `recording-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -2127,6 +2262,7 @@ function stopRecordedAudio() {
 }
 
 function playRecordedAudio() {
+  if (state.aiWork.active) return;
   if (!state.recordingUrl) return;
   if (state.recordingPlaybackAudio?.paused === false) {
     stopRecordedAudio();
@@ -2157,14 +2293,26 @@ function assessmentConsentGranted(kind) {
 
 function requireAssessmentReady(kind) {
   if (!window.LearningApi?.isConfigured() || !window.LearningApi.token()) throw new Error("请先登录，再使用 AI 测评");
+  if (state.aiWork.active) throw new Error("已有一个 AI 任务正在进行，请等待完成");
   if (!assessmentConsentGranted(kind)) throw new Error("请先勾选同意上传和测评");
 }
 
+function enforceWritingCooldown(key) {
+  const now = Date.now();
+  const elapsed = now - Number(state.lastAssessmentSubmissions[key] || 0);
+  if (elapsed < 10000) throw new Error(`请等待 ${Math.ceil((10000 - elapsed) / 1000)} 秒后再提交书写测评`);
+  state.lastAssessmentSubmissions[key] = now;
+}
+
 async function assessRecording() {
+  let ownsAiWork = false;
   try {
     requireAssessmentReady("recording");
+    if (recordingQuota().remaining <= 0) throw new Error("本学习点的两次正式口语测评已经用完");
     if (!state.recordingWavBlob || !state.recordingRecord) throw new Error("请先完成一次跟读录音");
-    state.recordingAssessment = { status: "working", result: null, message: "" };
+    state.recordingAssessment = { status: "working", phase: "preparing", result: null, message: "" };
+    setAiWork(true, "preparing");
+    ownsAiWork = true;
     state.recordingStatus = "录音正在上传并交给 SOE-N 测评…";
     refreshRecordingView();
     const record = state.recordingRecord;
@@ -2177,13 +2325,19 @@ async function assessRecording() {
       referenceText: record.referenceText,
       locale: state.locale,
       mode: record.assessments[0].mode,
-    });
+    }, { onProgress: (phase) => {
+      state.recordingAssessment.phase = phase;
+      setAiWork(true, phase);
+      refreshRecordingView();
+    } });
     state.recordingAssessment = { status: "ready", result, message: "" };
+    if (result.quota) state.assessmentUsage[recordingQuota().key] = result.quota.limit - result.quota.remaining;
     state.recordingStatus = "测评完成，录音已保存到个人 COS 学习记录。";
   } catch (error) {
     state.recordingAssessment = { status: "error", result: null, message: error.message || "口语测评失败" };
     state.recordingStatus = "本地录音仍然保留，可以重试测评。";
   }
+  if (ownsAiWork) setAiWork(false);
   refreshRecordingView();
 }
 
@@ -2248,10 +2402,14 @@ async function expectedStrokeCounts(characters) {
 
 async function assessWordWriting() {
   const writing = state.wordWriting;
+  let ownsAiWork = false;
   try {
     requireAssessmentReady("word-writing");
     if (!writing.artifactBlob || !writing.artifactUrl) throw new Error("请先生成整词书写图片");
-    writing.assessment = { status: "working", result: null, message: "" };
+    enforceWritingCooldown(`word:${writing.wordId}`);
+    writing.assessment = { status: "working", phase: "preparing", result: null, message: "" };
+    setAiWork(true, "preparing");
+    ownsAiWork = true;
     renderWordWritingDialog();
     const word = currentItem();
     const [layout, expected] = await Promise.all([
@@ -2267,11 +2425,16 @@ async function assessWordWriting() {
       referenceText: word.hanzi,
       locale: state.locale,
       metrics: { characters: writing.characters, recordedStrokeCounts: writing.strokeCounts, expectedStrokeCounts: expected, layout },
-    });
+    }, { onProgress: (phase) => {
+      writing.assessment.phase = phase;
+      setAiWork(true, phase);
+      renderWordWritingDialog();
+    } });
     writing.assessment = { status: "ready", result, message: "" };
   } catch (error) {
     writing.assessment = { status: "error", result: null, message: error.message || "书写测评失败" };
   }
+  if (ownsAiWork) setAiWork(false);
   renderWordWritingDialog();
   initializeWordWritingCharacter();
 }
@@ -2299,10 +2462,14 @@ async function combineHandwritingCells(cells) {
 async function assessPracticeHandwriting() {
   const item = currentItem();
   const draft = handwritingDraft(item.id);
+  let ownsAiWork = false;
   try {
     requireAssessmentReady("practice-writing");
     if (!draft.saved || !draft.cells.length) throw new Error("请先保存手写答案");
-    draft.assessment = { status: "working", result: null, message: "" };
+    enforceWritingCooldown(`practice:${item.id}`);
+    draft.assessment = { status: "working", phase: "preparing", result: null, message: "" };
+    setAiWork(true, "preparing");
+    ownsAiWork = true;
     refreshPracticeWritingPanel();
     const [blob, layout] = await Promise.all([combineHandwritingCells(draft.cells), Promise.all(draft.cells.map(analyzeWritingImage))]);
     const result = await window.LearningApi.assessArtifact(blob, {
@@ -2314,11 +2481,16 @@ async function assessPracticeHandwriting() {
       referenceText: `第${item.questionNumber}题手写作答`,
       locale: state.locale,
       metrics: { questionNumber: item.questionNumber, characterCount: draft.cells.length, recordedStrokeCounts: draft.strokeCounts, layout },
-    });
+    }, { onProgress: (phase) => {
+      draft.assessment.phase = phase;
+      setAiWork(true, phase);
+      refreshPracticeWritingPanel();
+    } });
     draft.assessment = { status: "ready", result, message: "" };
   } catch (error) {
     draft.assessment = { status: "error", result: null, message: error.message || "书写测评失败" };
   }
+  if (ownsAiWork) setAiWork(false);
   refreshPracticeWritingPanel();
 }
 
@@ -2507,10 +2679,12 @@ function bindEvents() {
     }
   });
   elements.play.addEventListener("click", () => {
+    if (state.aiWork.active) return;
     if (!elements.audio.paused) stopAudio();
     else void playCurrent("single");
   });
   elements.continuous.addEventListener("click", () => {
+    if (state.aiWork.active) return;
     if (!elements.audio.paused && state.audioMode === "continuous") stopAudio();
     else void playCurrent("continuous");
   });
@@ -2566,8 +2740,10 @@ function escapeAttribute(value) {
 async function start() {
   initializeLanguageOptions();
   bindEvents();
+  observeBilingualButtons();
   try {
     await loadData();
+    await loadAssessmentUsage();
     render();
   } catch (error) {
     elements.unitContent.innerHTML =

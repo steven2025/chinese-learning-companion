@@ -6,30 +6,30 @@
   <meta name="theme-color" content="#16373a">
   <title>中级综合1 第1课 · 智能伴学数字书</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
-  <link rel="stylesheet" href="styles.css?v=20260801-2">
+  <link rel="stylesheet" href="styles.css?v=20260801-3">
 </head>
 <body>
   <div class="book-app">
     <header class="book-toolbar">
-      <a class="brand-link" href="../learning-hub/" aria-label="返回天天汉语伴学学习中心">
+      <a class="brand-link" href="../learning-hub/" aria-label="返回天天汉语伴学学习中心 / Back to learning hub" title="返回学习中心 / Back to learning hub">
         <img src="../../icons/icon-96.png" alt="">
         <span><strong>智能伴学数字书</strong><small>中级综合1 · 第1课</small></span>
       </a>
 
       <nav class="section-tabs" aria-label="课程部分">
-        <button type="button" data-section="vocabulary">词语</button>
-        <button type="button" data-section="text">课文</button>
-        <button type="button" data-section="practice">练习</button>
+        <button type="button" data-section="vocabulary"><span class="bilingual-button-label"><strong>词语</strong><small>Vocabulary</small></span></button>
+        <button type="button" data-section="text"><span class="bilingual-button-label"><strong>课文</strong><small>Text</small></span></button>
+        <button type="button" data-section="practice"><span class="bilingual-button-label"><strong>练习</strong><small>Practice</small></span></button>
       </nav>
 
       <div class="toolbar-settings">
         <div class="assist-switch" role="group" aria-label="母语辅助模式">
-          <button type="button" data-assist-mode="immersion">中文沉浸</button>
-          <button type="button" data-assist-mode="assist">母语辅助</button>
-          <button type="button" data-assist-mode="bilingual">双语对照</button>
+          <button type="button" data-assist-mode="immersion"><span class="bilingual-button-label"><strong>中文沉浸</strong><small>Chinese only</small></span></button>
+          <button type="button" data-assist-mode="assist"><span class="bilingual-button-label"><strong>母语辅助</strong><small>Native-language aid</small></span></button>
+          <button type="button" data-assist-mode="bilingual"><span class="bilingual-button-label"><strong>双语对照</strong><small>Bilingual</small></span></button>
         </div>
         <label class="language-select">
-          <span>辅助语言</span>
+          <span>辅助语言 <small>Support language</small></span>
           <select id="languageSelect" aria-label="选择辅助语言"></select>
         </label>
       </div>
@@ -44,7 +44,7 @@
             <p id="unitProgress">准备课程内容</p>
           </div>
           <label class="unit-jump">
-            <span>跳转到</span>
+            <span>跳转到 <small>Jump to</small></span>
             <select id="unitSelect" aria-label="选择学习单元"></select>
           </label>
         </header>
@@ -55,7 +55,7 @@
 
             <section class="audio-dock" aria-label="课程音频播放器">
               <audio id="lessonAudio" preload="metadata"></audio>
-              <button class="audio-main-button" id="playButton" type="button" aria-label="播放当前内容" title="播放当前内容">▶</button>
+              <button class="audio-main-button" id="playButton" type="button" aria-label="播放当前内容 / Play current item" title="播放当前内容 / Play current item">▶</button>
               <div class="audio-current">
                 <span id="audioStatus">准备播放</span>
                 <strong id="audioLabel">当前学习单元</strong>
@@ -63,15 +63,15 @@
               <input id="audioSeek" type="range" min="0" max="1000" value="0" aria-label="音频进度">
               <span class="audio-time" id="audioTime">00:00 / 00:00</span>
               <label class="speed-control">
-                <span>速度</span>
+                <span>速度 <small>Speed</small></span>
                 <select id="speedSelect" aria-label="播放速度">
                   <option value="0.75">0.75×</option>
                   <option value="1" selected>1×</option>
                   <option value="1.25">1.25×</option>
                 </select>
               </label>
-              <button class="icon-button" id="continuousButton" type="button" aria-pressed="false" aria-label="连续播放" title="连续播放">⇥</button>
-              <button class="icon-button" id="loopButton" type="button" aria-pressed="false" aria-label="循环当前单元" title="循环当前单元">↻</button>
+              <button class="icon-button" id="continuousButton" type="button" aria-pressed="false" aria-label="连续播放 / Continuous play" title="连续播放 / Continuous play">⇥</button>
+              <button class="icon-button" id="loopButton" type="button" aria-pressed="false" aria-label="循环当前单元 / Loop current unit" title="循环当前单元 / Loop current unit">↻</button>
             </section>
           </div>
 
@@ -88,9 +88,9 @@
         </div>
 
         <footer class="unit-navigation">
-          <button type="button" id="previousUnitButton">‹ <span>上一个</span></button>
+          <button type="button" id="previousUnitButton"><span class="button-icon" aria-hidden="true">‹</span><span class="bilingual-button-label"><strong>上一个</strong><small>Previous</small></span></button>
           <strong id="footerProgress">1 / 1</strong>
-          <button type="button" id="nextUnitButton"><span>下一个</span> ›</button>
+          <button type="button" id="nextUnitButton"><span class="bilingual-button-label"><strong>下一个</strong><small>Next</small></span><span class="button-icon" aria-hidden="true">›</span></button>
         </footer>
       </section>
     </main>
@@ -101,12 +101,13 @@
   <section class="practice-writing-panel" id="practiceWritingPanel" hidden aria-labelledby="practiceWritingTitle">
     <div id="practiceWritingContent"></div>
   </section>
+  <aside class="ai-work-indicator" id="aiWorkIndicator" hidden aria-label="AI 工作状态 / AI work status"></aside>
   <script src="../../vendor/hanzi-writer.min.js?v=20260731-16"></script>
   <script src="../listening-speaking/js/voice-orb.js?v=20260731-16"></script>
   <script src="../../config.js?v=20260801-2"></script>
-  <script src="../shared/learning-api-client.js?v=20260801-3"></script>
+  <script src="../shared/learning-api-client.js?v=20260801-4"></script>
   <script src="book-data.js?v=20260731-16"></script>
   <script src="stroke-data.js?v=20260731-16"></script>
-  <script src="app.js?v=20260801-5" defer></script>
+  <script src="app.js?v=20260801-6" defer></script>
 </body>
 </html>

@@ -60,6 +60,7 @@
     const interval = Number(options.interval || 2000);
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       await new Promise((resolve) => setTimeout(resolve, interval));
+      options.onProgress?.(attempt < 3 ? "assessing" : "advising", { attempt });
       const status = await request("/jobs/status", { jobId });
       if (status.status === "completed") return status.result;
       if (status.status === "failed") throw new Error(status.message || "AI测评失败");
@@ -67,28 +68,33 @@
     throw new Error("AI测评仍在处理中，请稍后从学习记录中查看");
   }
 
-  async function assessArtifact(blob, input) {
+  async function assessArtifact(blob, input, options = {}) {
     if (!(blob instanceof Blob) || !blob.size) throw new Error("学习作品为空，无法上传");
+    options.onProgress?.("preparing");
     const ticket = await request("/uploads/ticket", {
       kind: input.kind,
       contentType: blob.type,
       artifactId: input.artifactId,
     });
+    options.onProgress?.("uploading");
     const upload = await fetch(ticket.uploadUrl, {
       method: "PUT",
       headers: ticket.headers,
       body: blob,
     });
     if (!upload.ok) throw new Error(`作品上传失败：${upload.status}`);
+    options.onProgress?.("submitting");
     const created = await request("/assessments/create", {
       ...input,
       artifactId: ticket.artifactId,
       contentType: blob.type,
       consentGranted: true,
     });
-    if (created.status === "completed") return created.result;
+    if (created.status === "completed") return { ...created.result, quota: created.quota || created.result?.quota };
     if (!created.jobId) throw new Error("云服务没有返回测评任务编号");
-    return waitForJob(created.jobId);
+    const result = await waitForJob(created.jobId, { ...options, onProgress: options.onProgress });
+    options.onProgress?.("saving");
+    return { ...result, quota: created.quota || result?.quota };
   }
 
   window.LearningApi = Object.freeze({
