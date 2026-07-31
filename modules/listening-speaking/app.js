@@ -421,7 +421,7 @@
     $("#dictationSpeed").addEventListener("click", event => { state.dictationSlow = !state.dictationSlow; event.currentTarget.textContent = state.dictationSlow ? "1.0× 正常" : "0.8× 慢速"; $("#slowUsed").textContent = state.dictationSlow ? "是" : "否"; });
     $("#dictationHint").addEventListener("click", () => toast(demo.dictation.hint));
     $("#dictationSubmit").addEventListener("click", submitDictation);
-    $("#openCharacterStudio").addEventListener("click", () => { location.href = "../../index.html?module=learn"; });
+    $("#openCharacterStudio").addEventListener("click", () => { location.href = "../../tools.html?module=learn"; });
 
     $("#testPlay").addEventListener("click", () => { state.testPlays += 1; $("#testPlayStatus").textContent = `已播放 ${state.testPlays} 次 · ${state.testSlow ? "慢速" : "正常语速"}`; speak(demo.listeningTest.audioText, state.testSlow ? .62 : .84, orbs.test); });
     $("#testSpeed").addEventListener("click", event => { state.testSlow = !state.testSlow; event.currentTarget.textContent = state.testSlow ? "1.0× 正常" : "0.8× 慢速"; });

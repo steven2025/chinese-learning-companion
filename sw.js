@@ -1,7 +1,8 @@
-const CACHE_VERSION = "tiantian-chinese-v4";
+const CACHE_VERSION = "tiantian-chinese-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./tools.html",
   "./styles.css",
   "./app.js",
   "./config.js",
