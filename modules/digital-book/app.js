@@ -84,12 +84,20 @@ const state = {
   mediaRecorder: null,
   recordingStream: null,
   recordingChunks: [],
+  recordingSamples: [],
+  recordingAudioContext: null,
+  recordingProcessor: null,
+  recordingSourceNode: null,
+  recordingMuteNode: null,
+  recordingInputSampleRate: 48000,
+  recordingWavBlob: null,
   recordingUrl: "",
   recordingStatus: "尚未录音",
   recordingRecord: null,
   recordingStartedAt: 0,
   recordingPlaybackAudio: null,
   discardRecording: false,
+  recordingAssessment: { status: "idle", result: null, message: "" },
   voiceOrbs: {},
   deepAssist: {},
   wordWriting: {
@@ -97,11 +105,14 @@ const state = {
     characters: [],
     characterIndex: 0,
     images: [],
+    strokeCounts: [],
     drawing: false,
     strokeCount: 0,
     lastPoint: null,
     writer: null,
     artifactUrl: "",
+    artifactBlob: null,
+    assessment: { status: "idle", result: null, message: "" },
   },
 };
 
@@ -596,6 +607,7 @@ function renderParagraphReadingUnit() {
             ${recordingComplete ? voiceOrbButton("paragraph-replay", "green", "▶", "试听录音", "play-recording") : ""}
           </div>
           <p class="recording-status paragraph-reading-status">${escapeHtml(state.recordingStatus)}</p>
+          ${recordingComplete ? renderAssessmentConsent("recording", state.recordingAssessment) : ""}
           <div class="paragraph-reading-choice">
             <button class="quiet-button${choice === "skipped" ? " active" : ""}" type="button" data-command="skip-paragraph-reading">暂不跟读，进入练习</button>
           </div>
@@ -649,9 +661,45 @@ function normalizeChoices(choices) {
 
 function handwritingDraft(itemId) {
   if (!state.handwriting[itemId]) {
-    state.handwriting[itemId] = { cells: [], saved: false };
+    state.handwriting[itemId] = { cells: [], strokeCounts: [], saved: false, assessment: { status: "idle", result: null, message: "" } };
   }
   return state.handwriting[itemId];
+}
+
+function renderAssessmentResult(assessment) {
+  if (!assessment || assessment.status === "idle") return "";
+  if (assessment.status === "working") return '<div class="assessment-panel is-working"><strong>AI 正在测评</strong><p>作品已安全上传，正在生成评估和练习建议，请稍候。</p></div>';
+  if (assessment.status === "error") return `<div class="assessment-panel is-error"><strong>本次测评未完成</strong><p>${escapeHtml(assessment.message || "请稍后重试")}</p></div>`;
+  const result = assessment.result || {};
+  const scores = result.scores || {};
+  const advice = result.advice || {};
+  const scoreEntries = [
+    ["建议分", scores.suggestedScore],
+    ["准确度", scores.accuracy],
+    ["流利度", scores.fluency],
+    ["完整度", scores.completion],
+  ].filter(([, value]) => value !== null && value !== undefined);
+  const adviceList = (key) => Array.isArray(advice[key]) && advice[key].length
+    ? `<ul>${advice[key].map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+    : "";
+  return `<div class="assessment-panel is-ready">
+    <div class="assessment-title"><span>AI 测评完成</span><strong>${escapeHtml(advice.summary || "本次学习作品已完成评估。")}</strong></div>
+    ${scoreEntries.length ? `<div class="assessment-scores">${scoreEntries.map(([label, value]) => `<div><strong>${escapeHtml(value)}</strong><span>${label}</span></div>`).join("")}</div>` : ""}
+    ${adviceList("strengths") ? `<section><strong>做得较好</strong>${adviceList("strengths")}</section>` : ""}
+    ${adviceList("priorities") ? `<section><strong>优先改进</strong>${adviceList("priorities")}</section>` : ""}
+    ${adviceList("practiceSteps") ? `<section><strong>练习建议</strong>${adviceList("practiceSteps")}</section>` : ""}
+    ${advice.reviewBasis ? `<p class="assessment-basis">${escapeHtml(advice.reviewBasis)}</p>` : ""}
+  </div>`;
+}
+
+function renderAssessmentConsent(kind, assessment) {
+  const working = assessment?.status === "working";
+  const command = kind === "recording" ? "assess-recording" : kind === "word-writing" ? "assess-word-writing" : "assess-practice-handwriting";
+  const commandAttribute = kind === "word-writing" ? `data-writing-command="${command}"` : `data-command="${command}"`;
+  return `<div class="assessment-consent">
+    <label><input type="checkbox" data-assessment-consent="${kind}"> <span>同意将本次作品保存到我的 COS 学习记录，并用于 AI 测评</span></label>
+    <button class="command-button" type="button" ${commandAttribute} ${working ? "disabled" : ""}>${working ? "测评中…" : assessment?.status === "ready" ? "重新测评" : "AI 评估与建议"}</button>
+  </div>${renderAssessmentResult(assessment)}`;
 }
 
 function renderHandwritingLauncher(item) {
@@ -664,7 +712,7 @@ function renderHandwritingLauncher(item) {
       </div>
       <button class="command-button" type="button" data-command="open-practice-writing">打开手写板</button>
     </div>
-    ${draft.saved ? `<div class="answer-feedback"><strong>手写答案已保留</strong><br>当前版本暂不进行 AI 评价，后续接入云函数和大模型后再启用。</div>` : ""}`;
+    ${draft.saved ? `<div class="answer-feedback"><strong>手写答案已保留</strong><br>确认后可上传到个人学习记录并获得书写建议。</div>${renderAssessmentConsent("practice-writing", draft.assessment)}` : ""}`;
 }
 
 function renderHandwritingWorkspace(item) {
@@ -699,7 +747,7 @@ function renderHandwritingWorkspace(item) {
       <div class="answer-actions">
         <button class="command-button" type="button" data-command="save-handwriting">保存手写答案</button>
       </div>
-      ${draft.saved ? `<div class="answer-feedback"><strong>手写答案已保留</strong><br>当前版本暂不进行 AI 评价，后续接入云函数和大模型后再启用。</div>` : ""}
+      ${draft.saved ? `<div class="answer-feedback"><strong>手写答案已保留</strong><br>确认后可上传到个人学习记录并获得书写建议。</div>${renderAssessmentConsent("practice-writing", draft.assessment)}` : ""}
     </div>`;
 }
 
@@ -811,7 +859,9 @@ function confirmHandwritingCell() {
   if (!canvas || !state.handwritingStrokeCount) return;
   const draft = handwritingDraft(item.id);
   draft.cells.push(canvas.toDataURL("image/png"));
+  draft.strokeCounts.push(state.handwritingStrokeCount);
   draft.saved = false;
+  draft.assessment = { status: "idle", result: null, message: "" };
   refreshPracticeWritingPanel();
 }
 
@@ -819,7 +869,9 @@ function removeHandwritingCell() {
   const item = currentItem();
   const draft = handwritingDraft(item.id);
   draft.cells.pop();
+  draft.strokeCounts.pop();
   draft.saved = false;
+  draft.assessment = { status: "idle", result: null, message: "" };
   refreshPracticeWritingPanel();
 }
 
@@ -941,7 +993,10 @@ function openWordWritingDialog() {
     writing.characters = Array.from(word.hanzi);
     writing.characterIndex = 0;
     writing.images = Array(writing.characters.length).fill("");
+    writing.strokeCounts = Array(writing.characters.length).fill(0);
     writing.artifactUrl = "";
+    writing.artifactBlob = null;
+    writing.assessment = { status: "idle", result: null, message: "" };
   }
   renderWordWritingDialog(word);
   if (typeof elements.writingDialog.showModal === "function") {
@@ -988,10 +1043,9 @@ function renderWordWritingDialog(word = currentItem()) {
         <p id="wordWritingStatus">${allComplete ? "所有汉字已经完成，可以生成整词书写图片。" : "请按笔顺练习，确认后再进入下一个字。"}</p>
         <div class="writing-result-actions">
           <button class="command-button" type="button" data-writing-command="generate" ${allComplete ? "" : "disabled"}>生成整词图片</button>
-          <button class="quiet-button" type="button" disabled title="接入云函数后启用">AI 评价与建议</button>
         </div>
       </div>
-      ${writing.artifactUrl ? `<div class="writing-result"><div><span>已生成</span><strong>${escapeHtml(word.hanzi)}书写图片</strong></div><img src="${writing.artifactUrl}" alt="${escapeAttribute(word.hanzi)}书写结果"><button class="quiet-button" type="button" data-writing-command="download">下载图片</button></div>` : ""}
+      ${writing.artifactUrl ? `<div class="writing-result"><div><span>已生成</span><strong>${escapeHtml(word.hanzi)}书写图片</strong></div><img src="${writing.artifactUrl}" alt="${escapeAttribute(word.hanzi)}书写结果"><button class="quiet-button" type="button" data-writing-command="download">下载图片</button></div>${renderAssessmentConsent("word-writing", writing.assessment)}` : ""}
     </div>`;
 }
 
@@ -1084,6 +1138,8 @@ function setupWordWritingCanvas() {
     state.wordWriting.strokeCount += 1;
     state.wordWriting.images[state.wordWriting.characterIndex] = "";
     state.wordWriting.artifactUrl = "";
+    state.wordWriting.artifactBlob = null;
+    state.wordWriting.assessment = { status: "idle", result: null, message: "" };
     state.wordWriting.lastPoint = pointFromEvent(event);
   });
   canvas.addEventListener("pointermove", (event) => {
@@ -1113,6 +1169,8 @@ function clearWordWritingCanvas() {
   canvas?.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
   state.wordWriting.images[state.wordWriting.characterIndex] = "";
   state.wordWriting.artifactUrl = "";
+  state.wordWriting.artifactBlob = null;
+  state.wordWriting.assessment = { status: "idle", result: null, message: "" };
   state.wordWriting.strokeCount = 0;
   setWordWritingStatus("田字格已清空，请重新书写。 ");
 }
@@ -1125,6 +1183,7 @@ async function confirmWordWritingCharacter() {
   }
   const writing = state.wordWriting;
   writing.images[writing.characterIndex] = canvas.toDataURL("image/png");
+  writing.strokeCounts[writing.characterIndex] = writing.strokeCount;
   if (writing.characterIndex < writing.characters.length - 1) {
     writing.characterIndex += 1;
     renderWordWritingDialog();
@@ -1182,6 +1241,7 @@ async function generateWordWritingImage() {
     context.drawImage(image, x, 0, cellSize, cellSize);
   });
   writing.artifactUrl = canvas.toDataURL("image/png");
+  writing.artifactBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   persistWordWritingRecord(canvas);
   renderWordWritingDialog();
   initializeWordWritingCharacter();
@@ -1245,6 +1305,7 @@ function handleWordWritingCommand(command) {
   else if (command === "clear") clearWordWritingCanvas();
   else if (command === "confirm") void confirmWordWritingCharacter();
   else if (command === "generate") void generateWordWritingImage();
+  else if (command === "assess-word-writing") void assessWordWriting();
   else if (command === "download" && state.wordWriting.artifactUrl) {
     const link = document.createElement("a");
     link.href = state.wordWriting.artifactUrl;
@@ -1312,7 +1373,8 @@ function renderShadowAssist(label) {
         ${state.recordingUrl ? voiceOrbButton("shadow-replay", "green", "▶", "试听录音", "play-recording") : ""}
       </div>
       <div class="recording-status">${escapeHtml(state.recordingStatus)}</div>
-      <p class="privacy-note">录音停止后不会自动上传，请试听并确认。</p>
+      ${state.recordingUrl ? renderAssessmentConsent("recording", state.recordingAssessment) : ""}
+      <p class="privacy-note">录音停止后不会自动上传；只有勾选同意并开始测评时才会保存到个人 COS 记录。</p>
     </div>`;
 }
 
@@ -1824,6 +1886,7 @@ function submitPractice() {
 
 async function toggleRecording() {
   if (state.mediaRecorder?.state === "recording") {
+    state.recordingWavBlob = await stopPcmCapture();
     state.mediaRecorder.stop();
     return;
   }
@@ -1837,7 +1900,10 @@ async function toggleRecording() {
       audio: true,
     });
     state.recordingChunks = [];
+    state.recordingSamples = [];
+    state.recordingWavBlob = null;
     state.discardRecording = false;
+    await startPcmCapture(state.recordingStream);
     state.mediaRecorder = new MediaRecorder(state.recordingStream);
     state.mediaRecorder.addEventListener("dataavailable", (event) => {
       if (event.data.size) state.recordingChunks.push(event.data);
@@ -1851,9 +1917,93 @@ async function toggleRecording() {
     }
     refreshRecordingView();
   } catch {
+    await stopPcmCapture().catch(() => null);
     state.recordingStatus = "未获得麦克风权限，录音没有开始。";
     refreshRecordingView();
   }
+}
+
+async function startPcmCapture(stream) {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) throw new Error("当前浏览器不支持标准录音格式");
+  const context = new AudioContextClass();
+  await context.resume();
+  const source = context.createMediaStreamSource(stream);
+  const processor = context.createScriptProcessor(4096, 1, 1);
+  const mute = context.createGain();
+  mute.gain.value = 0;
+  state.recordingSamples = [];
+  state.recordingInputSampleRate = context.sampleRate;
+  processor.onaudioprocess = (event) => {
+    if (state.mediaRecorder?.state !== "recording") return;
+    state.recordingSamples.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+  };
+  source.connect(processor);
+  processor.connect(mute);
+  mute.connect(context.destination);
+  state.recordingAudioContext = context;
+  state.recordingSourceNode = source;
+  state.recordingProcessor = processor;
+  state.recordingMuteNode = mute;
+}
+
+async function stopPcmCapture() {
+  const samples = state.recordingSamples;
+  const inputRate = state.recordingInputSampleRate || 48000;
+  state.recordingProcessor?.disconnect();
+  state.recordingSourceNode?.disconnect();
+  state.recordingMuteNode?.disconnect();
+  state.recordingProcessor = null;
+  state.recordingSourceNode = null;
+  state.recordingMuteNode = null;
+  if (state.recordingAudioContext) await state.recordingAudioContext.close().catch(() => {});
+  state.recordingAudioContext = null;
+  if (!samples.length) return null;
+  const total = samples.reduce((sum, item) => sum + item.length, 0);
+  const merged = new Float32Array(total);
+  let offset = 0;
+  samples.forEach((item) => { merged.set(item, offset); offset += item.length; });
+  state.recordingSamples = [];
+  return encodeWav(downsampleAudio(merged, inputRate, 16000), 16000);
+}
+
+function downsampleAudio(input, inputRate, outputRate) {
+  if (inputRate === outputRate) return input;
+  const ratio = inputRate / outputRate;
+  const length = Math.max(1, Math.floor(input.length / ratio));
+  const output = new Float32Array(length);
+  for (let index = 0; index < length; index += 1) {
+    const start = Math.floor(index * ratio);
+    const end = Math.min(input.length, Math.floor((index + 1) * ratio));
+    let sum = 0;
+    for (let cursor = start; cursor < end; cursor += 1) sum += input[cursor];
+    output[index] = sum / Math.max(1, end - start);
+  }
+  return output;
+}
+
+function encodeWav(samples, sampleRate) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+  const writeText = (offset, value) => Array.from(value).forEach((character, index) => view.setUint8(offset + index, character.charCodeAt(0)));
+  writeText(0, "RIFF");
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeText(8, "WAVE");
+  writeText(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeText(36, "data");
+  view.setUint32(40, samples.length * 2, true);
+  samples.forEach((sample, index) => {
+    const value = Math.max(-1, Math.min(1, sample));
+    view.setInt16(44 + index * 2, value < 0 ? value * 0x8000 : value * 0x7fff, true);
+  });
+  return new Blob([buffer], { type: "audio/wav" });
 }
 
 function finishRecording() {
@@ -1869,7 +2019,8 @@ function finishRecording() {
   if (state.recordingUrl) URL.revokeObjectURL(state.recordingUrl);
   state.recordingUrl = URL.createObjectURL(blob);
   state.recordingRecord = createRecordingRecord(blob);
-  state.recordingStatus = "录音完成，可以重听并与标准音比较。";
+  state.recordingAssessment = { status: "idle", result: null, message: "" };
+  state.recordingStatus = state.recordingWavBlob ? "录音完成，可以试听；确认后可进行真实口语测评。" : "录音完成，但标准测评音频生成失败，请重新录制。";
   state.recordingStream?.getTracks().forEach((track) => track.stop());
   state.recordingStream = null;
   persistRecordingRecord(state.recordingRecord);
@@ -1884,6 +2035,8 @@ function resetRecordingForUnit() {
   if (state.recordingUrl) URL.revokeObjectURL(state.recordingUrl);
   state.recordingUrl = "";
   state.recordingRecord = null;
+  state.recordingWavBlob = null;
+  state.recordingAssessment = { status: "idle", result: null, message: "" };
   state.recordingStartedAt = 0;
   state.recordingStatus = "尚未录音";
   if (state.mediaRecorder?.state === "recording") {
@@ -1892,6 +2045,7 @@ function resetRecordingForUnit() {
   }
   state.recordingStream?.getTracks().forEach((track) => track.stop());
   state.recordingStream = null;
+  void stopPcmCapture();
 }
 
 function refreshRecordingView() {
@@ -1924,8 +2078,8 @@ function createRecordingRecord(blob) {
     referenceText,
     createdAt: new Date().toISOString(),
     media: {
-      mimeType: blob.type || "audio/webm",
-      sizeBytes: blob.size,
+      mimeType: state.recordingWavBlob?.type || blob.type || "audio/webm",
+      sizeBytes: state.recordingWavBlob?.size || blob.size,
       durationMs: Math.max(0, Date.now() - state.recordingStartedAt),
     },
     storage: {
@@ -1997,6 +2151,177 @@ function playRecordedAudio() {
   void playback.play();
 }
 
+function assessmentConsentGranted(kind) {
+  return Array.from(document.querySelectorAll(`[data-assessment-consent="${kind}"]`)).some((input) => input.checked);
+}
+
+function requireAssessmentReady(kind) {
+  if (!window.LearningApi?.isConfigured() || !window.LearningApi.token()) throw new Error("请先登录，再使用 AI 测评");
+  if (!assessmentConsentGranted(kind)) throw new Error("请先勾选同意上传和测评");
+}
+
+async function assessRecording() {
+  try {
+    requireAssessmentReady("recording");
+    if (!state.recordingWavBlob || !state.recordingRecord) throw new Error("请先完成一次跟读录音");
+    state.recordingAssessment = { status: "working", result: null, message: "" };
+    state.recordingStatus = "录音正在上传并交给 SOE-N 测评…";
+    refreshRecordingView();
+    const record = state.recordingRecord;
+    const result = await window.LearningApi.assessArtifact(state.recordingWavBlob, {
+      kind: "recording",
+      artifactId: record.artifactId,
+      lessonId: record.lessonId,
+      unitType: record.unitType,
+      unitId: record.unitId,
+      referenceText: record.referenceText,
+      locale: state.locale,
+      mode: record.assessments[0].mode,
+    });
+    state.recordingAssessment = { status: "ready", result, message: "" };
+    state.recordingStatus = "测评完成，录音已保存到个人 COS 学习记录。";
+  } catch (error) {
+    state.recordingAssessment = { status: "error", result: null, message: error.message || "口语测评失败" };
+    state.recordingStatus = "本地录音仍然保留，可以重试测评。";
+  }
+  refreshRecordingView();
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [header, encoded] = String(dataUrl).split(",");
+  const mimeType = header.match(/data:([^;]+)/)?.[1] || "image/png";
+  const bytes = Uint8Array.from(atob(encoded || ""), (character) => character.charCodeAt(0));
+  return new Blob([bytes], { type: mimeType });
+}
+
+async function analyzeWritingImage(dataUrl) {
+  const image = await loadWritingImage(dataUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = 160;
+  canvas.height = 160;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  context.fillStyle = "#fff";
+  context.fillRect(0, 0, 160, 160);
+  context.drawImage(image, 0, 0, 160, 160);
+  const pixels = context.getImageData(0, 0, 160, 160).data;
+  let count = 0;
+  let sumX = 0;
+  let sumY = 0;
+  let minX = 160;
+  let minY = 160;
+  let maxX = 0;
+  let maxY = 0;
+  for (let index = 0; index < pixels.length; index += 4) {
+    const darkness = 255 - (pixels[index] + pixels[index + 1] + pixels[index + 2]) / 3;
+    if (pixels[index + 3] < 40 || darkness < 45) continue;
+    const pixel = index / 4;
+    const x = pixel % 160;
+    const y = Math.floor(pixel / 160);
+    count += 1;
+    sumX += x;
+    sumY += y;
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+  }
+  return {
+    inkRatio: Math.round((count / 25600) * 1000) / 10,
+    centerOffsetX: count ? Math.round(((sumX / count - 79.5) / 80) * 100) / 100 : 0,
+    centerOffsetY: count ? Math.round(((sumY / count - 79.5) / 80) * 100) / 100 : 0,
+    widthRatio: count ? Math.round(((maxX - minX + 1) / 160) * 100) / 100 : 0,
+    heightRatio: count ? Math.round(((maxY - minY + 1) / 160) * 100) / 100 : 0,
+  };
+}
+
+async function expectedStrokeCounts(characters) {
+  return Promise.all(characters.map(async (character) => {
+    try {
+      const bundled = window.DIGITAL_BOOK_STROKE_DATA?.[character];
+      if (bundled) return bundled.strokes?.length || null;
+      const response = await fetch(`${STROKE_DATA_ROOT}/${encodeURIComponent(character)}.json`);
+      if (!response.ok) return null;
+      return (await response.json()).strokes?.length || null;
+    } catch { return null; }
+  }));
+}
+
+async function assessWordWriting() {
+  const writing = state.wordWriting;
+  try {
+    requireAssessmentReady("word-writing");
+    if (!writing.artifactBlob || !writing.artifactUrl) throw new Error("请先生成整词书写图片");
+    writing.assessment = { status: "working", result: null, message: "" };
+    renderWordWritingDialog();
+    const word = currentItem();
+    const [layout, expected] = await Promise.all([
+      Promise.all(writing.images.map(analyzeWritingImage)),
+      expectedStrokeCounts(writing.characters),
+    ]);
+    const result = await window.LearningApi.assessArtifact(writing.artifactBlob, {
+      kind: "handwriting",
+      artifactId: window.crypto?.randomUUID?.() || `writing-${Date.now()}`,
+      lessonId: "zjzh-1-1",
+      unitType: "vocabularyWriting",
+      unitId: `${word.id}-writing`,
+      referenceText: word.hanzi,
+      locale: state.locale,
+      metrics: { characters: writing.characters, recordedStrokeCounts: writing.strokeCounts, expectedStrokeCounts: expected, layout },
+    });
+    writing.assessment = { status: "ready", result, message: "" };
+  } catch (error) {
+    writing.assessment = { status: "error", result: null, message: error.message || "书写测评失败" };
+  }
+  renderWordWritingDialog();
+  initializeWordWritingCharacter();
+}
+
+async function combineHandwritingCells(cells) {
+  const columns = Math.min(8, Math.max(1, cells.length));
+  const rows = Math.ceil(cells.length / columns);
+  const cellSize = 180;
+  const canvas = document.createElement("canvas");
+  canvas.width = columns * cellSize;
+  canvas.height = rows * cellSize;
+  const context = canvas.getContext("2d");
+  context.fillStyle = "#fff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  const images = await Promise.all(cells.map(loadWritingImage));
+  images.forEach((image, index) => {
+    const x = (index % columns) * cellSize;
+    const y = Math.floor(index / columns) * cellSize;
+    drawTianGrid(context, x, y, cellSize);
+    context.drawImage(image, x, y, cellSize, cellSize);
+  });
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+}
+
+async function assessPracticeHandwriting() {
+  const item = currentItem();
+  const draft = handwritingDraft(item.id);
+  try {
+    requireAssessmentReady("practice-writing");
+    if (!draft.saved || !draft.cells.length) throw new Error("请先保存手写答案");
+    draft.assessment = { status: "working", result: null, message: "" };
+    refreshPracticeWritingPanel();
+    const [blob, layout] = await Promise.all([combineHandwritingCells(draft.cells), Promise.all(draft.cells.map(analyzeWritingImage))]);
+    const result = await window.LearningApi.assessArtifact(blob, {
+      kind: "handwriting",
+      artifactId: window.crypto?.randomUUID?.() || `practice-writing-${Date.now()}`,
+      lessonId: "zjzh-1-1",
+      unitType: "practiceHandwriting",
+      unitId: item.id,
+      referenceText: `第${item.questionNumber}题手写作答`,
+      locale: state.locale,
+      metrics: { questionNumber: item.questionNumber, characterCount: draft.cells.length, recordedStrokeCounts: draft.strokeCounts, layout },
+    });
+    draft.assessment = { status: "ready", result, message: "" };
+  } catch (error) {
+    draft.assessment = { status: "error", result: null, message: error.message || "书写测评失败" };
+  }
+  refreshPracticeWritingPanel();
+}
+
 function handleCommand(command) {
   if (command === "play") {
     if (!elements.audio.paused && state.audioMode === "single") stopAudio();
@@ -2015,6 +2340,8 @@ function handleCommand(command) {
     openWordWritingDialog();
   } else if (command === "play-recording") {
     playRecordedAudio();
+  } else if (command === "assess-recording") {
+    void assessRecording();
   } else if (command === "skip-paragraph-reading") {
     localStorage.setItem("digitalBookParagraphReadingChoice", "skipped");
     moveUnit(1);
@@ -2046,6 +2373,8 @@ function handleCommand(command) {
     removeHandwritingCell();
   } else if (command === "save-handwriting") {
     saveHandwritingAnswer();
+  } else if (command === "assess-practice-handwriting") {
+    void assessPracticeHandwriting();
   }
 }
 

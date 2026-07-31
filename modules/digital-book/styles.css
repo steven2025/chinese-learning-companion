@@ -336,6 +336,26 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .keyword-list span { padding: 6px 10px; color: var(--teal); border: 1px solid #b4cdc7; border-radius: 4px; background: var(--teal-soft); font-size: 13px; }
 .recording-status { margin-top: 16px; padding: 12px 14px; color: var(--muted); border-left: 4px solid var(--gold); background: var(--gold-soft); font-size: 13px; }
 .privacy-note { margin-top: 14px !important; color: var(--muted) !important; font-size: 12px !important; }
+.assessment-consent { display: grid; gap: 10px; margin-top: 14px; padding: 12px; border: 1px solid #c9d8d4; border-radius: 6px; background: #f7faf9; }
+.assessment-consent label { display: flex; align-items: flex-start; gap: 8px; color: #405253; font-size: 12px; line-height: 1.5; }
+.assessment-consent input { flex: 0 0 auto; margin-top: 2px; accent-color: var(--teal); }
+.assessment-consent .command-button { justify-self: start; }
+.assessment-panel { margin-top: 12px; padding: 14px; border: 1px solid #c9d8d4; border-radius: 6px; background: #fff; }
+.assessment-panel.is-working { border-left: 4px solid var(--gold); background: var(--gold-soft); }
+.assessment-panel.is-error { color: #8b3526; border-color: #e1b1a5; background: var(--coral-soft); }
+.assessment-title { display: grid; gap: 4px; }
+.assessment-title span { color: var(--coral); font-size: 11px; font-weight: 800; }
+.assessment-title strong { font-size: 15px; line-height: 1.55; }
+.assessment-scores { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.assessment-scores div { min-width: 0; padding: 9px 5px; text-align: center; border: 1px solid #d6e2df; background: var(--teal-soft); }
+.assessment-scores strong, .assessment-scores span { display: block; }
+.assessment-scores strong { color: var(--teal); font-size: 20px; }
+.assessment-scores span { margin-top: 2px; color: var(--muted); font-size: 10px; }
+.assessment-panel section { margin-top: 12px; }
+.assessment-panel section > strong { color: var(--teal); font-size: 12px; }
+.assessment-panel ul { margin: 6px 0 0; padding-left: 20px; }
+.assessment-panel li { margin: 4px 0; color: #405253; font-size: 13px; line-height: 1.55; }
+.assessment-basis { margin: 12px 0 0; padding-top: 10px; color: var(--muted); border-top: 1px solid #e0e8e6; font-size: 11px; line-height: 1.55; }
 .shadow-orbs, .paragraph-reading-orbs {
   display: flex;
   flex-wrap: wrap;
@@ -611,6 +631,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 }
 
 @media (max-width: 520px) {
+  .assessment-scores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .brand-link img { width: 36px; height: 36px; }
   .brand-link strong { font-size: 13px; }
   .brand-link small { font-size: 9px; }

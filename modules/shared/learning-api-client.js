@@ -55,6 +55,42 @@
     throw new Error("深度解释仍在生成，请稍后再试");
   }
 
+  async function waitForJob(jobId, options = {}) {
+    const attempts = Number(options.attempts || 60);
+    const interval = Number(options.interval || 2000);
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, interval));
+      const status = await request("/jobs/status", { jobId });
+      if (status.status === "completed") return status.result;
+      if (status.status === "failed") throw new Error(status.message || "AI测评失败");
+    }
+    throw new Error("AI测评仍在处理中，请稍后从学习记录中查看");
+  }
+
+  async function assessArtifact(blob, input) {
+    if (!(blob instanceof Blob) || !blob.size) throw new Error("学习作品为空，无法上传");
+    const ticket = await request("/uploads/ticket", {
+      kind: input.kind,
+      contentType: blob.type,
+      artifactId: input.artifactId,
+    });
+    const upload = await fetch(ticket.uploadUrl, {
+      method: "PUT",
+      headers: ticket.headers,
+      body: blob,
+    });
+    if (!upload.ok) throw new Error(`作品上传失败：${upload.status}`);
+    const created = await request("/assessments/create", {
+      ...input,
+      artifactId: ticket.artifactId,
+      contentType: blob.type,
+      consentGranted: true,
+    });
+    if (created.status === "completed") return created.result;
+    if (!created.jobId) throw new Error("云服务没有返回测评任务编号");
+    return waitForJob(created.jobId);
+  }
+
   window.LearningApi = Object.freeze({
     isConfigured,
     token,
@@ -62,8 +98,11 @@
     createSession,
     clearSession,
     resolveAssist,
+    waitForJob,
+    assessArtifact,
     mediaUrl: (input) => request("/media/url", input),
     uploadTicket: (input) => request("/uploads/ticket", input),
+    assessmentHistory: () => request("/assessments/history", {}),
     classStudents: () => request("/classes/students", {}),
   });
 })();
