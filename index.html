@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08111f">
+  <meta name="application-name" content="天天汉语伴学系统">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>天天汉语伴学系统 · Tiantian Chinese Companion</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="天天汉语伴学系统">
+        <span class="brand-mark" aria-hidden="true">写</span>
+        <span>
+          <strong>天天汉语伴学系统</strong>
+          <small>TIANTIAN CHINESE COMPANION</small>
+        </span>
+      </div>
+
+      <nav class="primary-nav" aria-label="主导航">
+        <details class="nav-group"><summary>学习基础</summary><div class="nav-menu">
+          <button type="button" data-module="pinyin">拼音入门 · Pinyin</button>
+          <button type="button" data-module="learn">汉字伴写 · Character Studio</button>
+          <button type="button" data-module="grammar">语法精讲 · Grammar</button>
+        </div></details>
+        <details class="nav-group"><summary>词汇与技能</summary><div class="nav-menu">
+          <button type="button" data-module="vocabulary">词汇学记 · Vocabulary</button>
+          <button type="button" data-module="mistakes">错题本与复习 · Review</button>
+        </div></details>
+        <details class="nav-group"><summary>语言训练</summary><div class="nav-menu">
+          <button type="button" data-module="listening-speaking">听说训练 · Listening &amp; Speaking</button>
+          <button type="button" data-module="reading">阅读训练 · Reading</button>
+          <button type="button" data-module="essay">写作练习 · Writing</button>
+        </div></details>
+        <details class="nav-group"><summary>考试中心</summary><div class="nav-menu">
+          <button type="button" data-module="mock">HSK 全真模考 · Mock</button>
+          <button type="button" data-module="assessment">水平测评 · Assessment</button>
+        </div></details>
+        <details class="nav-group"><summary>学习进度</summary><div class="nav-menu">
+          <button type="button" data-module="progress">学习看板 · Progress</button>
+          <button type="button" data-module="mistakes">错题本与复习 · Review</button>
+        </div></details>
+      </nav>
+
+      <div class="developer-credit" aria-label="开发者与支持单位信息">
+        <div class="developer-primary"><span>程序开发</span><strong>鄢清华</strong><i></i><strong>重庆工商大学</strong></div>
+        <div class="developer-support">感谢重庆工商大学对外汉语教研室的大力支持</div>
+      </div>
+
+      <nav class="curriculum-nav" aria-label="教材与章节导航">
+        <label><span>教材</span><select id="seriesSelect" aria-label="选择教材系列"></select></label>
+        <label><span>册别</span><select id="bookSelect" aria-label="选择教材册别"></select></label>
+        <label class="chapter-select"><span>章节</span><select id="chapterSelect" aria-label="选择章节"></select></label>
+      </nav>
+
+      <div class="topbar-actions">
+        <button class="install-button" id="installAppButton" type="button" hidden>安装 · Install</button>
+        <button class="login-button" id="loginButton" type="button">登录 · Sign in</button>
+        <button class="icon-button" id="languageButton" type="button" aria-haspopup="true" aria-expanded="false">
+          <span aria-hidden="true">文</span><span id="languageLabel">中文</span><span aria-hidden="true">⌄</span>
+        </button>
+        <div class="language-menu" id="languageMenu" role="menu" hidden>
+          <button type="button" role="menuitem" data-locale="zh">中文</button>
+          <button type="button" role="menuitem" data-locale="en">English</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="character-rail" aria-label="本课汉字">
+        <nav class="module-rail-nav" aria-label="学习模块">
+          <div class="module-rail-title">学习模块 · Modules</div>
+          <button type="button" class="module-rail-button active" data-module="home"><span>系统首页</span><small>Home</small></button>
+          <button type="button" class="module-rail-button" data-module="pinyin"><span>拼音入门</span><small>Pinyin</small></button>
+          <button type="button" class="module-rail-button" data-module="vocabulary"><span>词汇学记</span><small>Vocabulary</small></button>
+          <button type="button" class="module-rail-button" data-module="learn"><span>汉字伴写</span><small>Character Studio</small></button>
+          <button type="button" class="module-rail-button" data-module="grammar"><span>语法精讲</span><small>Grammar</small></button>
+          <button type="button" class="module-rail-button" data-module="listening-speaking"><span>听说训练</span><small>Listening &amp; Speaking</small></button>
+          <button type="button" class="module-rail-button" data-module="reading"><span>阅读训练</span><small>Reading</small></button>
+          <button type="button" class="module-rail-button" data-module="essay"><span>写作练习</span><small>Writing</small></button>
+          <button type="button" class="module-rail-button" data-module="mock"><span>HSK 全真模考</span><small>Mock</small></button>
+          <button type="button" class="module-rail-button" data-module="assessment"><span>水平测评</span><small>Assessment</small></button>
+          <button type="button" class="module-rail-button" data-module="mistakes"><span>错题本与复习</span><small>Review</small></button>
+          <button type="button" class="module-rail-button" data-module="progress"><span>学习进度</span><small>Progress</small></button>
+        </nav>
+        <div class="rail-heading">
+          <div>
+            <span class="eyebrow">教材写字库</span>
+            <h2 id="railLessonTitle">第1课 · 你好</h2>
+          </div>
+          <span class="progress-count" id="progressCount">0 / 4</span>
+        </div>
+
+        <div class="library-search">
+          <div class="search-field">
+            <span aria-hidden="true">⌕</span>
+            <input id="characterSearch" type="search" inputmode="text" autocomplete="off" placeholder="输入汉字或词组">
+            <button id="clearSearchButton" type="button" aria-label="清空搜索" hidden>×</button>
+          </div>
+          <select id="searchScope" aria-label="搜索范围">
+            <option value="lesson">本课</option>
+            <option value="book">本册30课</option>
+          </select>
+        </div>
+
+        <div class="library-summary" id="librarySummary">本课“写汉字”栏目 · 4字</div>
+
+        <nav class="character-list" id="characterList" aria-live="polite"></nav>
+        <div class="direct-study" id="directStudy" hidden></div>
+
+        <div class="phrase-tools">
+          <button class="phrase-mode-button" id="multiSelectToggle" type="button">□ 勾选多字</button>
+          <div class="selection-tray" id="selectionTray" hidden>
+            <span>已选：<strong id="selectedCharacters">—</strong></span>
+            <button type="button" id="startMultiPractice" disabled>并排写</button>
+          </div>
+        </div>
+
+        <div class="rail-tip">
+          <span aria-hidden="true">✦</span>
+          <p><strong>学习建议</strong><br>先看动画，再进入田字格跟写。</p>
+        </div>
+      </aside>
+
+      <section class="learning-stage">
+        <div class="character-header">
+          <div class="character-title">
+            <div class="hero-character" id="heroCharacter">十</div>
+            <div>
+              <span class="eyebrow" id="structureLabel">独体字 · 十部</span>
+              <h1><span id="pinyinLabel">shí</span><button class="audio-button" type="button" id="speakButton" aria-label="朗读">◖))</button></h1>
+              <p id="meaningLabel">数字十；完整、十足</p>
+            </div>
+          </div>
+
+          <div class="step-navigation" role="tablist" aria-label="学习步骤">
+            <button class="step-tab active" type="button" data-view="learn" role="tab" aria-selected="true"><span>01</span>看动画</button>
+            <button class="step-tab" type="button" data-view="practice" role="tab" aria-selected="false"><span>02</span>跟着写</button>
+            <button class="step-tab" type="button" data-view="culture" role="tab" aria-selected="false"><span>03</span>字里文化</button>
+          </div>
+        </div>
+
+        <section class="view-panel active" id="learnView" data-panel="learn">
+          <div class="learning-grid immersive-learning">
+            <div class="animation-card surface-card immersive-card">
+              <div class="card-heading">
+                <div>
+                  <span class="eyebrow">笔顺动画</span>
+                  <h2>观察每一笔的位置与方向</h2>
+                </div>
+                <span class="stroke-counter" id="strokeCounter">2画</span>
+              </div>
+
+              <div class="guided-stage" id="guidedStage">
+                <svg class="annotation-lines" id="annotationLines" aria-hidden="true"></svg>
+                <div class="stroke-steps stage-annotations" id="strokeSteps" aria-live="polite"></div>
+
+                <div class="writer-stage">
+                  <div class="grid-caption top">上</div>
+                  <div class="tianzige" id="demoGrid">
+                    <div class="grid-lines" aria-hidden="true"></div>
+                    <div class="writer-target" id="demoWriter"></div>
+                  </div>
+                  <div class="grid-caption bottom">下</div>
+                </div>
+              </div>
+
+              <div class="animation-controls" aria-label="动画控制">
+                <button class="primary-button" id="playSequenceButton" type="button"><span aria-hidden="true">▶</span><span data-text="sequence">逐笔讲解</span></button>
+                <button class="secondary-button" id="playFullButton" type="button"><span aria-hidden="true">↻</span><span data-text="full">完整演示</span></button>
+                <button class="secondary-button accent" id="radicalButton" type="button"><span class="color-dot"></span><span data-text="radical">高亮部首</span></button>
+              </div>
+
+              <div class="integrated-summary" aria-live="polite">
+                <div class="coach-copy">
+                  <span class="eyebrow">整字提示</span>
+                  <h2 id="coachTitle">先横后竖</h2>
+                  <p id="coachText">“十”一共有两画。第一笔写横，第二笔写竖。竖画穿过横画，交点接近田字格中心。</p>
+                </div>
+                <div class="focus-box">
+                  <span class="focus-icon" aria-hidden="true">◎</span>
+                  <div><strong data-text="focus">书写重点</strong><p id="focusText"></p></div>
+                </div>
+                <button class="culture-link" type="button" data-go-view="culture">
+                  <span aria-hidden="true">文</span>
+                  <span><strong data-text="cultureButton">看看这个字的文化含义</strong><small data-text="cultureHint">构形知识与文化联想已分开标注</small></span>
+                  <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button class="next-action" type="button" data-go-view="practice"><span data-text="practiceNext">动画看懂了，开始跟写</span><span aria-hidden="true">→</span></button>
+        </section>
+
+        <section class="view-panel" id="practiceView" data-panel="practice" hidden>
+          <div class="practice-heading">
+            <div>
+              <span class="eyebrow">田字格跟写</span>
+              <h2>先观察，再在中央大田字格书写</h2>
+              <p>系统会检查笔顺、方向与轨迹。写完后可以查看点评并重新练习。</p>
+            </div>
+            <div class="mode-switch" role="group" aria-label="书写难度">
+              <button type="button" class="active" data-practice-mode="trace">描写</button>
+              <button type="button" data-practice-mode="free">独立写</button>
+            </div>
+          </div>
+
+          <div class="practice-grid" id="singlePracticeGrid">
+            <div class="model-panel surface-card">
+              <div class="card-heading compact"><div><span class="eyebrow">标准示范</span><h3>随时对照笔顺</h3></div><button class="round-play" id="practiceDemoButton" type="button" aria-label="播放示范">▶</button></div>
+              <div class="tianzige small"><div class="grid-lines" aria-hidden="true"></div><div class="writer-target" id="modelWriter"></div></div>
+              <ol class="model-rules" id="modelRules"></ol>
+            </div>
+
+            <div class="write-panel surface-card">
+              <div class="write-toolbar">
+                <div><span class="eyebrow">轮到你了</span><h3 id="practicePrompt">请写“十”</h3></div>
+                <span class="live-status" id="liveStatus"><i></i>等待落笔</span>
+              </div>
+              <div class="tianzige practice"><div class="grid-lines" aria-hidden="true"></div><div class="writer-target" id="quizWriter"></div></div>
+              <p class="practice-help" id="practiceHelp">从第一笔开始。连续写错3次，系统会显示正确笔画提示。</p>
+              <div class="practice-actions">
+                <button class="secondary-button" id="resetPracticeButton" type="button">清空重写</button>
+                <button class="secondary-button" id="showHintButton" type="button">播放提示</button>
+              </div>
+            </div>
+
+            <aside class="feedback-panel surface-card" id="feedbackPanel">
+              <div class="feedback-heading">
+                <div class="score-ring" id="scoreRing" style="--score:0"><span id="scoreValue">--</span><small>书写评价</small></div>
+                <div class="feedback-copy">
+                  <span class="eyebrow">智能点评</span>
+                  <h3 id="feedbackTitle">写完后查看评价</h3>
+                  <p id="feedbackText">我们会优先指出最重要的一项改进，不让反馈变成负担。</p>
+                </div>
+              </div>
+
+              <div class="user-sample-card" id="userSampleCard">
+                <div class="sample-title"><span>本次书写</span><small id="sampleStatus">完成后固定显示</small></div>
+                <div class="user-writing-grid">
+                  <svg id="userWritingPreview" viewBox="0 0 1000 1000" role="img" aria-label="用户本次书写图像"></svg>
+                  <span class="sample-placeholder" id="samplePlaceholder">你的字将显示在这里</span>
+                </div>
+              </div>
+
+              <div class="feedback-metrics">
+                <div><span>笔顺</span><strong id="orderMetric">待完成</strong></div>
+                <div><span>轨迹</span><strong id="pathMetric">待完成</strong></div>
+                <div><span>结构</span><strong id="structureMetric">待完成</strong></div>
+                <div><span>尝试</span><strong id="attemptMetric">0次</strong></div>
+              </div>
+              <div class="feedback-actions">
+                <button class="secondary-button" id="compareButton" type="button" disabled>叠加标准字</button>
+                <button class="primary-button" id="rewriteButton" type="button" disabled>再写一次</button>
+              </div>
+            </aside>
+          </div>
+
+          <section class="phrase-practice-panel surface-card" id="phrasePracticePanel" hidden>
+            <div class="phrase-panel-heading">
+              <div><span class="eyebrow">多字并排书写</span><h2 id="phraseTitle">词组练习</h2><p id="phraseProgress">依次完成每个田字格，系统将保留每个字的真实笔迹。</p></div>
+              <button class="secondary-button" id="exitPhraseButton" type="button">返回单字</button>
+            </div>
+
+            <div class="phrase-section-label"><span>标准示范</span><small>每个字与下方书写格严格对齐</small></div>
+            <div class="phrase-standard-row" id="phraseStandardRow"></div>
+
+            <div class="phrase-section-label"><span>请依次书写</span><small id="phraseActiveHint">从第一个字开始</small></div>
+            <div class="phrase-writing-row" id="phraseWritingRow"></div>
+
+            <div class="phrase-comparison" id="phraseComparison" hidden>
+              <div class="phrase-result-heading"><div><span class="eyebrow">词组书写对照</span><h3 id="phraseScoreTitle">本次书写</h3></div><strong id="phraseTotalScore">--</strong></div>
+              <div class="comparison-line"><span>标准字</span><div class="comparison-cells" id="phraseStandardResult"></div></div>
+              <div class="comparison-line"><span>你的字</span><div class="comparison-cells" id="phraseUserResult"></div></div>
+              <p class="phrase-feedback" id="phraseFeedback"></p>
+              <div class="phrase-result-actions"><button class="secondary-button" id="phraseOverlayButton" type="button">叠加标准字</button><button class="primary-button" id="rewritePhraseButton" type="button">再写一次</button></div>
+            </div>
+          </section>
+        </section>
+
+        <section class="view-panel" id="cultureView" data-panel="culture" hidden>
+          <div class="culture-layout">
+            <div class="culture-symbol surface-card">
+              <span class="eyebrow">字里文化</span>
+              <div class="culture-glyph" id="cultureGlyph">十</div>
+              <div class="component-badge" id="componentBadge">部首：十</div>
+              <button class="secondary-button accent" id="cultureAnimateButton" type="button"><span class="color-dot"></span>在动画中高亮</button>
+            </div>
+
+            <div class="culture-content surface-card">
+              <div class="culture-audio-toolbar">
+                <div>
+                  <span class="culture-audio-badge"><i aria-hidden="true"></i>中文原声</span>
+                  <small id="cultureAudioStatus" role="status" aria-live="polite">三段讲解可分别播放</small>
+                </div>
+                <div class="culture-audio-actions">
+                  <label class="culture-speed-control" for="cultureSpeedRange">
+                    <span>语速</span>
+                    <input id="cultureSpeedRange" type="range" min="0.65" max="1.25" step="0.05" value="0.90" aria-label="调节中文朗读速度">
+                    <output id="cultureSpeedValue" for="cultureSpeedRange">0.90×</output>
+                  </label>
+                  <button class="culture-play-all" id="playAllCultureButton" type="button">
+                    <span aria-hidden="true">▶</span><span>连续朗读三段</span>
+                  </button>
+                </div>
+              </div>
+              <div class="culture-section verified">
+                <div class="culture-section-head">
+                  <span class="content-tag">有依据的构形知识</span>
+                  <button class="culture-audio-button" type="button" data-culture-audio="formation"><span aria-hidden="true">▶</span><span>中文原声</span></button>
+                </div>
+                <h2 id="cultureTitle"></h2>
+                <p id="cultureVerified"></p>
+              </div>
+              <div class="culture-section association">
+                <div class="culture-section-head">
+                  <span class="content-tag">文化与现代用法</span>
+                  <button class="culture-audio-button" type="button" data-culture-audio="culture"><span aria-hidden="true">▶</span><span>中文原声</span></button>
+                </div>
+                <h3 id="associationTitle"></h3>
+                <p id="associationText"></p>
+                <div class="example-chips" id="cultureExamples"></div>
+              </div>
+              <div class="culture-section mnemonic" id="mnemonicSection">
+                <div class="culture-section-head">
+                  <span class="content-tag">记忆联想</span>
+                  <button class="culture-audio-button" type="button" data-culture-audio="memory"><span aria-hidden="true">▶</span><span>中文原声</span></button>
+                </div>
+                <h3 id="mnemonicTitle">结构记忆</h3>
+                <p id="mnemonicText"></p>
+                <small>这是学习提示，不等同于严格字源。</small>
+              </div>
+              <div class="source-note">内容状态：<strong>教学初稿 · 待教师复核</strong></div>
+            </div>
+          </div>
+
+          <button class="next-action" type="button" data-go-view="practice"><span>了解了，去练习书写</span><span aria-hidden="true">→</span></button>
+        </section>
+
+        <section class="view-panel" id="essayView" data-panel="essay" hidden>
+          <button class="essay-ai-fab" id="essayAiFab" type="button">✦ AI助写<br><small>Writing Coach</small></button>
+          <aside class="essay-ai-panel" id="essayAiPanel" hidden><div class="essay-ai-head"><strong>AI助写 · Writing Coach</strong><button id="essayAiClose" type="button">×</button></div><p>提供思路、提纲、句型和单句帮助，不直接代写整篇作文。</p><textarea id="essayAiRequest" rows="3" placeholder="例如：帮我列出三段提纲"></textarea><button class="primary-button" id="essayAiAsk" type="button">获取建议 · Get Help</button><div id="essayAiResult" class="essay-ai-result"></div></aside>
+          <div class="essay-toolbar surface-card">
+            <div class="essay-mode-tabs" role="tablist" aria-label="作文模式">
+              <button class="essay-mode-tab active" type="button" data-essay-mode="direct">01 直接写作文</button>
+              <button class="essay-mode-tab" type="button" data-essay-mode="sample">02 样文跟写</button>
+            </div>
+            <div class="essay-settings">
+              <label>题目<input id="essayTitleInput" type="text" placeholder="例如：我的一天"></label>
+              <label>目标字数<input id="essayCountInput" type="number" min="20" max="2000" value="200"></label>
+              <button class="primary-button" id="essayStartButton" type="button">生成作文格</button>
+            </div>
+            <label class="essay-sample-input" id="essaySampleInput" hidden>粘贴样文<textarea id="essayTextInput" rows="4" placeholder="输入或粘贴样文，段落之间留空行"></textarea></label>
+          </div>
+
+          <div class="essay-layout">
+            <section class="essay-writing-card surface-card">
+              <div class="card-heading compact"><div><span class="eyebrow">当前书写格</span><h2 id="essayCurrentLabel">准备开始</h2></div><span class="stroke-counter" id="essayProgressLabel">0 / 0</span></div>
+              <div class="essay-active-grid" id="essayActiveGrid"><div class="grid-lines" aria-hidden="true"></div><canvas id="essayCanvas" width="600" height="600"></canvas></div>
+              <p class="practice-help" id="essayHelp">样文跟写会显示当前汉字；直接写作文可自由书写。</p>
+              <div class="essay-writing-actions"><button class="secondary-button" id="essayClearButton" type="button">清空本格</button><button class="primary-button" id="essayConfirmButton" type="button">确认此字</button></div>
+              <div class="essay-edit-tools"><button type="button" data-essay-edit="insert-before">插入前</button><button type="button" data-essay-edit="insert-after">插入后</button><button type="button" data-essay-edit="rewrite">重写</button><button type="button" data-essay-edit="delete">删除</button><button type="button" data-essay-edit="undo">撤销</button></div>
+            </section>
+            <section class="essay-page-card surface-card"><div class="card-heading compact"><div><span class="eyebrow">作文田字格</span><h2 id="essayPageTitle">尚未开始</h2></div><span class="stroke-counter" id="essayPageLabel">第1页</span></div><div class="essay-pages" id="essayPages"></div><div class="essay-page-actions"><button class="secondary-button" id="essayPrevPageButton" type="button">上一页</button><button class="secondary-button" id="essayNextPageButton" type="button">下一页</button><button class="primary-button" id="essayEvaluateButton" type="button">提交作文评价</button></div></section>
+          </div>
+          <section class="essay-feedback surface-card" id="essayFeedback" hidden><div class="essay-feedback-heading"><div><span class="eyebrow">老师式综合点评 · Teacher Review</span><h2>本次作文评价 · Current Review</h2></div><span id="essayVersionLabel">版本 V1</span></div><div class="essay-score-grid"><div><strong id="essayWritingScore">--</strong><span>书写质量 · Writing</span></div><div><strong id="essayPunctuationScore">--</strong><span>标点符号 · Punctuation</span></div><div><strong id="essayContentScore">--</strong><span>内容质量 · Content</span></div></div><p id="essayFeedbackText"></p><div class="essay-feedback-actions"><button class="secondary-button" id="essayContinueButton" type="button">继续修改 · Continue Editing</button><button class="primary-button" id="essayExportButton" type="button">下载 PNG · Download PNG</button></div><div class="essay-history-list" id="essayHistoryList"></div></section>
+        </section>
+        <section class="view-panel module-placeholder surface-card" id="modulePlaceholder" data-panel="placeholder" hidden>
+          <span class="eyebrow" id="placeholderEyebrow">学习模块 · Learning Module</span>
+          <h1 id="placeholderTitle">模块准备中</h1>
+          <p id="placeholderText">该模块正在接入教材内容、练习题库和学习记录。你可以先使用汉字伴写和写作练习。</p>
+          <div class="placeholder-actions"><button type="button" class="primary-button" data-module="learn">进入汉字伴写 · Character Studio</button><button type="button" class="secondary-button" data-module="essay">进入写作练习 · Writing</button></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="vendor/hanzi-writer.min.js"></script>
+  <script src="data/stroke-data.js"></script>
+  <script src="data/character-lessons.js"></script>
+  <script src="data/character-cultures.js"></script>
+  <script src="data/textbook-library.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

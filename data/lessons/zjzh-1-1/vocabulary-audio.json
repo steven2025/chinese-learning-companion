@@ -1,0 +1,1210 @@
+{
+  "lessonId": "zjzh-1-1",
+  "type": "vocabulary",
+  "audio": {
+    "local": "Multilingual Chinese Learning Data Generator/zjzh-1-1/audio/vocabulary.mp3",
+    "cos": ""
+  },
+  "title": {
+    "zh-CN": "你咋不早说",
+    "en": "Why didn't you say so earlier",
+    "es": "¿Por qué no me lo dijiste antes?",
+    "fr": "Pourquoi ne pas l'avoir dit plus tôt",
+    "id": "Mengapa Kamu Tidak Mengatakannya Lebih Awal",
+    "ja": "どうして早く言ってくれなかったの",
+    "ko": "왜 진작 말하지 않았어",
+    "lo": "ເປັນຫຍັງຄືບໍ່ເວົ້າໃຫ້ໄວກວ່າຊີ້",
+    "ms": "Kenapa tak beritahu saya lebih awal?",
+    "my": "ဘာလို့ စောစော မပြောတာလဲ",
+    "ru": "Почему ты не сказал раньше",
+    "th": "ทำไมไม่บอกให้เร็วกว่านี้ล่ะ"
+  },
+  "languages": [
+    "zh-CN",
+    "en",
+    "es",
+    "fr",
+    "id",
+    "ja",
+    "ko",
+    "lo",
+    "ms",
+    "my",
+    "ru",
+    "th"
+  ],
+  "cues": [
+    {
+      "id": "vocab-001",
+      "index": 1,
+      "start": 1.51,
+      "end": 2.78,
+      "role": "lessonTitle",
+      "texts": {
+        "zh-CN": "第一课",
+        "en": "Lesson 1",
+        "es": "Lección 1",
+        "fr": "Leçon 1",
+        "id": "Pelajaran 1",
+        "ja": "第1課",
+        "ko": "제1과",
+        "lo": "ບົດທີ 1",
+        "ms": "Pelajaran 1",
+        "my": "သင်ခန်းစာ ၁",
+        "ru": "Урок 1",
+        "th": "บทที่ 1"
+      }
+    },
+    {
+      "id": "vocab-002",
+      "index": 2,
+      "start": 3.29,
+      "end": 5.22,
+      "role": "lessonTopic",
+      "texts": {
+        "zh-CN": "你咋不早说",
+        "en": "Why didn't you say so earlier",
+        "es": "¿Por qué no me lo dijiste antes?",
+        "fr": "Pourquoi ne pas l'avoir dit plus tôt",
+        "id": "Mengapa Kamu Tidak Mengatakannya Lebih Awal",
+        "ja": "どうして早く言ってくれなかったの",
+        "ko": "왜 진작 말하지 않았어",
+        "lo": "ເປັນຫຍັງຄືບໍ່ເວົ້າໃຫ້ໄວກວ່າຊີ້",
+        "ms": "Kenapa tak beritahu saya lebih awal?",
+        "my": "ဘာလို့ စောစော မပြောတာလဲ",
+        "ru": "Почему ты не сказал раньше",
+        "th": "ทำไมไม่บอกให้เร็วกว่านี้ล่ะ"
+      }
+    },
+    {
+      "id": "vocab-003",
+      "index": 3,
+      "start": 5.95,
+      "end": 7.82,
+      "role": "sectionTitle",
+      "texts": {
+        "zh-CN": "词语学习",
+        "en": "Vocabulary Learning",
+        "es": "Aprendizaje de vocabulario",
+        "fr": "Apprentissage du vocabulaire",
+        "id": "Pembelajaran Kosakata",
+        "ja": "単語の学習",
+        "ko": "단어 학습",
+        "lo": "ຮຽນຮູ້ຄຳສັບ",
+        "ms": "Pembelajaran Kosakata",
+        "my": "ဝေါဟာရ လေ့လာခြင်း",
+        "ru": "Изучение слов",
+        "th": "เรียนรู้คำศัพท์"
+      }
+    },
+    {
+      "id": "vocab-004",
+      "index": 4,
+      "start": 8.77,
+      "end": 10.04,
+      "role": "word",
+      "texts": {
+        "zh-CN": "闻名",
+        "en": "be well-known;be famous;be renowned",
+        "es": "famoso",
+        "fr": "célèbre",
+        "id": "terkenal",
+        "ja": "有名である",
+        "ko": "유명하다",
+        "lo": "ມີຊື່ສຽງ",
+        "ms": "terkenal",
+        "my": "ကျော်ကြားသော",
+        "ru": "знаменитый",
+        "th": "มีชื่อเสียง"
+      },
+      "entryId": "word-004",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-005",
+      "index": 5,
+      "start": 10.65,
+      "end": 11.46,
+      "role": "word",
+      "texts": {
+        "zh-CN": "叫",
+        "en": "order",
+        "es": "pedir",
+        "fr": "commander",
+        "id": "memesan",
+        "ja": "注文する",
+        "ko": "주문하다",
+        "lo": "ສັ່ງ",
+        "ms": "pesan",
+        "my": "မှာယူသည်",
+        "ru": "заказать",
+        "th": "สั่ง"
+      },
+      "entryId": "word-005",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-006",
+      "index": 6,
+      "start": 12.27,
+      "end": 13.6,
+      "role": "word",
+      "texts": {
+        "zh-CN": "误解",
+        "en": "fail to understand;be confused/puzzled/bewildered",
+        "es": "perplejo",
+        "fr": "perplexe",
+        "id": "tidak mengerti",
+        "ja": "納得がいかない",
+        "ko": "납득하지 못하다",
+        "lo": "ບໍ່ເຂົ້າໃຈ",
+        "ms": "keliru",
+        "my": "နားမလည်နိုင်သော",
+        "ru": "озадаченный",
+        "th": "ไม่เข้าใจ"
+      },
+      "entryId": "word-006",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-007",
+      "index": 7,
+      "start": 14.81,
+      "end": 15.56,
+      "role": "word",
+      "texts": {
+        "zh-CN": "嗯",
+        "en": "used to indicate positive response",
+        "es": "sí",
+        "fr": "oui",
+        "id": "ya",
+        "ja": "うん",
+        "ko": "응",
+        "lo": "ອືມ",
+        "ms": "ya",
+        "my": "အင်း",
+        "ru": "угу",
+        "th": "อืม"
+      },
+      "entryId": "word-007",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-008",
+      "index": 8,
+      "start": 16.91,
+      "end": 18.02,
+      "role": "word",
+      "texts": {
+        "zh-CN": "赶上",
+        "en": "be in time(for)",
+        "es": "llegar a tiempo a",
+        "fr": "être à temps pour",
+        "id": "sempat",
+        "ja": "間に合う",
+        "ko": "제때 맞추다",
+        "lo": "ທັນເວລາ",
+        "ms": "sempat",
+        "my": "အချိန်မှီ မှီသည်",
+        "ru": "успеть",
+        "th": "ทันเวลา"
+      },
+      "entryId": "word-008",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-009",
+      "index": 9,
+      "start": 18.91,
+      "end": 20.28,
+      "role": "word",
+      "texts": {
+        "zh-CN": "拥挤",
+        "en": "crowded",
+        "es": "abarrotado",
+        "fr": "bondé",
+        "id": "padat",
+        "ja": "混雑している",
+        "ko": "혼잡하다",
+        "lo": "ແອອັດ",
+        "ms": "sesak",
+        "my": "ကြပ်ညှပ်သော",
+        "ru": "переполненный",
+        "th": "แออัด"
+      },
+      "entryId": "word-009",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-010",
+      "index": 10,
+      "start": 21.29,
+      "end": 22.62,
+      "role": "word",
+      "texts": {
+        "zh-CN": "慕名",
+        "en": "be impressed by a reputation;admire a famous name",
+        "es": "atraído por la fama",
+        "fr": "attiré par la réputation",
+        "id": "tertarik oleh reputasi",
+        "ja": "評判を聞いてやって来る",
+        "ko": "소문을 듣고 찾아오다",
+        "lo": "ຕາມຊື່ສຽງມາ",
+        "ms": "tertarik oleh reputasi",
+        "my": "သတင်းကြောကြောင့် လာရောက်သည်",
+        "ru": "привлеченный славой",
+        "th": "ตามชื่อเสียงมา"
+      },
+      "entryId": "word-010",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-011",
+      "index": 11,
+      "start": 23.51,
+      "end": 24.78,
+      "role": "word",
+      "texts": {
+        "zh-CN": "靠近",
+        "en": "be close to;be near;be next to",
+        "es": "acercarse",
+        "fr": "s'approcher",
+        "id": "mendekat",
+        "ja": "近づく",
+        "ko": "다가가다",
+        "lo": "ເຂົ້າໃກ້",
+        "ms": "menghampiri",
+        "my": "နီးကပ်သွားသည်",
+        "ru": "приближаться",
+        "th": "เข้าใกล้"
+      },
+      "entryId": "word-011",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-012",
+      "index": 12,
+      "start": 25.87,
+      "end": 27.14,
+      "role": "word",
+      "texts": {
+        "zh-CN": "熟练",
+        "en": "skilled;practiced;proficient",
+        "es": "experimentado",
+        "fr": "expérimenté",
+        "id": "mahir",
+        "ja": "熟练している",
+        "ko": "숙련되다",
+        "lo": "ຊຳນານ",
+        "ms": "mahir",
+        "my": "ကျွမ်းကျင်သော",
+        "ru": "опытный",
+        "th": "เชี่ยวชาญ"
+      },
+      "entryId": "word-012",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-013",
+      "index": 13,
+      "start": 28.31,
+      "end": 29.18,
+      "role": "word",
+      "texts": {
+        "zh-CN": "捞",
+        "en": "scoop up from a liquid",
+        "es": "sacar del agua",
+        "fr": "repêcher",
+        "id": "mencedok",
+        "ja": "すくい上げる",
+        "ko": "건져 올리다",
+        "lo": "ຕັກຂຶ້ນ",
+        "ms": "mencedok",
+        "my": "ဆယ်ယူသည်",
+        "ru": "вылавливать",
+        "th": "ตักขึ้น"
+      },
+      "entryId": "word-013",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-014",
+      "index": 14,
+      "start": 30.11,
+      "end": 30.96,
+      "role": "word",
+      "texts": {
+        "zh-CN": "配",
+        "en": "garnish",
+        "es": "guarnición",
+        "fr": "garniture",
+        "id": "kondimen",
+        "ja": "添え物",
+        "ko": "고명",
+        "lo": "ເຄື່ອງຄຽງ",
+        "ms": "hiasan makanan",
+        "my": "တွဲဖက်ဟင်း",
+        "ru": "гарнир",
+        "th": "เครื่องเคียง"
+      },
+      "entryId": "word-014",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-015",
+      "index": 15,
+      "start": 31.93,
+      "end": 33.34,
+      "role": "word",
+      "texts": {
+        "zh-CN": "丝毫",
+        "en": "slightest amount of;a bit of;least bit of",
+        "es": "ni lo más mínimo",
+        "fr": "la moindre nuance",
+        "id": "sedikit pun",
+        "ja": "少しも…ない",
+        "ko": "조금도 …않다",
+        "lo": "ຈັກໜ້ອຍກໍບໍ່ມີ",
+        "ms": "sedikit pun tidak",
+        "my": "နည်းနည်းလေးမျှ မဟုတ်",
+        "ru": "нисколько",
+        "th": "แม้แต่น้อย"
+      },
+      "entryId": "word-015",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-016",
+      "index": 16,
+      "start": 34.35,
+      "end": 35.72,
+      "role": "word",
+      "texts": {
+        "zh-CN": "来往",
+        "en": "come and go",
+        "es": "trato",
+        "fr": "fréquentation",
+        "id": "interaksi",
+        "ja": "行き来する",
+        "ko": "왕래하다",
+        "lo": "ໄປມາຫາສູ່",
+        "ms": "berinteraksi",
+        "my": "ကူးလူးဆက်ဆံသည်",
+        "ru": "общение",
+        "th": "ไปมาหาสู่"
+      },
+      "entryId": "word-016",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-017",
+      "index": 17,
+      "start": 36.69,
+      "end": 37.92,
+      "role": "word",
+      "texts": {
+        "zh-CN": "顾客",
+        "en": "customer",
+        "es": "cliente",
+        "fr": "client",
+        "id": "pelanggan",
+        "ja": "客",
+        "ko": "손님",
+        "lo": "ລູກຄ້າ",
+        "ms": "pelanggan",
+        "my": "ဝယ်ယူသူ",
+        "ru": "покупатель",
+        "th": "ลูกค้า"
+      },
+      "entryId": "word-017",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-018",
+      "index": 18,
+      "start": 38.95,
+      "end": 40.24,
+      "role": "word",
+      "texts": {
+        "zh-CN": "创作",
+        "en": "create",
+        "es": "crear",
+        "fr": "créer",
+        "id": "menciptakan",
+        "ja": "創作する",
+        "ko": "창작하다",
+        "lo": "ສ້າງສັນ",
+        "ms": "mencipta",
+        "my": "ဖန်တီးသည်",
+        "ru": "создавать",
+        "th": "สร้างสรรค์"
+      },
+      "entryId": "word-018",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-019",
+      "index": 19,
+      "start": 41.43,
+      "end": 42.52,
+      "role": "word",
+      "texts": {
+        "zh-CN": "似的",
+        "en": "seem to be;just like/as",
+        "es": "como si",
+        "fr": "comme si",
+        "id": "seperti",
+        "ja": "〜のようだ",
+        "ko": "~처럼",
+        "lo": "ຄືກັນກັບ",
+        "ms": "seperti",
+        "my": "ကဲ့သို့",
+        "ru": "будто",
+        "th": "ราวกับว่า"
+      },
+      "entryId": "word-019",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-020",
+      "index": 20,
+      "start": 43.67,
+      "end": 44.84,
+      "role": "word",
+      "texts": {
+        "zh-CN": "制作",
+        "en": "make",
+        "es": "elaborar",
+        "fr": "fabriquer",
+        "id": "membuat",
+        "ja": "作る",
+        "ko": "제작하다",
+        "lo": "ເຮັດ",
+        "ms": "menghasilkan",
+        "my": "ပြုလုပ်သည်",
+        "ru": "изготовлять",
+        "th": "ทำ"
+      },
+      "entryId": "word-020",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-021",
+      "index": 21,
+      "start": 45.99,
+      "end": 47.98,
+      "role": "word",
+      "texts": {
+        "zh-CN": "不知不觉",
+        "en": "unconsciously;imperceptibly",
+        "es": "inconscientemente",
+        "fr": "inconsciemment",
+        "id": "tanpa disadari",
+        "ja": "知らず知らずのうちに",
+        "ko": "나도 모르게",
+        "lo": "ໂດຍບໍ່ຮູ້ຕົວ",
+        "ms": "tanpa disedari",
+        "my": "မသိလိုက်ဘဲ",
+        "ru": "незаметно",
+        "th": "โดยไม่รู้ตัว"
+      },
+      "entryId": "word-021",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-022",
+      "index": 22,
+      "start": 49.31,
+      "end": 50.66,
+      "role": "word",
+      "texts": {
+        "zh-CN": "分享",
+        "en": "share;partake in",
+        "es": "compartir",
+        "fr": "partager",
+        "id": "berbagi",
+        "ja": "分かち合う",
+        "ko": "나누다",
+        "lo": "ແບ່ງປັນ",
+        "ms": "berkongsi",
+        "my": "မျှဝေသည်",
+        "ru": "делиться",
+        "th": "แบ่งปัน"
+      },
+      "entryId": "word-022",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-023",
+      "index": 23,
+      "start": 51.77,
+      "end": 53.32,
+      "role": "word",
+      "texts": {
+        "zh-CN": "塑料袋",
+        "en": "plastic bag",
+        "es": "bolsa de plástico",
+        "fr": "sac en plastique",
+        "id": "kantong plastik",
+        "ja": "ポリ袋",
+        "ko": "비닐봉지",
+        "lo": "ຖົງພລາສຕິກ",
+        "ms": "beg plastik",
+        "my": "ပလတ်စတစ်အိတ်",
+        "ru": "пластиковый пакет",
+        "th": "ถุงพลาสติก"
+      },
+      "entryId": "word-023",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-024",
+      "index": 24,
+      "start": 54.53,
+      "end": 55.78,
+      "role": "word",
+      "texts": {
+        "zh-CN": "饭盒",
+        "en": "lunch/meal box;dinner bucket/pail",
+        "es": "fiambrera",
+        "fr": "boîte à repas",
+        "id": "kotak makan",
+        "ja": "弁当箱",
+        "ko": "도시락통",
+        "lo": "ກ່ອງເຂົ້າ",
+        "ms": "bekas makanan",
+        "my": "ထမင်းချိုင့်",
+        "ru": "контейнер для еды",
+        "th": "กล่องข้าว"
+      },
+      "entryId": "word-024",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-025",
+      "index": 25,
+      "start": 56.83,
+      "end": 58.06,
+      "role": "word",
+      "texts": {
+        "zh-CN": "连忙",
+        "en": "immediately;hastily;hurriedy;promptly",
+        "es": "apresuradamente",
+        "fr": "s'empresser",
+        "id": "segera",
+        "ja": "急いで",
+        "ko": "서둘러",
+        "lo": "ຟ້າວ",
+        "ms": "tergesa-gesa",
+        "my": "အလျင်အမြန်",
+        "ru": "поспешно",
+        "th": "รีบ"
+      },
+      "entryId": "word-025",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-026",
+      "index": 26,
+      "start": 59.01,
+      "end": 60.16,
+      "role": "word",
+      "texts": {
+        "zh-CN": "严厉",
+        "en": "stern;severe",
+        "es": "estricto",
+        "fr": "sévère",
+        "id": "tegas",
+        "ja": "厳しい",
+        "ko": "엄격하다",
+        "lo": "ເຂັ້ມງວດ",
+        "ms": "tegas",
+        "my": "တင်းကျပ်သော",
+        "ru": "строгий",
+        "th": "เข้มงวด"
+      },
+      "entryId": "word-026",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-027",
+      "index": 27,
+      "start": 61.35,
+      "end": 62.38,
+      "role": "word",
+      "texts": {
+        "zh-CN": "轮",
+        "en": "take turns",
+        "es": "turno",
+        "fr": "tour",
+        "id": "giliran",
+        "ja": "順番",
+        "ko": "차례",
+        "lo": "ຮອບ",
+        "ms": "giliran",
+        "my": "အလှည့်",
+        "ru": "очередь",
+        "th": "รอบ"
+      },
+      "entryId": "word-027",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-028",
+      "index": 28,
+      "start": 63.05,
+      "end": 64.18,
+      "role": "word",
+      "texts": {
+        "zh-CN": "轮到",
+        "en": "take turns",
+        "es": "tocar el turno a",
+        "fr": "être le tour de",
+        "id": "tiba giliran",
+        "ja": "順番が回ってくる",
+        "ko": "~의 차례가 되다",
+        "lo": "ຮອດຄິວ",
+        "ms": "tiba giliran",
+        "my": "အလှည့်ရောက်သည်",
+        "ru": "настала очередь",
+        "th": "ถึงคิว"
+      },
+      "entryId": "word-028",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-029",
+      "index": 29,
+      "start": 65.27,
+      "end": 66.44,
+      "role": "word",
+      "texts": {
+        "zh-CN": "和尚",
+        "en": "Buddhist monk",
+        "es": "monje budista",
+        "fr": "moine bouddhiste",
+        "id": "biksu",
+        "ja": "僧侣",
+        "ko": "스님",
+        "lo": "ພຣະສົງ",
+        "ms": "paderi Buddha",
+        "my": "ဘုန်းကြီး",
+        "ru": "буддийский монах",
+        "th": "พระสงฆ์"
+      },
+      "entryId": "word-029",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-030",
+      "index": 30,
+      "start": 67.47,
+      "end": 68.9,
+      "role": "word",
+      "texts": {
+        "zh-CN": "头脑",
+        "en": "main thread;clue",
+        "es": "pista",
+        "fr": "indice",
+        "id": "petunjuk",
+        "ja": "手がかり",
+        "ko": "단서",
+        "lo": "ເບາະແສ",
+        "ms": "petunjuk",
+        "my": "အစအန",
+        "ru": "зацепка",
+        "th": "เบาะแส"
+      },
+      "entryId": "word-030",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-031",
+      "index": 31,
+      "start": 69.95,
+      "end": 70.84,
+      "role": "word",
+      "texts": {
+        "zh-CN": "粘",
+        "en": "stick to/together",
+        "es": "pegar",
+        "fr": "coller",
+        "id": "menempel",
+        "ja": "貼り付ける",
+        "ko": "붙이다",
+        "lo": "ຕິດ",
+        "ms": "melekatkan",
+        "my": "ကပ်သည်",
+        "ru": "приклеить",
+        "th": "ติด"
+      },
+      "entryId": "word-031",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-032",
+      "index": 32,
+      "start": 71.69,
+      "end": 73.02,
+      "role": "word",
+      "texts": {
+        "zh-CN": "顿时",
+        "en": "suddenly;immediately;promptly;at once",
+        "es": "de repente",
+        "fr": "soudainement",
+        "id": "seketika",
+        "ja": "たちまち",
+        "ko": "갑자기",
+        "lo": "ທັນທີ",
+        "ms": "tiba-tiba",
+        "my": "ရုတ်တရက်",
+        "ru": "вдруг",
+        "th": "ทันที"
+      },
+      "entryId": "word-032",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-033",
+      "index": 33,
+      "start": 74.11,
+      "end": 75.14,
+      "role": "word",
+      "texts": {
+        "zh-CN": "松",
+        "en": "loosen;slacken;relax",
+        "es": "relajar",
+        "fr": "relâcher",
+        "id": "santai",
+        "ja": "緩む",
+        "ko": "느슨해지다",
+        "lo": "ຜ່ອນຄາຍ",
+        "ms": "longgar",
+        "my": "လျော့ရဲသွားသည်",
+        "ru": "расслабленный",
+        "th": "ผ่อนคลาย"
+      },
+      "entryId": "word-033",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-034",
+      "index": 34,
+      "start": 76.13,
+      "end": 77.36,
+      "role": "word",
+      "texts": {
+        "zh-CN": "不过",
+        "en": "only;merely;nomore than",
+        "es": "solo",
+        "fr": "seulement",
+        "id": "hanya",
+        "ja": "〜に過ぎない",
+        "ko": "~에 지나지 않다",
+        "lo": "ພຽງແຕ່",
+        "ms": "hanya",
+        "my": "မျှသာ",
+        "ru": "всего лишь",
+        "th": "เพียงแค่"
+      },
+      "entryId": "word-034",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-035",
+      "index": 35,
+      "start": 78.53,
+      "end": 79.58,
+      "role": "word",
+      "texts": {
+        "zh-CN": "罢了",
+        "en": "that's all;nothing more;just",
+        "es": "nada más",
+        "fr": "c'est tout",
+        "id": "saja",
+        "ja": "〜だけだ",
+        "ko": "~일 뿐이다",
+        "lo": "ເທົ່ານັ້ນ",
+        "ms": "sahaja",
+        "my": "ပါပဲ",
+        "ru": "и только",
+        "th": "เท่านั้น"
+      },
+      "entryId": "word-035",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-036",
+      "index": 36,
+      "start": 80.81,
+      "end": 81.96,
+      "role": "word",
+      "texts": {
+        "zh-CN": "招牌",
+        "en": "reputation of a large business,firm,or a quality product",
+        "es": "fama del local",
+        "fr": "réputation de l'enseigne",
+        "id": "reputasi toko",
+        "ja": "看板メニュー",
+        "ko": "간판 메뉴",
+        "lo": "ຊື່ສຽງຂອງຮ້ານ",
+        "ms": "hidangan istimewa",
+        "my": "အထူးဟင်း",
+        "ru": "репутация заведения",
+        "th": "ชื่อเสียงร้าน"
+      },
+      "entryId": "word-036",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-037",
+      "index": 37,
+      "start": 83.17,
+      "end": 84.22,
+      "role": "word",
+      "texts": {
+        "zh-CN": "打量",
+        "en": "look sb.up and down;size up;eye",
+        "es": "mirar de arriba abajo",
+        "fr": "toiser",
+        "id": "mengamati",
+        "ja": "じろじろ見る",
+        "ko": "뜯어보다",
+        "lo": "ພິຈາລະນາ",
+        "ms": "memperhatikan",
+        "my": "အကဲခတ်ကြည့်သည်",
+        "ru": "оглядывать",
+        "th": "พิจารณา"
+      },
+      "entryId": "word-037",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-038",
+      "index": 38,
+      "start": 85.23,
+      "end": 86.62,
+      "role": "word",
+      "texts": {
+        "zh-CN": "充满",
+        "en": "be full of;be imbued/permeated/brimming with",
+        "es": "lleno de",
+        "fr": "rempli de",
+        "id": "penuh dengan",
+        "ja": "満ち溢れている",
+        "ko": "가득하다",
+        "lo": "ເຕັມໄປດ້ວຍ",
+        "ms": "penuh dengan",
+        "my": "ပြည့်နှက်နေသော",
+        "ru": "полный",
+        "th": "เปี่ยมไปด้วย"
+      },
+      "entryId": "word-038",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-039",
+      "index": 39,
+      "start": 87.73,
+      "end": 89.28,
+      "role": "word",
+      "texts": {
+        "zh-CN": "身影",
+        "en": "silhouette(of a person);form;figure",
+        "es": "silueta",
+        "fr": "silhouette",
+        "id": "sosok",
+        "ja": "姿",
+        "ko": "모습",
+        "lo": "ເງົາຮ່າງ",
+        "ms": "kelibat",
+        "my": "ရုပ်ပုံ",
+        "ru": "силуэт",
+        "th": "เงาร่าง"
+      },
+      "entryId": "word-039",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-040",
+      "index": 40,
+      "start": 90.41,
+      "end": 91.66,
+      "role": "word",
+      "texts": {
+        "zh-CN": "难怪",
+        "en": "(it's)no/little/small wonder",
+        "es": "con razón",
+        "fr": "pas étonnant",
+        "id": "Pantas saja",
+        "ja": "道理で",
+        "ko": "어쩐지",
+        "lo": "ມິນ່າລະ",
+        "ms": "patutlah",
+        "my": "မဆန်းပါဘူး",
+        "ru": "неудивительно",
+        "th": "มิน่าล่ะ"
+      },
+      "entryId": "word-040",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    },
+    {
+      "id": "vocab-041",
+      "index": 41,
+      "start": 92.61,
+      "end": 93.94,
+      "role": "word",
+      "texts": {
+        "zh-CN": "口碑",
+        "en": "word-of-mouth;reputation;public praise",
+        "es": "boca a boca",
+        "fr": "bouche-à-oreille",
+        "id": "reputasi dari mulut ke mulut",
+        "ja": "口コミ",
+        "ko": "입소문",
+        "lo": "ຄຳປາກຕໍ່ປາກ",
+        "ms": "buah mulut",
+        "my": "ပါးစပ်သတင်း",
+        "ru": "сарафанное радио",
+        "th": "คำบอกเล่าปากต่อปาก"
+      },
+      "entryId": "word-041",
+      "learning": {
+        "pinyin": "",
+        "partOfSpeech": "",
+        "hskLevel": "",
+        "tags": []
+      }
+    }
+  ],
+  "quality": {
+    "cueCount": 41,
+    "sourceFiles": {
+      "zh-CN": "vocabulary-cn.srt",
+      "en": "vocabulary-en.srt",
+      "es": "vocabulary-es.srt",
+      "fr": "vocabulary_fr.srt",
+      "id": "vocabulary_id.srt",
+      "ja": "vocabulary_ja.srt",
+      "ko": "vocabulary_ko.srt",
+      "lo": "vocabulary_lo.srt",
+      "ms": "vocabulary_ms.srt",
+      "my": "vocabulary_my.srt",
+      "ru": "vocabulary_ru.srt",
+      "th": "vocabulary_th.srt"
+    },
+    "canonicalLanguages": [
+      "zh-CN",
+      "en"
+    ],
+    "canonicalAlignment": {
+      "zhCnCueCount": 41,
+      "enCueCount": 41,
+      "missingInEnglish": [],
+      "timeMismatchesWithEnglish": []
+    },
+    "auxiliaryLanguages": [
+      "es",
+      "fr",
+      "id",
+      "ja",
+      "ko",
+      "lo",
+      "ms",
+      "my",
+      "ru",
+      "th"
+    ],
+    "auxiliaryMissingTranslations": [],
+    "auxiliaryCueCountMismatches": [],
+    "auxiliaryExtraCues": [],
+    "notes": [
+      "Timing calibrated from vocabulary.mp3 voiced segments with 150 ms lead-in and 200 ms tail."
+    ]
+  }
+}

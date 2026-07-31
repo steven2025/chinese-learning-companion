@@ -1,0 +1,1795 @@
+{
+  "lessonId": "zjzh-1-1",
+  "type": "text",
+  "audio": {
+    "local": "Multilingual Chinese Learning Data Generator/zjzh-1-1/audio/text.mp3",
+    "cos": ""
+  },
+  "title": {
+    "zh-CN": "走进课文",
+    "en": "Entering the Text",
+    "es": "Entremos en el texto.",
+    "fr": "Entrons dans le texte.",
+    "id": "Marilah kita masuk ke dalam teks.",
+    "ja": "本文に入りましょう。",
+    "ko": "본문으로 들어가 봅시다.",
+    "lo": "ເຂົ້າສູ່ບົດຮຽນກັນເຖີດ.",
+    "ms": "Marilah kita masuk ke dalam teks.",
+    "my": "စာကို စတင်လေ့လာကြစို့။",
+    "ru": "Входим в текст.",
+    "th": "เข้าสู่บทเรียนกันเถอะ"
+  },
+  "languages": [
+    "zh-CN",
+    "en",
+    "es",
+    "fr",
+    "id",
+    "ja",
+    "ko",
+    "lo",
+    "ms",
+    "my",
+    "ru",
+    "th"
+  ],
+  "cues": [
+    {
+      "id": "text-001",
+      "index": 1,
+      "start": 1,
+      "end": 2.633,
+      "role": "sectionTitle",
+      "texts": {
+        "zh-CN": "走进课文",
+        "en": "Entering the Text",
+        "es": "Entremos en el texto.",
+        "fr": "Entrons dans le texte.",
+        "id": "Marilah kita masuk ke dalam teks.",
+        "ja": "本文に入りましょう。",
+        "ko": "본문으로 들어가 봅시다.",
+        "lo": "ເຂົ້າສູ່ບົດຮຽນກັນເຖີດ.",
+        "ms": "Marilah kita masuk ke dalam teks.",
+        "my": "စာကို စတင်လေ့လာကြစို့။",
+        "ru": "Входим в текст.",
+        "th": "เข้าสู่บทเรียนกันเถอะ"
+      }
+    },
+    {
+      "id": "text-002",
+      "index": 2,
+      "start": 4.066,
+      "end": 6.533,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "中午，不愿意做饭，",
+        "en": "At noon, not feeling like cooking,",
+        "es": "Al mediodía, no quería cocinar.",
+        "fr": "À midi, je n'avais pas envie de cuisiner.",
+        "id": "Pada siang hari, saya tidak ingin memasak.",
+        "ja": "昼、私は料理をしたくありませんでした。",
+        "ko": "점심때 저는 요리하고 싶지 않았습니다.",
+        "lo": "ຕອນທ່ຽງ ຂ້ອຍບໍ່ຢາກເຮັດອາຫານ.",
+        "ms": "Pada waktu tengah hari, saya tidak mahu memasak.",
+        "my": "နေ့လယ်မှာ ကျွန်တော် ချက်ပြုတ်ချင်စိတ် မရှိခဲ့ပါ။",
+        "ru": "В полдень я не хотел готовить.",
+        "th": "ตอนเที่ยง ผมไม่อยากทำอาหาร"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-003",
+      "index": 3,
+      "start": 7.066,
+      "end": 11.6,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我到附近一家远近闻名的牛肉面馆，",
+        "en": "I went to a well-known nearby beef noodle shop",
+        "es": "Fui a un famoso restaurante de fideos con carne de res cerca de aquí.",
+        "fr": "Je suis allé dans une célèbre boutique de nouilles au bœuf près de chez moi.",
+        "id": "Saya pergi ke sebuah kedai mi daging sapi yang terkenal di dekat rumah.",
+        "ja": "近くにある有名な牛肉麺のお店へ行きました。",
+        "ko": "저는 근처에 있는 유명한 소고기 국수집에 갔습니다.",
+        "lo": "ຂ້ອຍໄປຮ້ານເຝີຊີ້ນງົວທີ່ມີຊື່ສຽງໃກ້ໆ.",
+        "ms": "Saya pergi ke sebuah kedai mi daging lembu yang terkenal berhampiran.",
+        "my": "ကျွန်တော် အနီးအနားရှိ နာမည်ကြီး အမဲသားခေါက်ဆွဲဆိုင်တစ်ဆိုင်ကို သွားခဲ့ပါတယ်။",
+        "ru": "Я пришёл в известную поблизости лапшичную с говяжьей лапшой.",
+        "th": "ผมไปร้านบะหมี่เนื้อวัวชื่อดังใกล้ ๆ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-004",
+      "index": 4,
+      "start": 12.2,
+      "end": 13.666,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "叫了两碗面。",
+        "en": "and ordered two bowls of noodles.",
+        "es": "Pedí dos tazones de fideos.",
+        "fr": "J'ai commandé deux bols de nouilles.",
+        "id": "Saya memesan dua mangkuk mi.",
+        "ja": "麺を二杯注文しました。",
+        "ko": "국수 두 그릇을 주문했습니다.",
+        "lo": "ຂ້ອຍສັ່ງເຝີສອງຖ້ວຍ.",
+        "ms": "Saya memesan dua mangkuk mi.",
+        "my": "ခေါက်ဆွဲနှစ်ပွဲ မှာခဲ့ပါတယ်။",
+        "ru": "Я заказал две порции лапши.",
+        "th": "ผมสั่งบะหมี่สองชาม"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-005",
+      "index": 5,
+      "start": 14.833,
+      "end": 17.3,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "服务员看我一个人来",
+        "en": "Seeing that I came alone",
+        "es": "El camarero vio que había venido solo,",
+        "fr": "Le serveur a vu que j'étais venu seul,",
+        "id": "Pelayan melihat bahwa saya datang sendirian,",
+        "ja": "店員は私が一人で来たのを見て、",
+        "ko": "종업원은 제가 혼자 온 것을 보고,",
+        "lo": "ພະນັກງານເຫັນວ່າຂ້ອຍມາຄົນດຽວ,",
+        "ms": "Pelayan melihat saya datang seorang diri,",
+        "my": "စားပွဲထိုးက ကျွန်တော် တစ်ယောက်တည်းလာတာကို တွေ့ပြီး၊",
+        "ru": "Официант увидел, что я пришёл один,",
+        "th": "พนักงานเห็นว่าผมมาคนเดียว"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-006",
+      "index": 6,
+      "start": 17.4,
+      "end": 18.833,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "却叫了两碗，",
+        "en": "yet ordered two bowls,",
+        "es": "pero que había pedido dos tazones.",
+        "fr": "mais que j'avais commandé deux bols.",
+        "id": "tetapi memesan dua mangkuk.",
+        "ja": "それなのに二杯注文したことに気づきました。",
+        "ko": "두 그릇을 주문한 것을 이상하게 생각했습니다.",
+        "lo": "ແຕ່ກັບສັ່ງເຝີສອງຖ້ວຍ.",
+        "ms": "tetapi saya memesan dua mangkuk.",
+        "my": "ဒါပေမယ့် ခေါက်ဆွဲနှစ်ပွဲ မှာတာကို မြင်ခဲ့ပါတယ်။",
+        "ru": "но заказал две порции.",
+        "th": "แต่กลับสั่งบะหมี่สองชาม"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-007",
+      "index": 7,
+      "start": 19.333,
+      "end": 21.033,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "有些不解的问：",
+        "en": "the waiter asked, somewhat confused:",
+        "es": "Preguntó sorprendido:",
+        "fr": "Il a demandé avec étonnement :",
+        "id": "Dia bertanya dengan heran:",
+        "ja": "そして不思議そうに聞きました。",
+        "ko": "그리고 의아한 표정으로 물었습니다.",
+        "lo": "ລາວຖາມດ້ວຍຄວາມແປກໃຈວ່າ:",
+        "ms": "Dia bertanya dengan hairan:",
+        "my": "သူက အံ့ဩစွာ မေးခဲ့ပါတယ်။",
+        "ru": "Он немного удивлённо спросил:",
+        "th": "เขาถามอย่างสงสัยว่า"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-008",
+      "index": 8,
+      "start": 22.1,
+      "end": 22.9,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "“两碗？”",
+        "en": "\"Two bowls?\"",
+        "es": "— ¿Dos tazones?",
+        "fr": "— Deux bols ?",
+        "id": "— Dua mangkuk?",
+        "ja": "— 二杯ですか。",
+        "ko": "— 두 그릇이요?",
+        "lo": "— ສອງຖ້ວຍບໍ?",
+        "ms": "— Dua mangkuk?",
+        "my": "— နှစ်ပွဲလား။",
+        "ru": "— Две порции?",
+        "th": "— สองชามหรือครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-009",
+      "index": 9,
+      "start": 24.066,
+      "end": 25.533,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "“嗯!两碗!\"",
+        "en": "\"Mm! Two bowls!\"",
+        "es": "— ¡Sí! ¡Dos tazones!",
+        "fr": "— Oui ! Deux bols !",
+        "id": "— Ya! Dua mangkuk!",
+        "ja": "— うん、二杯です。",
+        "ko": "— 네! 두 그릇입니다!",
+        "lo": "— ແມ່ນແລ້ວ! ສອງຖ້ວຍ.",
+        "ms": "— Ya! Dua mangkuk!",
+        "my": "— အင်း၊ နှစ်ပွဲပါ။",
+        "ru": "— Угу! Две порции!",
+        "th": "— อืม สองชามครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-010",
+      "index": 10,
+      "start": 26.4,
+      "end": 27.933,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我笑着回答，",
+        "en": "I replied with a smile,",
+        "es": "Respondí sonriendo,",
+        "fr": "J'ai répondu en souriant,",
+        "id": "Saya menjawab sambil tersenyum,",
+        "ja": "私は笑いながら答え、",
+        "ko": "저는 웃으면서 대답했고,",
+        "lo": "ຂ້ອຍຍິ້ມແລ້ວຕອບ,",
+        "ms": "Saya menjawab sambil tersenyum,",
+        "my": "ကျွန်တော် ပြုံးပြီး ဖြေခဲ့ပါတယ်၊",
+        "ru": "Я улыбнулся и ответил,",
+        "th": "ผมตอบพร้อมรอยยิ้ม"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-011",
+      "index": 11,
+      "start": 28.2,
+      "end": 29.466,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "没多解释。",
+        "en": "without explaining further.",
+        "es": "sin dar más explicaciones.",
+        "fr": "sans donner plus d'explications.",
+        "id": "tanpa menjelaskan lebih lanjut.",
+        "ja": "詳しく説明しませんでした。",
+        "ko": "더 설명하지 않았습니다.",
+        "lo": "ໂດຍບໍ່ໄດ້ອະທິບາຍຫຼາຍ.",
+        "ms": "tanpa menerangkan lebih lanjut.",
+        "my": "အသေးစိတ်တော့ မရှင်းပြခဲ့ပါ။",
+        "ru": "ничего больше не объясняя.",
+        "th": "โดยไม่ได้อธิบายเพิ่มเติม"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-012",
+      "index": 12,
+      "start": 30.633,
+      "end": 33.1,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "正好赶上午餐时间，",
+        "en": "It happened to be peak lunch time,",
+        "es": "Justo era la hora del almuerzo.",
+        "fr": "C'était justement l'heure du déjeuner.",
+        "id": "Kebetulan saat itu waktu makan siang.",
+        "ja": "ちょうど昼食の時間でした。",
+        "ko": "마침 점심시간이었습니다.",
+        "lo": "ພໍດີເປັນເວລາອາຫານທ່ຽງ.",
+        "ms": "Kebetulan waktu makan tengah hari sudah tiba.",
+        "my": "အဲဒီအချိန်က နေ့လယ်စာစားချိန် ဖြစ်နေပါတယ်။",
+        "ru": "Как раз наступило время обеда.",
+        "th": "พอดีเป็นเวลารับประทานอาหารกลางวัน"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-013",
+      "index": 13,
+      "start": 33.833,
+      "end": 36,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "店里人越来越多，",
+        "en": "and the shop grew busier and busier,",
+        "es": "Cada vez había más clientes en el restaurante.",
+        "fr": "Il y avait de plus en plus de clients dans le restaurant.",
+        "id": "Semakin banyak orang datang ke kedai.",
+        "ja": "店の中にはどんどん人が増えていきました。",
+        "ko": "가게 안에는 사람들이 점점 많아졌습니다.",
+        "lo": "ໃນຮ້ານມີຄົນເພີ່ມຂຶ້ນເລື້ອຍໆ.",
+        "ms": "Semakin ramai pelanggan datang ke kedai itu.",
+        "my": "ဆိုင်ထဲမှာ လူတွေ ပိုပိုများလာပါတယ်။",
+        "ru": "В заведении становилось всё больше людей.",
+        "th": "ในร้านมีลูกค้าเพิ่มขึ้นเรื่อย ๆ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-014",
+      "index": 14,
+      "start": 36.233,
+      "end": 37.3,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "十分拥挤，",
+        "en": "becoming very crowded.",
+        "es": "El lugar estaba muy lleno.",
+        "fr": "Le restaurant était très bondé.",
+        "id": "Kedai itu sangat ramai.",
+        "ja": "店はとても混んでいました。",
+        "ko": "가게는 매우 붐볐습니다.",
+        "lo": "ຮ້ານແອອັດຫຼາຍ.",
+        "ms": "Kedai itu sangat sesak.",
+        "my": "ဆိုင်က အရမ်းစည်ကားပြီး လူများပါတယ်။",
+        "ru": "Там было очень тесно.",
+        "th": "ร้านเต็มไปด้วยผู้คนมากมาย"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-015",
+      "index": 15,
+      "start": 38.2,
+      "end": 42.033,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我想这些人都是慕名而来的。",
+        "en": "I figured these people were all attracted by its reputation.",
+        "es": "Pensé que todas estas personas habían venido por la buena fama del restaurante.",
+        "fr": "Je me suis dit que tous ces gens étaient venus parce que cet endroit était réputé.",
+        "id": "Saya berpikir bahwa orang-orang itu datang karena reputasi kedai tersebut.",
+        "ja": "私は、みんなこの店の評判を聞いて来たのだと思いました。",
+        "ko": "저는 이 사람들이 모두 가게의 좋은 평판을 듣고 온 것이라고 생각했습니다.",
+        "lo": "ຂ້ອຍຄິດວ່າຄົນເຫຼົ່ານີ້ມາເພາະຊື່ສຽງຂອງຮ້ານ.",
+        "ms": "Saya berfikir bahawa semua orang datang kerana nama baik kedai ini.",
+        "my": "ဒီလူတွေဟာ နာမည်ကောင်းကြောင့် လာကြတာဖြစ်မယ်လို့ ကျွန်တော် တွေးမိပါတယ်။",
+        "ru": "Я подумал, что все эти люди пришли сюда из-за хорошей репутации.",
+        "th": "ผมคิดว่าคนเหล่านี้มาที่นี่เพราะชื่อเสียงของร้าน"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-016",
+      "index": 16,
+      "start": 43.266,
+      "end": 46.8,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我坐在靠近做面师傅的位置，",
+        "en": "I sat near the noodle chef,",
+        "es": "Me senté cerca del maestro que preparaba los fideos.",
+        "fr": "Je me suis assis près du cuisinier qui préparait les nouilles.",
+        "id": "Saya duduk dekat koki yang sedang membuat mi.",
+        "ja": "私は麺を作っている職人さんの近くに座りました。",
+        "ko": "저는 국수를 만드는 장인 가까이에 앉았습니다.",
+        "lo": "ຂ້ອຍນັ່ງໃກ້ຊ່າງທີ່ກຳລັງເຮັດເຝີ.",
+        "ms": "Saya duduk berhampiran tukang masak yang membuat mi.",
+        "my": "ကျွန်တော် ခေါက်ဆွဲလုပ်နေတဲ့ ဆရာကြီးနားမှာ ထိုင်ခဲ့ပါတယ်။",
+        "ru": "Я сел рядом с мастером, который готовил лапшу.",
+        "th": "ผมนั่งใกล้ช่างทำบะหมี่"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-017",
+      "index": 17,
+      "start": 47.333,
+      "end": 53.533,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "看着他熟练的下面、捞面、切牛肉、配青菜，",
+        "en": "watching him skillfully cook, scoop up the noodles, slice beef, and garnish with greens,",
+        "es": "Observé cómo preparaba hábilmente los fideos, cortaba la carne de res y añadía verduras.",
+        "fr": "Je regardais avec quelle habileté il préparait les nouilles, coupait le bœuf et ajoutait les légumes.",
+        "id": "Saya melihat dia dengan terampil merebus mi, mengangkatnya, memotong daging sapi, dan menambahkan sayuran.",
+        "ja": "彼が手際よく麺を作り、牛肉を切り、野菜を添える様子を見ていました。",
+        "ko": "그가 능숙하게 국수를 만들고, 소고기를 썰고, 채소를 올리는 모습을 보았습니다.",
+        "lo": "ຂ້ອຍເບິ່ງລາວລວກເຝີ ຕັກເຝີ ຫັ່ນຊີ້ນງົວ ແລະໃສ່ຜັກຢ່າງຄ່ອງແຄ້ວ.",
+        "ms": "Saya melihat dia dengan mahir merebus mi, mengangkat mi, memotong daging lembu dan menambah sayur-sayuran.",
+        "my": "သူက ခေါက်ဆွဲချက်ခြင်း၊ ထုတ်ခြင်း၊ အမဲသားဖြတ်ခြင်းနဲ့ ဟင်းသီးဟင်းရွက်ထည့်ခြင်းတို့ကို ကျွမ်းကျင်စွာ လုပ်နေတာကို ကြည့်ခဲ့ပါတယ်။",
+        "ru": "Я смотрел, как он умело варит лапшу, достаёт её, режет говядину и добавляет зелень.",
+        "th": "ผมดูเขาทำบะหมี่อย่างคล่องแคล่ว หั่นเนื้อวัว และใส่ผัก"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-018",
+      "index": 18,
+      "start": 54.133,
+      "end": 57.133,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "丝毫不受来往顾客的影响，",
+        "en": "not affected in the slightest bit by the customers coming and going,",
+        "es": "Los clientes que iban y venían no le afectaban en absoluto.",
+        "fr": "Il n'était absolument pas dérangé par les clients qui passaient.",
+        "id": "Dia sama sekali tidak terganggu oleh pelanggan yang datang dan pergi.",
+        "ja": "行き来するお客さんに、彼は少しも影響されませんでした。",
+        "ko": "오가는 손님들도 그에게 전혀 영향을 주지 못했습니다.",
+        "lo": "ລູກຄ້າທີ່ໄປມາບໍ່ໄດ້ລົບກວນລາວເລີຍ.",
+        "ms": "Dia langsung tidak terganggu oleh pelanggan yang datang dan pergi.",
+        "my": "လာသွားလာလာ ဖောက်သည်တွေကြောင့် သူ လုံးဝ မအာရုံပျက်ခဲ့ပါ။",
+        "ru": "Его совершенно не отвлекали проходящие посетители.",
+        "th": "ลูกค้าที่เดินไปมาไม่ได้ทำให้เขาเสียสมาธิเลย"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-019",
+      "index": 19,
+      "start": 57.933,
+      "end": 61.8,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "好像是在创作自己的艺术品似的，",
+        "en": "as if he were creating his own work of art,",
+        "es": "Parecía que estaba creando su propia obra de arte.",
+        "fr": "On aurait dit qu'il créait sa propre œuvre d'art.",
+        "id": "Seolah-olah dia sedang menciptakan karya seninya sendiri.",
+        "ja": "まるで自分の芸術作品を作っているようでした。",
+        "ko": "마치 자신의 예술 작품을 만드는 것 같았습니다.",
+        "lo": "ເບິ່ງຄືວ່າລາວກຳລັງສ້າງຜົນງານສິລະປະຂອງຕົນເອງ.",
+        "ms": "Seolah-olah dia sedang mencipta sebuah karya seni sendiri.",
+        "my": "သူဟာ ကိုယ်ပိုင်အနုပညာလက်ရာတစ်ခု ဖန်တီးနေသလို ထင်ရပါတယ်။",
+        "ru": "Казалось, будто он создаёт своё произведение искусства.",
+        "th": "เหมือนกับว่าเขากำลังสร้างผลงานศิลปะของตัวเอง"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-020",
+      "index": 20,
+      "start": 62.433,
+      "end": 65.733,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "享受着制作牛肉面的快乐。",
+        "en": "enjoying the joy of making beef noodles.",
+        "es": "Disfrutaba de la alegría de preparar fideos con carne de res.",
+        "fr": "Il profitait du plaisir de préparer des nouilles au bœuf.",
+        "id": "Dia menikmati kebahagiaan saat membuat mi daging sapi.",
+        "ja": "彼は牛肉麺を作る喜びを楽しんでいました。",
+        "ko": "그는 소고기 국수를 만드는 즐거움을 누리고 있었습니다.",
+        "lo": "ລາວມີຄວາມສຸກກັບການເຮັດເຝີຊີ້ນງົວ.",
+        "ms": "Dia menikmati kegembiraan membuat mi daging lembu.",
+        "my": "သူက အမဲသားခေါက်ဆွဲလုပ်ရတဲ့ ပျော်ရွှင်မှုကို ခံစားနေပါတယ်။",
+        "ru": "Он наслаждался радостью приготовления говяжьей лапши.",
+        "th": "เขามีความสุขกับการทำบะหมี่เนื้อวัว"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-021",
+      "index": 21,
+      "start": 66.666,
+      "end": 68.533,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我在一旁看着，",
+        "en": "As I watched from the side,",
+        "es": "Yo lo observaba a un lado,",
+        "fr": "Je le regardais à côté,",
+        "id": "Saya memperhatikannya dari samping,",
+        "ja": "私はそばで見ていました。",
+        "ko": "저는 옆에서 계속 바라보았고,",
+        "lo": "ຂ້ອຍນັ່ງເບິ່ງຢູ່ຂ້າງໆ,",
+        "ms": "Saya memerhatikannya dari tepi,",
+        "my": "ကျွန်တော် ဘေးကနေ ကြည့်နေခဲ့ပြီး၊",
+        "ru": "Я смотрел со стороны",
+        "th": "ผมนั่งมองอยู่ข้าง ๆ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-022",
+      "index": 22,
+      "start": 68.9,
+      "end": 72.8,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "不知不觉也分享了他的快乐。",
+        "en": "I unconsciously shared in his joy too.",
+        "es": "y sin darme cuenta también compartí su alegría.",
+        "fr": "et sans m'en rendre compte, je partageais aussi sa joie.",
+        "id": "dan tanpa sadar saya ikut merasakan kebahagiaannya.",
+        "ja": "そして知らないうちに、私も彼の喜びを分かち合っていました。",
+        "ko": "어느새 저도 그의 즐거움을 함께 느끼게 되었습니다.",
+        "lo": "ແລະໂດຍບໍ່ຮູ້ຕົວ ຂ້ອຍກໍແບ່ງປັນຄວາມສຸກຂອງລາວ.",
+        "ms": "dan tanpa disedari saya turut berkongsi kegembiraannya.",
+        "my": "မသိမသာ သူ့ရဲ့ပျော်ရွှင်မှုကိုလည်း မျှဝေခဲ့ပါတယ်။",
+        "ru": "и незаметно разделил его радость.",
+        "th": "และโดยไม่รู้ตัว ผมก็แบ่งปันความสุขของเขาด้วย"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-023",
+      "index": 23,
+      "start": 74.633,
+      "end": 80.2,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "面来了，服务员端着面又问了我一遍：",
+        "en": "The noodles arrived, and the waiter brought them over, asking me once again:",
+        "es": "Cuando llegaron los fideos, el camarero los trajo y volvió a preguntar:",
+        "fr": "Quand les nouilles sont arrivées, le serveur me les a apportées et a demandé encore une fois :",
+        "id": "Ketika mi datang, pelayan membawanya dan bertanya lagi:",
+        "ja": "麺が来ると、店員は運んできて、もう一度聞きました。",
+        "ko": "국수가 나오자 종업원은 가져다주며 다시 물었습니다.",
+        "lo": "ເມື່ອເຝີມາຮອດ ພະນັກງານນຳມາໃຫ້ແລ້ວຖາມອີກຄັ້ງວ່າ:",
+        "ms": "Apabila mi sampai, pelayan menghidangkannya dan bertanya sekali lagi:",
+        "my": "ခေါက်ဆွဲရောက်လာတဲ့အခါ စားပွဲထိုးက ထပ်မေးပါတယ်။",
+        "ru": "Когда лапша была готова, официант принёс её и снова спросил:",
+        "th": "เมื่อบะหมี่มา พนักงานนำมาให้และถามอีกครั้งว่า"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-024",
+      "index": 24,
+      "start": 80.933,
+      "end": 81.733,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "“两碗？”",
+        "en": "\"Two bowls?\"",
+        "es": "— ¿Dos tazones?",
+        "fr": "— Deux bols ?",
+        "id": "— Dua mangkuk?",
+        "ja": "— 二杯ですか。",
+        "ko": "— 두 그릇이요?",
+        "lo": "— ສອງຖ້ວຍບໍ?",
+        "ms": "— Dua mangkuk?",
+        "my": "— နှစ်ပွဲလား။",
+        "ru": "— Две порции?",
+        "th": "— สองชามหรือครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-025",
+      "index": 25,
+      "start": 82.533,
+      "end": 83.4,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "”是的。“",
+        "en": "\"Yes.\"",
+        "es": "— Sí.",
+        "fr": "— Oui.",
+        "id": "— Ya.",
+        "ja": "— はい。",
+        "ko": "— 네.",
+        "lo": "— ແມ່ນ.",
+        "ms": "— Ya.",
+        "my": "— ဟုတ်ပါတယ်။",
+        "ru": "— Да.",
+        "th": "— ใช่ครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-026",
+      "index": 26,
+      "start": 84.033,
+      "end": 86.733,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我取出塑料袋里的饭盒，",
+        "en": "I pulled out the lunch box from the plastic bag,",
+        "es": "Saque el recipiente de la bolsa de plástico.",
+        "fr": "J'ai sorti la boîte de mon sac en plastique.",
+        "id": "Saya mengeluarkan kotak makanan dari kantong plastik.",
+        "ja": "私はビニール袋の中から容器を取り出しました。",
+        "ko": "저는 비닐봉지 안에서 용기를 꺼냈습니다.",
+        "lo": "ຂ້ອຍເອົາກ່ອງອາຫານອອກຈາກຖົງພລາສຕິກ.",
+        "ms": "Saya mengeluarkan bekas makanan daripada beg plastik.",
+        "my": "ကျွန်တော် ပလတ်စတစ်အိတ်ထဲက ဘူးကို ထုတ်လိုက်ပါတယ်။",
+        "ru": "Я достал контейнер из пластикового пакета.",
+        "th": "ผมหยิบกล่องอาหารออกมาจากถุงพลาสติก"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-027",
+      "index": 27,
+      "start": 87.333,
+      "end": 89.866,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "刚要把一碗面倒进去，",
+        "en": "and was just about to pour a bowl into it",
+        "es": "Cuando estaba a punto de poner un tazón dentro,",
+        "fr": "Au moment où j'allais mettre un bol dedans,",
+        "id": "Saat saya hendak memasukkan satu mangkuk mi ke dalamnya,",
+        "ja": "一杯をその中に入れようとした時、",
+        "ko": "국수 한 그릇을 그 안에 담으려고 할 때,",
+        "lo": "ໃນຂະນະທີ່ຂ້ອຍກຳລັງຈະໃສ່ເຝີໜຶ່ງຖ້ວຍລົງໃນກ່ອງ,",
+        "ms": "Ketika saya hendak memasukkan satu mangkuk mi ke dalamnya,",
+        "my": "ခေါက်ဆွဲတစ်ပွဲကို အဲဒီထဲ ထည့်မယ့်အချိန်မှာ၊",
+        "ru": "Я только хотел переложить одну порцию лапши туда,",
+        "th": "ตอนที่กำลังจะใส่บะหมี่หนึ่งชามลงไป"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-028",
+      "index": 28,
+      "start": 90.633,
+      "end": 94.1,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "正好被转过头来的师傅看见，",
+        "en": "when the chef happened to turn around and see me.",
+        "es": "el maestro, que se había girado, lo vio.",
+        "fr": "le cuisinier qui s'était retourné l'a vu.",
+        "id": "koki yang menoleh melihat hal itu.",
+        "ja": "振り向いた職人さんがそれを見ました。",
+        "ko": "뒤돌아본 장인이 그것을 보았습니다.",
+        "lo": "ຊ່າງທີ່ຫັນມາພໍດີເຫັນເຂົ້າ.",
+        "ms": "tukang masak yang berpaling melihat perkara itu.",
+        "my": "လှည့်ကြည့်လိုက်တဲ့ ဆရာကြီးက မြင်သွားပါတယ်။",
+        "ru": "как мастер, повернувшись, увидел это.",
+        "th": "ช่างทำบะหมี่ที่หันกลับมาเห็นพอดี"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-029",
+      "index": 29,
+      "start": 94.7,
+      "end": 97.066,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "他连忙朝我大声喊：",
+        "en": "He hastily shouted at me:",
+        "es": "Inmediatamente me gritó:",
+        "fr": "Il m'a immédiatement crié :",
+        "id": "Dia segera berteriak kepada saya:",
+        "ja": "彼はすぐに大きな声で言いました。",
+        "ko": "그는 바로 큰 소리로 말했습니다.",
+        "lo": "ລາວຮ້ອງຖາມຂ້ອຍທັນທີວ່າ:",
+        "ms": "Dia segera menjerit kepada saya:",
+        "my": "သူ ချက်ချင်း အော်မေးပါတယ်။",
+        "ru": "Он сразу громко крикнул мне:",
+        "th": "เขารีบตะโกนถามผมว่า"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-030",
+      "index": 30,
+      "start": 97.833,
+      "end": 99.333,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "”你这是干什么？“",
+        "en": "\"What are you doing?\"",
+        "es": "— ¿Qué estás haciendo?",
+        "fr": "— Qu'est-ce que vous faites ?",
+        "id": "— Apa yang sedang Anda lakukan?",
+        "ja": "— 何をしているんですか。",
+        "ko": "— 지금 뭐 하시는 거예요?",
+        "lo": "— ທ່ານກຳລັງເຮັດຫຍັງ?",
+        "ms": "— Apa yang kamu buat?",
+        "my": "— ဘာလုပ်နေတာလဲ။",
+        "ru": "— Что вы делаете?",
+        "th": "— คุณกำลังทำอะไรครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-031",
+      "index": 31,
+      "start": 100.533,
+      "end": 105,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我一下子被他这样严厉的语气吓着了，",
+        "en": "I was startled by his stern tone,",
+        "es": "Me asustó su tono serio",
+        "fr": "J'ai été effrayé par son ton sévère",
+        "id": "Saya terkejut oleh nada suaranya yang tegas",
+        "ja": "私は彼の厳しい口調に驚き、",
+        "ko": "저는 그의 엄격한 말투에 놀라서",
+        "lo": "ຂ້ອຍຕົກໃຈກັບນ້ຳສຽງທີ່ເຂັ້ມງວດຂອງລາວ,",
+        "ms": "Saya terkejut dengan nada suaranya yang tegas",
+        "my": "သူ့ရဲ့ တင်းကြပ်တဲ့အသံကြောင့် ကျွန်တော် လန့်သွားပါတယ်။",
+        "ru": "Я сразу испугался его строгого тона.",
+        "th": "ผมตกใจกับน้ำเสียงที่จริงจังของเขา"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-032",
+      "index": 32,
+      "start": 105.466,
+      "end": 107.1,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "小声回答说：",
+        "en": "and replied softly:",
+        "es": "y respondí en voz baja:",
+        "fr": "et j'ai répondu doucement :",
+        "id": "dan menjawab pelan:",
+        "ja": "小さな声で答えました。",
+        "ko": "작은 목소리로 대답했습니다.",
+        "lo": "ແລ້ວຕອບຄ່ອຍໆວ່າ:",
+        "ms": "dan menjawab perlahan:",
+        "my": "ပြီးတော့ တိုးတိုးဖြေခဲ့ပါတယ်။",
+        "ru": "И тихо ответил:",
+        "th": "และตอบเบา ๆ ว่า"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-033",
+      "index": 33,
+      "start": 107.833,
+      "end": 109.8,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "”我带一碗回去呀！“",
+        "en": "\"I'm taking a bowl back!\"",
+        "es": "— Quiero llevarme un tazón a casa.",
+        "fr": "— Je veux en rapporter un bol à la maison.",
+        "id": "— Saya ingin membawa satu mangkuk pulang.",
+        "ja": "— 一杯を家に持って帰りたいんです。",
+        "ko": "— 한 그릇을 집에 가져가려고요.",
+        "lo": "— ຂ້ອຍຢາກເອົາໜຶ່ງຖ້ວຍກັບບ້ານ.",
+        "ms": "— Saya mahu membawa satu mangkuk pulang.",
+        "my": "— တစ်ပွဲကို အိမ်ယူသွားချင်လို့ပါ။",
+        "ru": "— Я хочу одну порцию забрать домой!",
+        "th": "— ผมอยากเอาหนึ่งชามกลับบ้านครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-034",
+      "index": 34,
+      "start": 110.866,
+      "end": 112.433,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "”你咋不早说？“",
+        "en": "\"Why didn't you say so earlier?\"",
+        "es": "— ¿Por qué no lo dijiste antes?",
+        "fr": "— Pourquoi ne l'avez-vous pas dit plus tôt ?",
+        "id": "— Mengapa Anda tidak mengatakannya sejak awal?",
+        "ja": "— どうして先に言わなかったのですか。",
+        "ko": "— 왜 미리 말하지 않았어요?",
+        "lo": "— ເປັນຫຍັງບໍ່ບອກກ່ອນ?",
+        "ms": "— Mengapa kamu tidak memberitahu lebih awal?",
+        "my": "— ဘာလို့ အစောက မပြောတာလဲ။",
+        "ru": "— Почему вы не сказали раньше?",
+        "th": "— ทำไมไม่บอกก่อนล่ะครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-035",
+      "index": 35,
+      "start": 113.5,
+      "end": 115.2,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "”为什么要早说？“",
+        "en": "\"Why should I have said so earlier?\"",
+        "es": "— ¿Por qué tenía que decirlo antes?",
+        "fr": "— Pourquoi fallait-il le dire plus tôt ?",
+        "id": "— Mengapa harus mengatakannya sejak awal?",
+        "ja": "— どうして先に言う必要があるんですか。",
+        "ko": "— 왜 미리 말해야 하나요?",
+        "lo": "— ເປັນຫຍັງຕ້ອງບອກກ່ອນ?",
+        "ms": "— Mengapa perlu memberitahu lebih awal?",
+        "my": "— ဘာလို့ အစောက ပြောရမှာလဲ။",
+        "ru": "— Зачем было говорить раньше?",
+        "th": "— ทำไมต้องบอกก่อนด้วยครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-036",
+      "index": 36,
+      "start": 115.933,
+      "end": 121.5,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "这回轮到我丈二和尚摸不着头脑了。",
+        "en": "This time, it was my turn to be completely puzzled.",
+        "es": "Esta vez fui yo quien realmente no entendió.",
+        "fr": "Cette fois, c'est moi qui n'ai vraiment pas compris.",
+        "id": "Kali ini saya yang benar-benar tidak mengerti.",
+        "ja": "今度は私のほうが本当に分からなくなりました。",
+        "ko": "이번에는 제가 정말 이해하지 못했습니다.",
+        "lo": "ຄັ້ງນີ້ກາຍເປັນຂ້ອຍທີ່ບໍ່ເຂົ້າໃຈ.",
+        "ms": "Kali ini saya pula benar-benar tidak faham.",
+        "my": "ဒီတစ်ခါတော့ ကျွန်တော် နားမလည်တော့ပါ။",
+        "ru": "На этот раз я совсем не понял, что происходит.",
+        "th": "ครั้งนี้เป็นผมเองที่ไม่เข้าใจจริง ๆ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-037",
+      "index": 37,
+      "start": 123,
+      "end": 123.833,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "”为什么？",
+        "en": "\"Why?",
+        "es": "— ¿Por qué?",
+        "fr": "— Pourquoi ?",
+        "id": "— Mengapa?",
+        "ja": "— なぜですか。",
+        "ko": "— 왜요?",
+        "lo": "— ເປັນຫຍັງ?",
+        "ms": "— Mengapa?",
+        "my": "— ဘာလို့လဲ။",
+        "ru": "— Почему?",
+        "th": "— ทำไมครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-038",
+      "index": 38,
+      "start": 124.533,
+      "end": 127.033,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "要真等你把面吃完了",
+        "en": "If you wait until you finish eating",
+        "es": "Si esperas a terminar los fideos",
+        "fr": "Si vous attendez de finir les nouilles",
+        "id": "Kalau Anda menunggu sampai selesai makan mi",
+        "ja": "もし麺を食べ終わってから、",
+        "ko": "만약 국수를 다 먹은 다음에",
+        "lo": "ຖ້າທ່ານກິນເຝີຂອງທ່ານໝົດກ່ອນ,",
+        "ms": "Jika kamu tunggu sehingga habis makan mi",
+        "my": "ခင်ဗျား ခေါက်ဆွဲစားပြီးမှ",
+        "ru": "Если вы сначала съедите лапшу,",
+        "th": "ถ้ารอจนกินบะหมี่หมด"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-039",
+      "index": 39,
+      "start": 127.1,
+      "end": 129,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "再拿着一碗回去，",
+        "en": "to take the other bowl back,",
+        "es": "y luego llevas un tazón a casa,",
+        "fr": "avant de prendre un bol à emporter,",
+        "id": "baru membawa satu mangkuk pulang,",
+        "ja": "もう一杯を家に持って帰ったら、",
+        "ko": "한 그릇을 집에 가져가면",
+        "lo": "ແລ້ວຈຶ່ງເອົາອີກຖ້ວຍກັບບ້ານ,",
+        "ms": "barulah membawa satu mangkuk pulang,",
+        "my": "တစ်ပွဲယူသွားမယ်ဆိုရင်၊",
+        "ru": "а потом возьмёте вторую порцию домой,",
+        "th": "แล้วค่อยเอาอีกชามกลับบ้าน"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-040",
+      "index": 40,
+      "start": 129.333,
+      "end": 131.4,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "那面还能吃吗？",
+        "en": "will the noodles still be edible?",
+        "es": "¿seguirán estando buenos los fideos?",
+        "fr": "est-ce que les nouilles seront encore bonnes ?",
+        "id": "apakah mi itu masih enak?",
+        "ja": "その麺はまだおいしいと思いますか。",
+        "ko": "그 국수가 아직 맛있겠어요?",
+        "lo": "ເຝີນັ້ນຍັງຈະກິນໄດ້ຢູ່ບໍ?",
+        "ms": "adakah mi itu masih sedap?",
+        "my": "အဲဒီခေါက်ဆွဲက ကောင်းနေဦးမလား။",
+        "ru": "разве она останется вкусной?",
+        "th": "บะหมี่นั้นยังจะอร่อยอยู่ไหมครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-041",
+      "index": 41,
+      "start": 131.733,
+      "end": 133.7,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "早粘在一起了！”",
+        "en": "They'll have stuck together long ago!\"",
+        "es": "¡Ya estarán pegados!",
+        "fr": "Elles seront déjà collées ensemble !",
+        "id": "Mi itu pasti sudah lengket menjadi satu!",
+        "ja": "もうくっついてしまいますよ。",
+        "ko": "이미 서로 붙어 버릴 거예요.",
+        "lo": "ມັນຄົງຕິດກັນໝົດແລ້ວ.",
+        "ms": "Mi itu pasti sudah melekat bersama!",
+        "my": "ခေါက်ဆွဲတွေ ကပ်ကုန်မှာပဲ။",
+        "ru": "Она ведь уже слипнется!",
+        "th": "มันคงติดกันหมดแล้ว"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-042",
+      "index": 42,
+      "start": 134.733,
+      "end": 138.2,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我一听，顿时松了一口气，",
+        "en": "Hearing this, I suddenly breathed a sigh of relief",
+        "es": "Al escuchar esto, me tranquilicé inmediatamente.",
+        "fr": "En entendant cela, je me suis immédiatement rassuré.",
+        "id": "Setelah mendengarnya, saya langsung merasa lega.",
+        "ja": "それを聞いて、私はすぐ安心しました。",
+        "ko": "그 말을 듣고 저는 바로 안심했습니다.",
+        "lo": "ເມື່ອໄດ້ຍິນແນວນັ້ນ ຂ້ອຍກໍໂລ່ງໃຈທັນທີ.",
+        "ms": "Selepas mendengar penjelasannya, saya terus berasa lega.",
+        "my": "ဒါကို ကြားပြီး ကျွန်တော် စိတ်အေးသွားပါတယ်။",
+        "ru": "Услышав это, я сразу успокоился.",
+        "th": "เมื่อได้ยินเช่นนั้น ผมก็สบายใจขึ้นทันที"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-043",
+      "index": 43,
+      "start": 138.6,
+      "end": 139.833,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "笑着解释：",
+        "en": "and explained with a smile:",
+        "es": "Sonreí y expliqué:",
+        "fr": "J'ai souri et expliqué :",
+        "id": "Saya tersenyum dan menjelaskan:",
+        "ja": "私は笑って説明しました。",
+        "ko": "저는 웃으며 설명했습니다.",
+        "lo": "ຂ້ອຍຍິ້ມແລ້ວອະທິບາຍວ່າ:",
+        "ms": "Saya tersenyum dan menjelaskan:",
+        "my": "ကျွန်တော် ပြုံးပြီး ရှင်းပြခဲ့ပါတယ်။",
+        "ru": "Я улыбнулся и объяснил:",
+        "th": "ผมยิ้มและอธิบายว่า"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-044",
+      "index": 44,
+      "start": 140.8,
+      "end": 145.733,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "“没关系，不过是带回去给孩子吃罢了，",
+        "en": "\"It's fine, I'm only taking it back for my child, that's all.",
+        "es": "— No pasa nada, solo quiero llevarlos a mi hijo.",
+        "fr": "— Ce n'est pas grave, je veux simplement l'apporter à mon enfant.",
+        "id": "— Tidak apa-apa, saya hanya ingin membawanya pulang untuk anak saya.",
+        "ja": "— 大丈夫です。ただ子どもに持って帰るだけです。",
+        "ko": "— 괜찮아요. 그냥 아이에게 가져다주려고요.",
+        "lo": "— ບໍ່ເປັນຫຍັງ ຂ້ອຍພຽງແຕ່ຈະເອົາໄປໃຫ້ລູກກິນ.",
+        "ms": "— Tidak mengapa, saya hanya mahu membawanya pulang untuk anak saya.",
+        "my": "— မဖြစ်ပါဘူး၊ ကလေးစားဖို့ အိမ်ယူသွားချင်တာပါ။",
+        "ru": "— Ничего страшного, я просто хочу отнести её ребёнку.",
+        "th": "— ไม่เป็นไรครับ ผมแค่อยากเอาไปให้ลูกกิน"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-045",
+      "index": 45,
+      "start": 146.233,
+      "end": 147.466,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "没关系的！”",
+        "en": "It doesn't matter!\"",
+        "es": "— ¡No hay problema!",
+        "fr": "— Ce n'est pas un problème !",
+        "id": "— Tidak boleh!",
+        "ja": "— 大丈夫ではありません。",
+        "ko": "— 안 됩니다.",
+        "lo": "— ບໍ່ໄດ້!",
+        "ms": "— Tidak mengapa!",
+        "my": "— အဆင်ပြေပါတယ်။",
+        "ru": "— Всё в порядке!",
+        "th": "— ไม่ได้ครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-046",
+      "index": 46,
+      "start": 148.466,
+      "end": 152.1,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "“不行！我不管是给谁吃的，",
+        "en": "\"No way! I don't care who it's for,",
+        "es": "— ¡No! No importa para quién sean.",
+        "fr": "— Non ! Peu importe pour qui vous les prenez.",
+        "id": "— Tidak boleh. Tidak peduli siapa yang akan memakannya.",
+        "ja": "— だめです。誰が食べるかは関係ありません。",
+        "ko": "— 안 돼요. 누가 먹는지는 중요하지 않습니다.",
+        "lo": "— ບໍ່ໄດ້ ບໍ່ວ່າຈະເອົາໄປໃຫ້ໃຜກິນ.",
+        "ms": "— Tidak boleh! Tidak kira untuk siapa kamu membawanya.",
+        "my": "— မရပါဘူး။ ဘယ်သူစားမလဲဆိုတာ မအရေးကြီးပါဘူး။",
+        "ru": "— Нет! Неважно, кому вы её дадите.",
+        "th": "— ไม่ได้ครับ ไม่ว่าใครจะเป็นคนกิน"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-047",
+      "index": 47,
+      "start": 152.233,
+      "end": 153.7,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "这样都不行，",
+        "en": "it won't do like this.",
+        "es": "No podemos hacerlo así.",
+        "fr": "On ne peut pas faire cela.",
+        "id": "Kami tidak boleh melakukan seperti ini.",
+        "ja": "このようなことはできません。",
+        "ko": "이렇게 할 수는 없습니다.",
+        "lo": "ເຮັດແບບນີ້ບໍ່ໄດ້.",
+        "ms": "Kami tidak boleh berbuat demikian.",
+        "my": "ဒီလိုလုပ်လို့ မရပါဘူး။",
+        "ru": "Так делать нельзя.",
+        "th": "เราทำแบบนี้ไม่ได้"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-048",
+      "index": 48,
+      "start": 154.333,
+      "end": 157.066,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我们这个店是有招牌的，",
+        "en": "Our shop has a reputation to uphold,",
+        "es": "Nuestro restaurante tiene una reputación que cuidar.",
+        "fr": "Notre restaurant a une réputation à respecter.",
+        "id": "Kedai kami memiliki reputasi yang harus dijaga.",
+        "ja": "私たちの店には守るべき評判があります。",
+        "ko": "우리 가게는 지켜야 할 평판이 있습니다.",
+        "lo": "ຮ້ານຂອງພວກເຮົາມີຊື່ສຽງທີ່ຕ້ອງຮັກສາ.",
+        "ms": "Kedai kami mempunyai reputasi yang perlu dijaga.",
+        "my": "ကျွန်တော်တို့ဆိုင်မှာ ထိန်းသိမ်းရမယ့် နာမည်ကောင်းရှိပါတယ်။",
+        "ru": "У нашего заведения есть своя репутация.",
+        "th": "ร้านของเรามีชื่อเสียงที่ต้องรักษา"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-049",
+      "index": 49,
+      "start": 157.4,
+      "end": 158.833,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "不可以这样，",
+        "en": "we can't do this.",
+        "es": "No podemos hacer esto.",
+        "fr": "Nous ne pouvons pas agir ainsi.",
+        "id": "Kami tidak boleh berbuat seperti ini.",
+        "ja": "こんなことはできません。",
+        "ko": "이렇게 하면 안 됩니다.",
+        "lo": "ພວກເຮົາຈະເຮັດແບບນີ້ບໍ່ໄດ້.",
+        "ms": "Kami tidak boleh membuat begitu.",
+        "my": "ဒီလို မလုပ်နိုင်ပါဘူး။",
+        "ru": "Мы не можем так делать.",
+        "th": "เราไม่สามารถทำแบบนี้ได้"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-050",
+      "index": 50,
+      "start": 159.433,
+      "end": 161.133,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "这样怎么能吃？",
+        "en": "How could anyone eat that?",
+        "es": "¿Cómo se pueden comer unos fideos preparados así?",
+        "fr": "Comment pourrait-on manger des nouilles préparées comme ça ?",
+        "id": "Bagaimana mi seperti ini bisa dimakan?",
+        "ja": "こんな麺をどうやって食べられるでしょうか。",
+        "ko": "이런 국수를 어떻게 먹을 수 있겠습니까?",
+        "lo": "ເຝີແບບນີ້ຈະກິນໄດ້ແນວໃດ?",
+        "ms": "Bagaimana mi seperti ini boleh dimakan?",
+        "my": "ဒီလိုခေါက်ဆွဲကို ဘယ်လိုစားနိုင်မှာလဲ။",
+        "ru": "Разве такую лапшу можно есть?",
+        "th": "บะหมี่แบบนี้จะกินได้อย่างไรครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-051",
+      "index": 51,
+      "start": 161.8,
+      "end": 163.466,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "如果要带回去，",
+        "en": "If you want to take one home,",
+        "es": "Si quieres llevarlos a casa,",
+        "fr": "Si vous voulez les emporter,",
+        "id": "Kalau Anda ingin membawanya pulang,",
+        "ja": "持ち帰りたいなら、",
+        "ko": "가져가고 싶다면",
+        "lo": "ຖ້າທ່ານຢາກເອົາກັບບ້ານ,",
+        "ms": "Jika kamu mahu membawanya pulang,",
+        "my": "ယူသွားချင်ရင်၊",
+        "ru": "Если хотите взять с собой,",
+        "th": "ถ้าต้องการนำกลับบ้าน"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-052",
+      "index": 52,
+      "start": 163.866,
+      "end": 165.3,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "等你吃完了，",
+        "en": "when you finish eating,",
+        "es": "cuando termines de comer,",
+        "fr": "après avoir fini votre repas,",
+        "id": "setelah Anda selesai makan,",
+        "ja": "食べ終わってから、",
+        "ko": "식사를 다 한 후에",
+        "lo": "ຫຼັງຈາກທ່ານກິນແລ້ວ,",
+        "ms": "selepas kamu selesai makan,",
+        "my": "စားပြီးသွားတဲ့အခါ၊",
+        "ru": "после того как вы поедите,",
+        "th": "หลังจากคุณกินเสร็จแล้ว"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-053",
+      "index": 53,
+      "start": 165.533,
+      "end": 167.4,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我再另做一碗。”",
+        "en": "I'll make another fresh bowl for you.\"",
+        "es": "prepararé otro tazón.",
+        "fr": "j'en préparerai un autre bol.",
+        "id": "saya akan membuatkan satu mangkuk yang baru.",
+        "ja": "もう一杯作ります。",
+        "ko": "제가 새로 한 그릇 만들어 드리겠습니다.",
+        "lo": "ຂ້ອຍຈະເຮັດໃຫ້ໃໝ່ອີກໜຶ່ງຖ້ວຍ.",
+        "ms": "saya akan membuat satu mangkuk yang baharu.",
+        "my": "နောက်တစ်ပွဲ ထပ်လုပ်ပေးပါမယ်။",
+        "ru": "я приготовлю ещё одну порцию.",
+        "th": "ผมจะทำชามใหม่ให้ครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-054",
+      "index": 54,
+      "start": 169,
+      "end": 172,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "“可是，我没时间等呀！",
+        "en": "\"But I don't have time to wait!",
+        "es": "— Pero no tengo tiempo para esperar.",
+        "fr": "— Mais je n'ai pas le temps d'attendre !",
+        "id": "— Tetapi saya tidak punya waktu untuk menunggu!",
+        "ja": "— でも待つ時間がありません。",
+        "ko": "— 하지만 기다릴 시간이 없습니다.",
+        "lo": "— ແຕ່ຂ້ອຍບໍ່ມີເວລາລໍຖ້າ!",
+        "ms": "— Tetapi saya tidak ada masa untuk menunggu!",
+        "my": "— ဒါပေမယ့် ကျွန်တော် စောင့်ဖို့ အချိန်မရှိပါဘူး။",
+        "ru": "— Но я не могу ждать!",
+        "th": "— แต่ผมไม่มีเวลารอครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-055",
+      "index": 55,
+      "start": 172.433,
+      "end": 174.4,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "孩子快放学了。”",
+        "en": "My child will be out of school soon.\"",
+        "es": "Mi hijo está a punto de salir de la escuela.",
+        "fr": "Mon enfant va bientôt sortir de l'école.",
+        "id": "Anak saya sebentar lagi pulang sekolah.",
+        "ja": "子どもがもうすぐ学校から帰ってきます。",
+        "ko": "아이가 곧 학교에서 돌아옵니다.",
+        "lo": "ລູກຂອງຂ້ອຍໃກ້ຈະເລີກຮຽນແລ້ວ.",
+        "ms": "Anak saya hampir pulang dari sekolah.",
+        "my": "ကလေး ကျောင်းဆင်းတော့မှာပါ။",
+        "ru": "Ребёнок скоро заканчивает школу.",
+        "th": "ลูกกำลังจะเลิกเรียนแล้ว"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-056",
+      "index": 56,
+      "start": 175.466,
+      "end": 177.466,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "“不会让你久等的，",
+        "en": "\"I won't keep you waiting long,",
+        "es": "— No tendrás que esperar mucho.",
+        "fr": "— Vous n'attendrez pas longtemps.",
+        "id": "— Anda tidak akan menunggu lama.",
+        "ja": "— 長く待たせません。",
+        "ko": "— 오래 기다리게 하지 않겠습니다.",
+        "lo": "— ຈະບໍ່ໃຫ້ທ່ານລໍດົນ.",
+        "ms": "— Kamu tidak perlu menunggu lama.",
+        "my": "— အကြာကြီး မစောင့်ရပါဘူး။",
+        "ru": "— Я не заставлю вас долго ждать.",
+        "th": "— ผมจะไม่ให้คุณรอนานครับ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-057",
+      "index": 57,
+      "start": 177.833,
+      "end": 179.8,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "保证你一吃完面，",
+        "en": "I guarantee that right as you finish your noodles,",
+        "es": "Te garantizo que cuando termines de comer,",
+        "fr": "Je vous garantis qu'après avoir fini vos nouilles,",
+        "id": "Saya jamin, begitu Anda selesai makan mi,",
+        "ja": "麺を食べ終わったら、",
+        "ko": "국수를 다 드시면",
+        "lo": "ຂ້ອຍຮັບປະກັນວ່າ ເມື່ອທ່ານກິນເຝີໝົດ,",
+        "ms": "Saya jamin selepas kamu selesai makan mi,",
+        "my": "ခေါက်ဆွဲစားပြီးတာနဲ့၊",
+        "ru": "Гарантирую: как только вы закончите есть,",
+        "th": "รับรองว่าเมื่อคุณกินเสร็จ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-058",
+      "index": 58,
+      "start": 180.066,
+      "end": 181.9,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "正好可以带走。”",
+        "en": "it will be ready for you to take.\"",
+        "es": "podrás llevártelos inmediatamente.",
+        "fr": "vous pourrez les emporter immédiatement.",
+        "id": "Anda bisa langsung membawanya pulang.",
+        "ja": "すぐ持って帰れることを保証します。",
+        "ko": "바로 가져가실 수 있다고 약속합니다.",
+        "lo": "ທ່ານຈະສາມາດເອົາກັບໄດ້ທັນທີ.",
+        "ms": "kamu boleh terus membawanya pulang.",
+        "my": "ချက်ချင်း ယူသွားနိုင်အောင် အာမခံပါတယ်။",
+        "ru": "вы сможете сразу забрать её.",
+        "th": "คุณจะสามารถนำกลับไปได้ทันที"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-059",
+      "index": 59,
+      "start": 183.333,
+      "end": 186.6,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我一边享受着好吃的牛肉面，",
+        "en": "While enjoying the delicious beef noodles,",
+        "es": "Mientras disfrutaba de los deliciosos fideos con carne de res,",
+        "fr": "Tout en savourant ces délicieuses nouilles au bœuf,",
+        "id": "Sambil menikmati mi daging sapi yang lezat,",
+        "ja": "おいしい牛肉麺を味わいながら、",
+        "ko": "맛있는 소고기 국수를 먹으면서",
+        "lo": "ຂະນະທີ່ຂ້ອຍກຳລັງກິນເຝີຊີ້ນງົວທີ່ແຊບ,",
+        "ms": "Sambil menikmati mi daging lembu yang enak,",
+        "my": "အရသာရှိတဲ့ အမဲသားခေါက်ဆွဲကို စားရင်း၊",
+        "ru": "Я наслаждался вкусной говяжьей лапшой",
+        "th": "ขณะที่ผมกำลังลิ้มรสบะหมี่เนื้อวัวแสนอร่อย"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-060",
+      "index": 60,
+      "start": 187.066,
+      "end": 189.3,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "一边偷偷打量着这位",
+        "en": "I secretly observed",
+        "es": "observaba discretamente",
+        "fr": "j'observais discrètement",
+        "id": "saya diam-diam memperhatikan",
+        "ja": "私はこっそり見ていました。",
+        "ko": "저는 몰래 지켜보았습니다.",
+        "lo": "ຂ້ອຍແອບສັງເກດ,",
+        "ms": "saya diam-diam memerhatikan",
+        "my": "ကျွန်တော် တိတ်တိတ်လေး ကြည့်နေခဲ့ပါတယ်။",
+        "ru": "и тайком наблюдал за",
+        "th": "ผมแอบมอง"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-061",
+      "index": 61,
+      "start": 189.3,
+      "end": 192.866,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "老师傅充满工作热情的身影，",
+        "en": "this veteran master full of passion for his work.",
+        "es": "la figura de este viejo maestro lleno de pasión por su trabajo.",
+        "fr": "la silhouette de ce vieux maître passionné par son travail.",
+        "id": "sosok koki tua yang penuh semangat terhadap pekerjaannya.",
+        "ja": "仕事への情熱にあふれた、この年配の職人さんの姿を。",
+        "ko": "일에 대한 열정으로 가득한 이 나이 든 장인의 모습을.",
+        "lo": "ຮູບຮ່າງຂອງຊ່າງອາວຸໂສທີ່ເຕັມໄປດ້ວຍຄວາມຮັກໃນວຽກຂອງຕົນ.",
+        "ms": "sosok guru tukang masak tua yang penuh semangat terhadap pekerjaannya.",
+        "my": "အလုပ်ကို စိတ်အားထက်သန်စွာ လုပ်နေတဲ့ ဆရာကြီးရဲ့ပုံရိပ်ကို။",
+        "ru": "этим пожилым мастером, полным любви к своей работе.",
+        "th": "ภาพของช่างผู้สูงอายุที่เต็มไปด้วยความรักในงานของเขา"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-062",
+      "index": 62,
+      "start": 193.7,
+      "end": 195.266,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "我逐渐明白，",
+        "en": "I gradually came to realize",
+        "es": "Poco a poco comprendí:",
+        "fr": "Peu à peu, j'ai compris :",
+        "id": "Sedikit demi sedikit saya mulai mengerti:",
+        "ja": "私は少しずつ分かってきました。",
+        "ko": "저는 조금씩 이해하게 되었습니다.",
+        "lo": "ຂ້ອຍຄ່ອຍໆເຂົ້າໃຈວ່າ:",
+        "ms": "Sedikit demi sedikit, saya mula memahami:",
+        "my": "တဖြည်းဖြည်းနဲ့ ကျွန်တော် နားလည်လာပါတယ်။",
+        "ru": "Постепенно я понял:",
+        "th": "ผมค่อย ๆ เข้าใจว่า"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-063",
+      "index": 63,
+      "start": 195.933,
+      "end": 198.5,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "难怪附近面馆那么多，",
+        "en": "why, with so many noodle shops nearby,",
+        "es": "no era extraño que hubiera tantos restaurantes de fideos en la zona,",
+        "fr": "pas étonnant qu'il y ait tant de restaurants de nouilles dans le quartier,",
+        "id": "tidak heran ada begitu banyak kedai mi di sekitar sini,",
+        "ja": "近くに麺のお店がたくさんあるのに、",
+        "ko": "근처에 국수집이 이렇게 많은데도",
+        "lo": "ບໍ່ແປກໃຈເລີຍທີ່ບໍລິເວນນີ້ມີຮ້ານເຝີຫຼາຍ,",
+        "ms": "tidak hairanlah terdapat banyak kedai mi di kawasan ini,",
+        "my": "အနီးအနားမှာ ခေါက်ဆွဲဆိုင်တွေ အများကြီးရှိပေမယ့်၊",
+        "ru": "неудивительно, что рядом так много лапшичных,",
+        "th": "ไม่น่าแปลกใจที่บริเวณนี้มีร้านบะหมี่มากมาย"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-064",
+      "index": 64,
+      "start": 199,
+      "end": 202.1,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "而只有这一家口碑最好。",
+        "en": "only this one has the best reputation.",
+        "es": "pero solo este tuviera la mejor reputación.",
+        "fr": "mais que celui-ci ait la meilleure réputation.",
+        "id": "tetapi hanya kedai ini yang memiliki reputasi terbaik.",
+        "ja": "なぜこの店だけが一番評判が良いのか。",
+        "ko": "왜 이곳만 가장 좋은 평판을 가지고 있는지 말입니다.",
+        "lo": "ແຕ່ມີພຽງຮ້ານນີ້ທີ່ມີຊື່ສຽງດີທີ່ສຸດ.",
+        "ms": "tetapi hanya kedai ini yang mempunyai reputasi terbaik.",
+        "my": "ဒီဆိုင်တစ်ဆိုင်ပဲ နာမည်အကောင်းဆုံး ဖြစ်ရတဲ့အကြောင်းကို။",
+        "ru": "но только у этой самая лучшая репутация.",
+        "th": "แต่มีเพียงร้านนี้ที่มีชื่อเสียงดีที่สุด"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-065",
+      "index": 65,
+      "start": 203,
+      "end": 207.633,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "因为他们对面的品质有坚持，不马虎；",
+        "en": "Because they insist on quality without compromise,",
+        "es": "Porque aquí se insiste en la calidad de los fideos y no se trabaja de manera descuidada;",
+        "fr": "Parce qu'ici, on exige une grande qualité des nouilles et on ne travaille jamais négligemment ;",
+        "id": "Karena mereka menjaga kualitas mi dengan sungguh-sungguh dan tidak bekerja sembarangan;",
+        "ja": "それは、麺の品質にこだわり、決して手を抜かないからです。",
+        "ko": "그 이유는 국수의 품질을 고집하고 절대 대충 만들지 않기 때문입니다.",
+        "lo": "ເພາະພວກເຂົາຍຶດໝັ້ນໃນຄຸນນະພາບຂອງເຝີ ແລະບໍ່ເຮັດວຽກແບບລວກໆ;",
+        "ms": "Kerana mereka berpegang teguh pada kualiti mi dan tidak bekerja secara sambil lewa;",
+        "my": "ဘာကြောင့်လဲဆိုတော့ သူတို့က ခေါက်ဆွဲအရည်အသွေးကို တင်းတင်းကျပ်ကျပ် ထိန်းသိမ်းပြီး ပေါ့ပေါ့ဆဆ မလုပ်ကြလို့ပါ။",
+        "ru": "Потому что здесь строго относятся к качеству лапши и не работают небрежно;",
+        "th": "เพราะพวกเขายึดมั่นในคุณภาพของบะหมี่และไม่ทำงานอย่างลวก ๆ"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    },
+    {
+      "id": "text-066",
+      "index": 66,
+      "start": 208.3,
+      "end": 211.933,
+      "role": "sentence",
+      "texts": {
+        "zh-CN": "对顾客有尊重，有爱心。",
+        "en": "and hold respect and care for their customers.",
+        "es": "y se trata a los clientes con respeto y consideración.",
+        "fr": "et que l'on traite les clients avec respect et bienveillance.",
+        "id": "serta menghormati dan peduli kepada pelanggan.",
+        "ja": "そして、お客さんへの敬意と思いやりがあるからです。",
+        "ko": "그리고 손님을 존중하고 배려하기 때문입니다.",
+        "lo": "ແລະໃຫ້ຄວາມເຄົາລົບ ແລະໃສ່ໃຈຕໍ່ລູກຄ້າ.",
+        "ms": "serta menghormati dan mengambil berat terhadap pelanggan.",
+        "my": "ဖောက်သည်တွေကို လေးစားပြီး ကြင်နာစွာ ဆက်ဆံကြလို့ပါ။",
+        "ru": "и относятся к клиентам с уважением и заботой.",
+        "th": "และให้ความเคารพและใส่ใจลูกค้า"
+      },
+      "annotations": {
+        "vocabulary": [],
+        "grammar": [],
+        "culture": []
+      }
+    }
+  ],
+  "quality": {
+    "cueCount": 66,
+    "sourceFiles": {
+      "zh-CN": "text-cn.srt",
+      "en": "text_en.srt",
+      "es": "text_es.srt",
+      "fr": "text_fr.srt",
+      "id": "text_id.srt",
+      "ja": "text_ja.srt",
+      "ko": "text_ko.srt",
+      "lo": "text_lo.srt",
+      "ms": "text_ms.srt",
+      "my": "text_my.srt",
+      "ru": "text_ru.srt",
+      "th": "text_th.srt"
+    },
+    "canonicalLanguages": [
+      "zh-CN",
+      "en"
+    ],
+    "canonicalAlignment": {
+      "zhCnCueCount": 66,
+      "enCueCount": 66,
+      "missingInEnglish": [],
+      "timeMismatchesWithEnglish": []
+    },
+    "auxiliaryLanguages": [
+      "es",
+      "fr",
+      "id",
+      "ja",
+      "ko",
+      "lo",
+      "ms",
+      "my",
+      "ru",
+      "th"
+    ],
+    "auxiliaryMissingTranslations": [],
+    "auxiliaryCueCountMismatches": [],
+    "auxiliaryExtraCues": [],
+    "notes": [
+      "All language tracks contain 66 non-empty cues aligned to the zh-CN and en canonical timeline.",
+      "Auxiliary translations were re-segmented on 2026-07-31; original files are retained in the lesson backup directory."
+    ]
+  }
+}

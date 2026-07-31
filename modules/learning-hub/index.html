@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123b3d">
+  <title>学习中心 · 天天汉语伴学</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
+  <link rel="stylesheet" href="styles.css?v=20260801-4">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="天天汉语伴学学习中心">
+        <img src="../../icons/icon-96.png" alt="">
+        <span><strong>天天汉语伴学</strong><small>学习中心</small></span>
+      </a>
+      <div class="current-location" id="currentLocation">首页</div>
+      <label class="global-search">
+        <span aria-hidden="true">⌕</span>
+        <input id="globalSearch" type="search" placeholder="搜索教材或课程" autocomplete="off">
+      </label>
+      <button class="language-button" type="button" title="辅助语言"><span>文</span><b>中文</b></button>
+      <button class="profile-button" id="profileButton" type="button" aria-haspopup="dialog">
+        <span class="profile-avatar" id="profileAvatar">学</span>
+        <span><strong id="profileName">邀请码登录</strong><small id="profileRole">访客</small></span>
+        <i aria-hidden="true">⌄</i>
+      </button>
+    </header>
+
+    <aside class="sidebar" aria-label="主导航">
+      <nav class="primary-navigation">
+        <button class="active" type="button" data-view="home"><span aria-hidden="true">⌂</span><b>首页</b></button>
+        <button type="button" data-view="courses"><span aria-hidden="true">册</span><b>我的课程</b></button>
+        <button type="button" data-view="games"><span aria-hidden="true">练</span><b>互动练习</b></button>
+        <button type="button" data-view="progress"><span aria-hidden="true">记</span><b>学习记录</b></button>
+        <button type="button" data-view="teacher" data-role-nav="teacher" hidden><span aria-hidden="true">教</span><b>教学工作台</b></button>
+        <button type="button" data-view="admin" data-role-nav="admin" hidden><span aria-hidden="true">管</span><b>系统管理</b></button>
+      </nav>
+      <section class="sidebar-course">
+        <span>当前课程</span>
+        <strong>中级综合1</strong>
+        <p>第1课 · 你咋不早说</p>
+        <a href="../digital-book/">继续学习</a>
+      </section>
+    </aside>
+
+    <main class="main-content">
+      <section class="app-view active" id="homeView" data-view-panel="home">
+        <header class="page-heading">
+          <div><span>学习中心</span><h1>下午好，继续今天的学习</h1></div>
+          <button class="quiet-button" type="button" data-action="open-role-dialog">切换身份视图</button>
+        </header>
+
+        <section class="continue-panel" aria-labelledby="continueTitle">
+          <div class="course-cover" aria-hidden="true"><span>发展汉语</span><strong>中级<br>综合Ⅰ</strong></div>
+          <div class="continue-copy">
+            <span>上次学习</span>
+            <h2 id="continueTitle">第1课 · 你咋不早说</h2>
+            <p>发展汉语 · 中级综合1</p>
+            <div class="progress-line"><i style="width: 42%"></i></div>
+            <small>已完成 42% · 第42 / 99个学习单元</small>
+          </div>
+          <a class="primary-button" href="../digital-book/">继续学习 <span>›</span></a>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="dashboard-section">
+            <header><div><span>本周安排</span><h2>学习任务</h2></div><button type="button" data-view="courses">全部课程</button></header>
+            <div class="task-list">
+              <a href="../digital-book/"><span class="task-number">01</span><span><strong>词汇与课文学习</strong><small>中级综合1 · 第1课</small></span><b>继续</b></a>
+              <a href="../digital-book/"><span class="task-number coral">02</span><span><strong>完成课后练习</strong><small>第41—48题</small></span><b>开始</b></a>
+              <button type="button" data-view="games"><span class="task-number gold">03</span><span><strong>单词消消乐复习</strong><small>使用第1课词汇</small></span><b>待接入</b></button>
+            </div>
+          </section>
+
+          <section class="dashboard-section compact-section">
+            <header><div><span>学习概况</span><h2>本周记录</h2></div></header>
+            <dl class="stat-list">
+              <div><dt>学习天数</dt><dd>3<small>天</small></dd></div>
+              <div><dt>已学词语</dt><dd>18<small>个</small></dd></div>
+              <div><dt>完成练习</dt><dd>12<small>题</small></dd></div>
+            </dl>
+            <button class="text-button" type="button" data-view="progress">查看学习记录 ›</button>
+          </section>
+        </div>
+
+        <section class="tool-strip">
+          <header><span>学习工具</span><h2>按需要进入专项训练</h2></header>
+          <nav>
+            <a href="../../index.html?module=learn"><span>字</span><strong>汉字伴写</strong><small>笔顺与跟写</small></a>
+            <a href="../listening-speaking/"><span>声</span><strong>听说训练</strong><small>跟读与录音</small></a>
+            <a href="../../index.html?module=essay"><span>写</span><strong>写作练习</strong><small>田字格作文</small></a>
+            <button type="button" data-view="games"><span>练</span><strong>互动练习</strong><small>课程游戏</small></button>
+          </nav>
+        </section>
+      </section>
+
+      <section class="app-view" id="coursesView" data-view-panel="courses" hidden>
+        <header class="page-heading"><div><span>课程</span><h1>我的课程</h1><p>按教材系列、阶段和册别查找课程。</p></div></header>
+        <div class="course-browser">
+          <aside class="catalog-filters">
+            <label><span>教材系列</span><select id="seriesFilter"><option value="fazhan">发展汉语</option><option value="other">其他教材系列</option></select></label>
+            <div><span>学习阶段</span><button class="active" type="button" data-level="all">全部</button><button type="button" data-level="beginner">初级</button><button type="button" data-level="intermediate">中级</button></div>
+            <div class="catalog-note"><strong>课程结构</strong><p>教材系列 → 册别 → 课程 → 学习单元</p></div>
+          </aside>
+          <div class="catalog-content">
+            <section class="level-catalog" id="levelCatalog" aria-label="发展汉语教材目录"></section>
+            <section class="lesson-directory" aria-labelledby="lessonDirectoryTitle">
+              <header><div><span>发展汉语</span><h2 id="lessonDirectoryTitle">中级综合（Ⅰ）</h2></div><strong id="lessonCount">共14课</strong></header>
+              <div class="lesson-list" id="lessonList"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="app-view" id="gamesView" data-view-panel="games" hidden>
+        <header class="page-heading"><div><span>互动练习</span><h1>课程游戏</h1><p>游戏使用当前教材和课程的学习内容。</p></div></header>
+        <section class="game-workspace">
+          <div class="game-identity"><span>词</span></div>
+          <div><span>发展汉语词汇游戏</span><h2>单词消消乐</h2><p>选择教材和课程后，使用对应词汇开始练习。</p></div>
+          <div class="game-selectors"><label><span>教材</span><select><option>中级综合1</option></select></label><label><span>范围</span><select><option>第1课</option><option>第1—3课</option></select></label></div>
+          <button class="primary-button" type="button" disabled>游戏模块待接入</button>
+        </section>
+      </section>
+
+      <section class="app-view" id="progressView" data-view-panel="progress" hidden>
+        <header class="page-heading"><div><span>学习记录</span><h1>我的学习</h1><p>正式登录接入后，这里将汇总跨设备学习记录。</p></div></header>
+        <section class="record-table">
+          <header><span>最近学习</span><strong>本地原型数据</strong></header>
+          <div class="record-row"><time>今天 14:20</time><span><strong>第1课 · 课文学习</strong><small>完成句子41</small></span><b>已完成</b></div>
+          <div class="record-row"><time>昨天 19:10</time><span><strong>第1课 · 词汇学习</strong><small>学习18个词语</small></span><b>已记录</b></div>
+          <div class="record-row"><time>7月30日</time><span><strong>听说训练</strong><small>完成1次跟读</small></span><b>本地保存</b></div>
+        </section>
+      </section>
+
+      <section class="app-view" id="teacherView" data-view-panel="teacher" hidden>
+        <header class="page-heading"><div><span>教师身份</span><h1>教学工作台</h1><p>班级、作业和学情功能将在登录系统接入后启用。</p></div></header>
+        <section class="class-context">
+          <label><span>学期</span><select id="teacherTermSelect"></select></label>
+          <label><span>教材</span><select id="teacherBookSelect"></select></label>
+          <div><span>任课教师</span><strong id="teacherContextName">—</strong></div>
+        </section>
+        <section class="approval-panel">
+          <header><div><span>课程成员</span><h2>本班学生</h2></div><strong id="classStudentCount">0人</strong></header>
+          <div id="classStudentList"></div>
+        </section>
+        <div class="management-list"><button>班级学习进度 <span>待接入</span></button><button>布置课程与作业 <span>待接入</span></button><a href="../digital-book/">以学生视图预览第1课 <span>打开 ›</span></a></div>
+      </section>
+
+      <section class="app-view" id="adminView" data-view-panel="admin" hidden>
+        <header class="page-heading"><div><span>管理员身份</span><h1>系统管理</h1><p>此处只定义未来管理入口，不接入云端操作。</p></div></header>
+        <div class="management-list"><button>教材与课程发布 <span>待接入</span></button><button>多语言内容审核 <span>待接入</span></button><button>用户与角色管理 <span>待接入</span></button><button>系统配置 <span>待接入</span></button></div>
+      </section>
+    </main>
+
+    <nav class="mobile-navigation" aria-label="移动端导航">
+      <button class="active" type="button" data-view="home"><span>⌂</span><b>首页</b></button>
+      <button type="button" data-view="courses"><span>册</span><b>课程</b></button>
+      <button type="button" data-view="games"><span>练</span><b>练习</b></button>
+      <button type="button" data-view="progress"><span>记</span><b>记录</b></button>
+    </nav>
+  </div>
+
+  <dialog class="role-dialog" id="roleDialog" aria-labelledby="roleDialogTitle">
+    <div class="auth-dialog-shell">
+      <header><div><span>账号原型</span><h2 id="roleDialogTitle">邀请码登录</h2></div><button type="button" data-auth-close aria-label="关闭">×</button></header>
+      <nav class="auth-tabs" aria-label="登录身份">
+        <button class="active" type="button" data-auth-tab="student-login">学生登录</button>
+        <button type="button" data-auth-tab="teacher-login">教师登录</button>
+        <button type="button" data-auth-tab="admin-login">管理员</button>
+      </nav>
+
+      <form class="auth-panel active" id="studentLoginForm" data-auth-panel="student-login">
+        <div class="form-grid two-columns">
+          <label><span>中文名</span><input name="chineseName" required></label>
+          <label><span>英文名</span><input name="englishName" required></label>
+          <label><span>学号</span><input name="studentId" required></label>
+          <label><span>班级邀请码</span><input name="inviteCode" required autocomplete="one-time-code"></label>
+          <label><span>学期</span><select name="term" data-term-options required></select></label>
+          <label><span>教师</span><select name="teacher" data-teacher-options required></select></label>
+          <label class="wide-field"><span>教材</span><select name="book" data-book-options required></select></label>
+        </div>
+        <button class="primary-button" type="submit">进入课程</button>
+        <p>原型阶段只检查邀请码是否填写；正式系统将验证邀请码与班级是否匹配。</p>
+      </form>
+
+      <form class="auth-panel" id="teacherLoginForm" data-auth-panel="teacher-login" hidden>
+        <div class="form-grid two-columns">
+          <label><span>教师姓名</span><select name="teacher" data-teacher-options required></select></label>
+          <label><span>教师邀请码</span><input name="inviteCode" required autocomplete="one-time-code"></label>
+          <label><span>学期</span><select name="term" data-term-options required></select></label>
+          <label><span>教材</span><select name="book" data-book-options required></select></label>
+        </div>
+        <button class="primary-button" type="submit">进入教学工作台</button>
+        <p>教师身份限定为曹丹丹、袁玥、李进。</p>
+      </form>
+
+      <form class="auth-panel" id="adminLoginForm" data-auth-panel="admin-login" hidden>
+        <label><span>管理员姓名</span><input name="administrator" value="鄢清华" readonly></label>
+        <label><span>管理员邀请码</span><input name="inviteCode" required autocomplete="one-time-code"></label>
+        <button class="primary-button" type="submit">进入系统管理</button>
+        <p>当前管理员为鄢清华。</p>
+      </form>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script src="../../config.js?v=20260801-2"></script>
+  <script src="../shared/learning-api-client.js?v=20260801-2"></script>
+  <script src="app.js?v=20260801-5" defer></script>
+</body>
+</html>

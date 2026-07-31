@@ -1,0 +1,175 @@
+{
+  "schema_version": "0.1.0",
+  "lesson_id": "developing-chinese-elementary-1-lesson-01",
+  "course": {
+    "id": "developing-chinese-elementary-1",
+    "title_zh": "发展汉语·初级综合Ⅰ",
+    "edition": 2
+  },
+  "lesson": {
+    "number": 1,
+    "title": {
+      "zh-Hans": "你好",
+      "en": "Hello"
+    },
+    "estimated_minutes": 10,
+    "source_pages_printed": [1, 2, 3, 4, 5, 6, 7, 8]
+  },
+  "locale_policy": {
+    "supported": ["zh-Hans", "en", "th", "vi", "lo", "fr", "ja", "ko", "ru", "de", "es"],
+    "fallback": ["learner_locale", "en", "zh-Hans"],
+    "english_default": "collapsed",
+    "translation_review_states": ["draft", "ai_checked", "needs_human_review", "human_reviewed"]
+  },
+  "asset_policy": {
+    "base_url_source": "runtime_asset_manifest",
+    "audio_url_in_content": false,
+    "copyright_clearance_required": true
+  },
+  "learning_sequence": [
+    "tone_warmup",
+    "syllable_builder",
+    "word_cards",
+    "pragmatics_ni_nin",
+    "dialogue_shadowing",
+    "micro_practice",
+    "character_intro",
+    "lesson_match_game",
+    "lesson_summary"
+  ],
+  "phonetics": {
+    "tone_warmup": {
+      "audio_asset_keys": ["l01-tone-ni-1", "l01-tone-ni-2", "l01-tone-ni-3", "l01-tone-ni-4"],
+      "items": [
+        {"display": "nī", "tone": 1},
+        {"display": "ní", "tone": 2},
+        {"display": "nǐ", "tone": 3},
+        {"display": "nì", "tone": 4}
+      ]
+    },
+    "syllable_examples": [
+      {"initial": "n", "final": "i", "tone": 3, "result": "nǐ"},
+      {"initial": "h", "final": "ao", "tone": 3, "result": "hǎo"}
+    ]
+  },
+  "vocabulary": [
+    {
+      "id": "dc-e1-l01-ni",
+      "hanzi": "你",
+      "pinyin": "nǐ",
+      "pos": "pron.",
+      "meaning": {"en": "you (singular)", "th": "คุณ", "vi": "bạn", "lo": "ເຈົ້າ", "fr": "toi", "ja": "あなた", "ko": "당신", "ru": "ты", "de": "du", "es": "tú"},
+      "audio_asset_key": "l01-word-ni",
+      "review_state": "needs_human_review"
+    },
+    {
+      "id": "dc-e1-l01-hao",
+      "hanzi": "好",
+      "pinyin": "hǎo",
+      "pos": "adj.",
+      "meaning": {"en": "good; fine; nice", "th": "ดี", "vi": "tốt", "lo": "ດີ", "fr": "bon", "ja": "良い", "ko": "좋은", "ru": "хороший", "de": "gut", "es": "bueno"},
+      "audio_asset_key": "l01-word-hao",
+      "review_state": "needs_human_review"
+    },
+    {
+      "id": "dc-e1-l01-nin",
+      "hanzi": "您",
+      "pinyin": "nín",
+      "pos": "pron.",
+      "meaning": {"en": "you (polite singular)"},
+      "audio_asset_key": "l01-word-nin",
+      "review_state": "draft"
+    },
+    {
+      "id": "dc-e1-l01-nimen",
+      "hanzi": "你们",
+      "pinyin": "nǐmen",
+      "pos": "pron.",
+      "meaning": {"en": "you (plural)", "th": "พวกคุณ", "vi": "các bạn", "lo": "ພວກເຈົ້າ", "fr": "vous", "ja": "あなたたち", "ko": "여러분", "ru": "вы", "de": "ihr", "es": "vosotros"},
+      "audio_asset_key": "l01-word-nimen",
+      "review_state": "needs_human_review"
+    },
+    {
+      "id": "dc-e1-l01-laoshi",
+      "hanzi": "老师",
+      "pinyin": "lǎoshī",
+      "pos": "n.",
+      "meaning": {"en": "teacher", "th": "ครู", "vi": "giáo viên", "lo": "ຄູສອນ", "fr": "professeur", "ja": "先生", "ko": "선생님", "ru": "учитель", "de": "Lehrer", "es": "maestro"},
+      "audio_asset_key": "l01-word-laoshi",
+      "review_state": "needs_human_review"
+    },
+    {"id": "dc-e1-l01-ling", "hanzi": "零", "pinyin": "líng", "pos": "num.", "meaning": {"en": "zero"}, "audio_asset_key": "l01-word-ling", "review_state": "draft"},
+    {"id": "dc-e1-l01-yi", "hanzi": "一", "pinyin": "yī", "pos": "num.", "meaning": {"en": "one"}, "audio_asset_key": "l01-word-yi", "review_state": "draft"},
+    {"id": "dc-e1-l01-er", "hanzi": "二", "pinyin": "èr", "pos": "num.", "meaning": {"en": "two"}, "audio_asset_key": "l01-word-er", "review_state": "draft"},
+    {"id": "dc-e1-l01-wu", "hanzi": "五", "pinyin": "wǔ", "pos": "num.", "meaning": {"en": "five"}, "audio_asset_key": "l01-word-wu", "review_state": "draft"},
+    {"id": "dc-e1-l01-ba", "hanzi": "八", "pinyin": "bā", "pos": "num.", "meaning": {"en": "eight"}, "audio_asset_key": "l01-word-ba", "review_state": "draft"}
+  ],
+  "pragmatics": [
+    {
+      "id": "dc-e1-l01-ni-vs-nin",
+      "focus": ["你", "您"],
+      "short_explanation": {
+        "zh-Hans": "“您”比“你”更尊敬、更正式。初学时，面对老师、长辈或需要表示尊重的人，可以优先使用“您”。实际选择也会受到关系、年龄、地区和场合影响。",
+        "en": "您 is more respectful and formal than 你. Beginners can use 您 with teachers, older people, or when showing respect; actual usage also depends on relationship, age, region, and setting."
+      },
+      "translation_strategy": "localize_social_distance_not_word_only",
+      "review_state": "draft"
+    }
+  ],
+  "dialogues": [
+    {
+      "id": "dc-e1-l01-dialogue-peer",
+      "context": "two_students_meet",
+      "turns": [
+        {"speaker": "A", "text": "你好！", "pinyin": "Nǐ hǎo!", "audio_asset_key": "l01-dialogue-peer-a"},
+        {"speaker": "B", "text": "你好！", "pinyin": "Nǐ hǎo!", "audio_asset_key": "l01-dialogue-peer-b"}
+      ]
+    },
+    {
+      "id": "dc-e1-l01-dialogue-polite",
+      "context": "student_greets_teacher",
+      "turns": [
+        {"speaker": "老师", "text": "你好！", "pinyin": "Nǐ hǎo!", "audio_asset_key": "l01-dialogue-polite-a"},
+        {"speaker": "学生", "text": "您好！", "pinyin": "Nín hǎo!", "audio_asset_key": "l01-dialogue-polite-b"}
+      ]
+    }
+  ],
+  "exercises": [
+    {"id": "l01-ex01", "type": "listen_choose_tone", "prompt_audio_asset_key": "l01-ex01-audio", "options": [1, 2, 3, 4], "answer": 3, "required": true},
+    {"id": "l01-ex02", "type": "listen_choose_pinyin", "prompt_audio_asset_key": "l01-word-hao", "options": ["hāo", "háo", "hǎo", "hào"], "answer": "hǎo", "required": true},
+    {"id": "l01-ex03", "type": "match_hanzi_pinyin", "pairs": [["你", "nǐ"], ["好", "hǎo"], ["您", "nín"]], "required": true},
+    {"id": "l01-ex04", "type": "context_choice", "context": "greet_your_teacher", "options": ["你好", "您好"], "answer": "您好", "feedback_ref": "dc-e1-l01-ni-vs-nin", "required": true},
+    {"id": "l01-ex05", "type": "fill_one_token", "prompt": "___好！", "options": ["你", "零", "八"], "answer": "你", "required": true},
+    {"id": "l01-ex06", "type": "listen_choose_hanzi", "prompt_audio_asset_key": "l01-word-wu", "options": ["一", "二", "五", "八"], "answer": "五", "required": true},
+    {"id": "l01-ex07", "type": "stroke_rule_choice", "prompt": "十", "options": ["先横后竖", "先竖后横"], "answer": "先横后竖", "required": false}
+  ],
+  "characters": {
+    "strokes": [
+      {"name": "横", "pinyin": "héng"},
+      {"name": "竖", "pinyin": "shù"},
+      {"name": "撇", "pinyin": "piě"},
+      {"name": "捺", "pinyin": "nà"}
+    ],
+    "rules": ["先横后竖", "先撇后捺"],
+    "practice_characters": ["土", "十", "八"],
+    "optional": true
+  },
+  "classroom_expressions": [
+    {"text": "上课！", "pinyin": "Shàng kè!", "meaning": {"en": "Class begins."}, "audio_asset_key": "l01-classroom-start"},
+    {"text": "下课！", "pinyin": "Xià kè!", "meaning": {"en": "Class is over."}, "audio_asset_key": "l01-classroom-end"}
+  ],
+  "match_game": {
+    "unlock_rule": {"required_exercise_accuracy": 0.7},
+    "rounds": [
+      {"id": "core-greetings", "vocabulary_ids": ["dc-e1-l01-ni", "dc-e1-l01-hao", "dc-e1-l01-nin", "dc-e1-l01-nimen", "dc-e1-l01-laoshi"]},
+      {"id": "numbers", "vocabulary_ids": ["dc-e1-l01-ling", "dc-e1-l01-yi", "dc-e1-l01-er", "dc-e1-l01-wu", "dc-e1-l01-ba"]}
+    ],
+    "columns": ["hanzi", "pinyin", "learner_locale_meaning"],
+    "legacy_txt_fallback": "初级1-Lesson 1-3_multilingual.txt"
+  },
+  "progress": {
+    "storage_key": "hsk.dc.e1.l01.progress.v1",
+    "resume_same_step": true,
+    "wrong_item_review": true
+  }
+}
