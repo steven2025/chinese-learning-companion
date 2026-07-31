@@ -1479,7 +1479,7 @@ function renderDeepAssistValue(value) {
 }
 
 function deepAssistLabel(key) {
-  return ({ summary: "简明说明", contextMeaning: "本课语境", collocations: "常用搭配", contrast: "辨析", errorWarning: "易错提醒", examples: "相似例句", translation: "母语解释", segments: "句子分块", grammarPoints: "语法要点", contextRole: "上下文作用", expressionTip: "表达建议", taskMeaning: "题目要求", keyRequirements: "关键要求", protectedTerms: "目标词语", steps: "思考步骤", checklist: "检查清单", prompt: "相似题目", answer: "实例答案", explanation: "实例解析", differenceFromOriginal: "与原题区别", zh: "中文", meaning: "含义", structure: "结构", usageNotes: "使用提示" })[key] || key;
+  return ({ summary: "简明说明", contextMeaning: "本课语境", collocations: "常用搭配", contrast: "辨析", errorWarning: "易错提醒", examples: "相似例句", translation: "母语解释", segments: "句子分块", grammarPoints: "语法要点", contextRole: "上下文作用", expressionTip: "表达建议", taskMeaning: "题目要求", vocabularyReminder: "参考词汇提醒", suggestedStructure: "参考结构", keyRequirements: "关键要求", protectedTerms: "目标词语", steps: "思考步骤", checklist: "检查清单", prompt: "相似题目", answer: "实例答案", explanation: "实例解析", differenceFromOriginal: "与原题区别", zh: "中文", meaning: "含义", structure: "结构", usageNotes: "使用提示" })[key] || key;
 }
 
 async function requestDeepAssist(request) {
