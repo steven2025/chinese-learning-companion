@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260802-1">
+  <link rel="stylesheet" href="styles.css?v=20260802-3">
 </head>
 <body>
   <div class="book-app">
@@ -77,16 +77,6 @@
             </section>
           </div>
 
-          <section class="assist-zone" aria-labelledby="assistTitle">
-            <header class="assist-header">
-              <div>
-                <span>当前学习单元</span>
-                <h2 id="assistTitle">AI 精准伴学</h2>
-              </div>
-              <div class="assist-tabs" id="assistTabs" role="tablist" aria-label="伴学功能"></div>
-            </header>
-            <div class="assist-content" id="assistContent"></div>
-          </section>
         </div>
 
         <footer class="unit-navigation">
@@ -103,6 +93,20 @@
   <section class="practice-writing-panel" id="practiceWritingPanel" hidden aria-labelledby="practiceWritingTitle">
     <div id="practiceWritingContent"></div>
   </section>
+  <section class="assist-zone" id="assistWindow" hidden aria-labelledby="assistTitle">
+    <header class="assist-header" data-assist-drag-handle>
+      <div>
+        <span id="assistContext">当前学习单元</span>
+        <h2 id="assistTitle">AI 精准伴学</h2>
+      </div>
+      <div class="assist-window-actions">
+        <button type="button" data-assist-window-command="fullscreen" aria-label="全屏 / Full screen" title="全屏 / Full screen">⛶</button>
+        <button type="button" data-assist-window-command="close" aria-label="关闭 / Close" title="关闭 / Close">×</button>
+      </div>
+    </header>
+    <div class="assist-tabs" id="assistTabs" role="tablist" aria-label="伴学功能"></div>
+    <div class="assist-content" id="assistContent"></div>
+  </section>
   <aside class="ai-work-indicator" id="aiWorkIndicator" hidden aria-label="AI 工作状态 / AI work status"></aside>
   <script src="../../vendor/hanzi-writer.min.js?v=20260731-16"></script>
   <script src="../shared/voice-orb.js?v=20260801-1"></script>
@@ -110,6 +114,6 @@
   <script src="../shared/learning-api-client.js?v=20260802-1"></script>
   <script src="book-data.js?v=20260731-16"></script>
   <script src="stroke-data.js?v=20260731-16"></script>
-  <script src="app.js?v=20260802-2" defer></script>
+  <script src="app.js?v=20260802-3" defer></script>
 </body>
 </html>

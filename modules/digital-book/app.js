@@ -56,6 +56,10 @@ const state = {
   section: "vocabulary",
   indices: { vocabulary: 0, text: 0, practice: 0 },
   assistTab: "understand",
+  assistOpen: false,
+  assistDrag: null,
+  assistFullscreen: false,
+  assistPreviousStyle: "",
   words: [],
   textCues: [],
   textParagraphs: [],
@@ -140,6 +144,7 @@ const elements = {
   speed: document.querySelector("#speedSelect"),
   assistTabs: document.querySelector("#assistTabs"),
   assistZone: document.querySelector(".assist-zone"),
+  assistContext: document.querySelector("#assistContext"),
   assistContent: document.querySelector("#assistContent"),
   previous: document.querySelector("#previousUnitButton"),
   next: document.querySelector("#nextUnitButton"),
@@ -587,11 +592,12 @@ function render() {
   const hideAssist = ["partTitle", "sectionTitle", "paragraphReading"].includes(
     item.unitType,
   );
-  elements.assistZone.hidden = hideAssist;
-  elements.workspace.classList.toggle("assist-hidden", hideAssist);
+  elements.assistZone.hidden = hideAssist || !state.assistOpen;
+  elements.workspace.classList.add("assist-hidden");
   if (!hideAssist) {
     renderAssistTabs();
     renderAssistContent();
+    renderAssistContext();
   }
   updateAudioLabels();
   initializeVoiceOrbs();
@@ -630,6 +636,7 @@ function renderPracticeIntro(item) {
       ${item.examples?.length ? `<div class="intro-examples"><strong>例如</strong><ol>${item.examples.map((example) => `<li>${escapeHtml(example)}</li>`).join("")}</ol></div>` : ""}
       ${showInstruction ? `<p class="intro-instruction">${escapeHtml(item.instruction)}</p>` : ""}
       ${choices.length ? `<div class="word-bank">${choices.map((choice) => `<span>${escapeHtml(choice)}</span>`).join("")}</div>` : ""}
+      ${renderContextualAssistButtons()}
     </div>`;
 }
 
@@ -654,6 +661,7 @@ function renderWordUnit(word, index) {
         <button class="quiet-button${status.mastered ? " active" : ""}" type="button" data-command="mastered">✓ 已掌握</button>
         <button class="quiet-button${status.favorite ? " active" : ""}" type="button" data-command="favorite">☆ 收藏</button>
       </div>
+      ${renderContextualAssistButtons()}
     </div>`;
 }
 
@@ -668,8 +676,8 @@ function renderTextUnit(cue, index) {
       ${showTranslation ? `<p class="sentence-translation">${escapeHtml(translationFor(cue.texts))}</p>` : ""}
       <div class="unit-actions">
         <button class="command-button coral" type="button" data-command="play">▶ 播放本句</button>
-        <button class="quiet-button" type="button" data-command="open-shadow">进入跟读</button>
       </div>
+      ${renderContextualAssistButtons()}
       <div class="sentence-neighbors">
         ${previousText ? `<span>上句：${escapeHtml(truncate(previousText, 18))}</span>` : ""}
         ${nextText ? `<span>下句：${escapeHtml(truncate(nextText, 18))}</span>` : ""}
@@ -745,6 +753,7 @@ function renderPracticeUnit(item, index) {
       <h2 class="practice-prompt">${escapeHtml(item.prompt)}</h2>
       ${choices.length ? `<div class="word-bank">${choices.map((choice) => `<span>${escapeHtml(choice)}</span>`).join("")}</div>` : ""}
       ${requiredVocabulary.length ? `<div class="required-vocabulary"><strong>参考词组</strong><div class="word-bank">${requiredVocabulary.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div></div>` : ""}
+      ${renderContextualAssistButtons()}
       ${supportsHandwriting ? `<div class="answer-mode-tabs" role="group" aria-label="作答方式">
         ${allowedModes.includes("keyboard") ? `<button type="button" data-answer-mode="keyboard" class="${answerMode === "keyboard" ? "active" : ""}">键盘输入</button>` : ""}
         ${allowedModes.includes("handwriting") ? `<button type="button" data-answer-mode="handwriting" class="${answerMode === "handwriting" ? "active" : ""}">手写作答</button>` : ""}
@@ -800,9 +809,12 @@ function normalizeChoices(choices) {
 
 function handwritingDraft(itemId) {
   if (!state.handwriting[itemId]) {
-    state.handwriting[itemId] = { cells: [], strokeCounts: [], saved: false, assessment: { status: "idle", result: null, message: "" } };
+    state.handwriting[itemId] = { cells: [], strokeCounts: [], page: 0, selectedCell: null, saved: false, assessment: { status: "idle", result: null, message: "" } };
   }
-  return state.handwriting[itemId];
+  const draft = state.handwriting[itemId];
+  if (!Number.isInteger(draft.page)) draft.page = 0;
+  if (!Number.isInteger(draft.selectedCell)) draft.selectedCell = null;
+  return draft;
 }
 
 function assessmentUsageKey(record) {
@@ -907,6 +919,16 @@ function renderHandwritingLauncher(item) {
 
 function renderHandwritingWorkspace(item) {
   const draft = handwritingDraft(item.id);
+  const cellsPerPage = 80;
+  const pageCount = Math.max(1, Math.ceil(draft.cells.length / cellsPerPage));
+  draft.page = Math.min(draft.page, pageCount - 1);
+  const pageStart = draft.page * cellsPerPage;
+  const manuscriptCells = Array.from({ length: cellsPerPage }, (_, offset) => {
+    const index = pageStart + offset;
+    const image = draft.cells[index];
+    const selected = draft.selectedCell === index;
+    return `<button class="manuscript-cell${image ? " has-writing" : ""}${selected ? " is-selected" : ""}" type="button" ${image ? `data-manuscript-cell="${index}"` : "disabled"} aria-label="${image ? `第${index + 1}格，点击重写` : `第${index + 1}格，空白`}">${image ? `<img src="${escapeAttribute(image)}" alt="第${index + 1}格手写笔迹">` : ""}</button>`;
+  }).join("");
   return `
     <header class="practice-writing-panel-header" data-writing-drag-handle>
       <div>
@@ -919,24 +941,40 @@ function renderHandwritingWorkspace(item) {
       </div>
     </header>
     <div class="handwriting-workspace practice-writing-panel-body">
-      <div class="handwriting-active-grid">
-        <div class="handwriting-grid-lines" aria-hidden="true"></div>
-        <canvas id="practiceHandwritingCanvas" width="600" height="600" aria-label="手写田字格"></canvas>
+      <div class="practice-writing-layout">
+        <section class="single-character-studio">
+          <header><span>单字书写</span><strong>${draft.selectedCell !== null ? `正在重写第 ${draft.selectedCell + 1} 格` : "请在田字格内书写"}</strong></header>
+          <div class="handwriting-active-grid">
+            <div class="handwriting-grid-lines" aria-hidden="true"></div>
+            <canvas id="practiceHandwritingCanvas" width="600" height="600" aria-label="单字手写田字格"></canvas>
+          </div>
+          <div class="handwriting-actions">
+            <button class="quiet-button" type="button" data-command="clear-handwriting">清空本格</button>
+            <button class="command-button" type="button" data-command="confirm-handwriting">${draft.selectedCell !== null ? "确认修改" : "确认此字"}</button>
+            ${draft.selectedCell !== null ? `<button class="quiet-button" type="button" data-command="cancel-handwriting-edit">取消修改</button>` : ""}
+          </div>
+          <div class="punctuation-tools" aria-label="常用标点">
+            <span>常用标点 <small>Punctuation</small></span>
+            <div>${["，", "。", "？", "！", "；", "："].map((mark) => `<button type="button" data-handwriting-punctuation="${mark}">${mark}</button>`).join("")}</div>
+          </div>
+        </section>
+        <section class="manuscript-studio">
+          <header>
+            <div><span>标准田字稿纸</span><strong>已完成 ${draft.cells.length} 格</strong></div>
+            <div class="manuscript-pagination">
+              <button type="button" data-command="previous-handwriting-page" ${draft.page === 0 ? "disabled" : ""} aria-label="上一页 / Previous page">‹</button>
+              <span>${draft.page + 1} / ${pageCount}</span>
+              <button type="button" data-command="next-handwriting-page" ${draft.page >= pageCount - 1 ? "disabled" : ""} aria-label="下一页 / Next page">›</button>
+            </div>
+          </header>
+          <div class="manuscript-page" aria-label="第${draft.page + 1}页田字稿纸">${manuscriptCells}</div>
+          <p>点击已有字格可重新书写。确认的新字会进入下一个空格。</p>
+        </section>
       </div>
-      <p class="handwriting-count">已完成 ${draft.cells.length} 格</p>
-      <div class="handwriting-actions">
-        <button class="quiet-button" type="button" data-command="clear-handwriting">清空本格</button>
-        <button class="command-button" type="button" data-command="confirm-handwriting">确认此字</button>
-        <button class="quiet-button" type="button" data-command="remove-handwriting" ${draft.cells.length ? "" : "disabled"}>撤销上一格</button>
-      </div>
-      <div class="handwriting-cells">
-        ${draft.cells.length
-          ? draft.cells.map((image, index) => `<span><img src="${escapeAttribute(image)}" alt="第${index + 1}格手写笔迹"></span>`).join("")
-          : "<p>确认每个字后，笔迹会按顺序排列在这里。</p>"}
-      </div>
-      <div class="answer-actions">
+      <footer class="practice-writing-footer">
+        <button class="quiet-button" type="button" data-command="remove-handwriting" ${draft.cells.length ? "" : "disabled"}>${draft.selectedCell !== null ? "删除选中字" : "撤销上一格"}</button>
         <button class="command-button" type="button" data-command="save-handwriting">保存手写答案</button>
-      </div>
+      </footer>
       ${draft.saved ? `<div class="answer-feedback"><strong>手写答案已保留</strong><br>确认后可上传到个人学习记录并获得书写建议。</div>${renderAssessmentConsent("practice-writing", draft.assessment)}` : ""}
     </div>`;
 }
@@ -1050,8 +1088,16 @@ function confirmHandwritingCell() {
   const canvas = document.querySelector("#practiceHandwritingCanvas");
   if (!canvas || !state.handwritingStrokeCount) return;
   const draft = handwritingDraft(item.id);
-  draft.cells.push(canvas.toDataURL("image/png"));
-  draft.strokeCounts.push(state.handwritingStrokeCount);
+  const image = canvas.toDataURL("image/png");
+  if (draft.selectedCell !== null && draft.selectedCell < draft.cells.length) {
+    draft.cells[draft.selectedCell] = image;
+    draft.strokeCounts[draft.selectedCell] = state.handwritingStrokeCount;
+  } else {
+    draft.cells.push(image);
+    draft.strokeCounts.push(state.handwritingStrokeCount);
+    draft.page = Math.floor((draft.cells.length - 1) / 80);
+  }
+  draft.selectedCell = null;
   draft.saved = false;
   draft.assessment = { status: "idle", result: null, message: "" };
   refreshPracticeWritingPanel();
@@ -1060,8 +1106,36 @@ function confirmHandwritingCell() {
 function removeHandwritingCell() {
   const item = currentItem();
   const draft = handwritingDraft(item.id);
-  draft.cells.pop();
-  draft.strokeCounts.pop();
+  if (draft.selectedCell !== null && draft.selectedCell < draft.cells.length) {
+    draft.cells.splice(draft.selectedCell, 1);
+    draft.strokeCounts.splice(draft.selectedCell, 1);
+  } else {
+    draft.cells.pop();
+    draft.strokeCounts.pop();
+  }
+  draft.selectedCell = null;
+  draft.page = Math.min(draft.page, Math.max(0, Math.ceil(draft.cells.length / 80) - 1));
+  draft.saved = false;
+  draft.assessment = { status: "idle", result: null, message: "" };
+  refreshPracticeWritingPanel();
+}
+
+function addHandwritingPunctuation(mark) {
+  const item = currentItem();
+  const draft = handwritingDraft(item.id);
+  const canvas = document.createElement("canvas");
+  canvas.width = 600;
+  canvas.height = 600;
+  const context = canvas.getContext("2d");
+  context.fillStyle = "#173b4c";
+  context.font = '700 250px "STKaiti", "KaiTi", serif';
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(mark, 300, 335);
+  draft.cells.push(canvas.toDataURL("image/png"));
+  draft.strokeCounts.push(0);
+  draft.page = Math.floor((draft.cells.length - 1) / 80);
+  draft.selectedCell = null;
   draft.saved = false;
   draft.assessment = { status: "idle", result: null, message: "" };
   refreshPracticeWritingPanel();
@@ -1108,6 +1182,69 @@ function getAssistTabs() {
     { key: "shadow", label: "跟读" },
     { key: "practice", label: state.section === "text" ? "表达" : "小练习" },
   ];
+}
+
+function renderContextualAssistButtons() {
+  const tabs = getAssistTabs();
+  const tones = ["teal", "coral", "gold", "blue"];
+  return `<div class="contextual-assist-tools" aria-label="AI 精准伴学功能">
+    <span>AI 精准伴学 <small>AI Learning Tools</small></span>
+    <div>${tabs.map((tab, index) => `<button class="assist-action ${tones[index % tones.length]}" type="button" data-assist-open="${tab.key}">${escapeHtml(tab.label)}</button>`).join("")}</div>
+  </div>`;
+}
+
+function assistContextLabel() {
+  const item = currentItem();
+  if (item.unitType === "word") return `词语 ${String(item.sourceIndex + 1).padStart(2, "0")} · ${item.hanzi}`;
+  if (item.unitType === "sentence") return `课文第 ${item.sourceIndex + 1} 句`;
+  if (item.unitType === "practiceIntro") return `${item.introNumber} · ${item.groupTitle}`;
+  return item.questionNumber ? `第 ${item.questionNumber} 题` : "当前学习单元";
+}
+
+function renderAssistContext() {
+  if (elements.assistContext) elements.assistContext.textContent = assistContextLabel();
+}
+
+function openAssistWindow(tab = "understand") {
+  if (tab === "write" && state.section === "vocabulary") {
+    openWordWritingDialog();
+    return;
+  }
+  state.assistTab = tab;
+  state.assistOpen = true;
+  elements.assistZone.hidden = false;
+  renderAssistContext();
+  renderAssistTabs();
+  renderAssistContent();
+  initializeVoiceOrbs();
+}
+
+function closeAssistWindow() {
+  if (state.assistFullscreen) setAssistFullscreen(false);
+  state.assistOpen = false;
+  state.assistDrag = null;
+  elements.assistZone.hidden = true;
+}
+
+function setAssistFullscreen(fullscreen) {
+  if (fullscreen === state.assistFullscreen) return;
+  if (fullscreen) {
+    state.assistPreviousStyle = elements.assistZone.getAttribute("style") || "";
+    elements.assistZone.removeAttribute("style");
+    elements.assistZone.classList.add("is-fullscreen");
+  } else {
+    elements.assistZone.classList.remove("is-fullscreen");
+    if (state.assistPreviousStyle) elements.assistZone.setAttribute("style", state.assistPreviousStyle);
+    else elements.assistZone.removeAttribute("style");
+    state.assistPreviousStyle = "";
+  }
+  state.assistFullscreen = fullscreen;
+  const button = elements.assistZone.querySelector('[data-assist-window-command="fullscreen"]');
+  if (button) {
+    button.textContent = fullscreen ? "❐" : "⛶";
+    button.setAttribute("aria-label", fullscreen ? "恢复 / Restore" : "全屏 / Full screen");
+    button.title = fullscreen ? "恢复 / Restore" : "全屏 / Full screen";
+  }
 }
 
 function renderAssistTabs() {
@@ -1848,6 +1985,7 @@ function deterministicShuffle(values, seed) {
 
 function setSection(section, index = state.indices[section] || 0) {
   if (!sectionOrder.includes(section)) return;
+  closeAssistWindow();
   closePracticeWritingPanel();
   resetAudioSource();
   state.section = section;
@@ -1871,6 +2009,7 @@ function moveUnit(direction) {
   const index = currentIndex();
   if (index + direction >= 0 && index + direction < items.length) {
     state.indices[state.section] = index + direction;
+    closeAssistWindow();
     closePracticeWritingPanel();
     stopAudio();
     state.assistTab = "understand";
@@ -2566,8 +2705,8 @@ async function assessWordWriting() {
 }
 
 async function combineHandwritingCells(cells) {
-  const columns = Math.min(8, Math.max(1, cells.length));
-  const rows = Math.ceil(cells.length / columns);
+  const columns = 10;
+  const rows = Math.max(8, Math.ceil(cells.length / columns));
   const cellSize = 180;
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(600, columns * cellSize);
@@ -2577,10 +2716,12 @@ async function combineHandwritingCells(cells) {
   context.fillRect(0, 0, canvas.width, canvas.height);
   const images = await Promise.all(cells.map(loadWritingImage));
   const left = Math.floor((canvas.width - columns * cellSize) / 2);
+  for (let index = 0; index < rows * columns; index += 1) {
+    drawTianGrid(context, left + (index % columns) * cellSize, Math.floor(index / columns) * cellSize, cellSize);
+  }
   images.forEach((image, index) => {
     const x = left + (index % columns) * cellSize;
     const y = Math.floor(index / columns) * cellSize;
-    drawTianGrid(context, x, y, cellSize);
     context.drawImage(image, x, y, cellSize, cellSize);
   });
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
@@ -2681,13 +2822,7 @@ function handleCommand(command) {
   } else if (command === "record") {
     void toggleRecording();
   } else if (command === "open-shadow") {
-    state.assistTab = "shadow";
-    renderAssistTabs();
-    renderAssistContent();
-    initializeVoiceOrbs();
-    if (window.matchMedia("(max-width: 900px)").matches) {
-      elements.assistZone.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    openAssistWindow("shadow");
   } else if (command === "open-word-writing") {
     openWordWritingDialog();
   } else if (command === "play-recording") {
@@ -2723,6 +2858,14 @@ function handleCommand(command) {
     confirmHandwritingCell();
   } else if (command === "remove-handwriting") {
     removeHandwritingCell();
+  } else if (command === "cancel-handwriting-edit") {
+    handwritingDraft(currentItem().id).selectedCell = null;
+    refreshPracticeWritingPanel();
+  } else if (command === "previous-handwriting-page" || command === "next-handwriting-page") {
+    const draft = handwritingDraft(currentItem().id);
+    const direction = command === "next-handwriting-page" ? 1 : -1;
+    draft.page = Math.max(0, Math.min(Math.max(0, Math.ceil(draft.cells.length / 80) - 1), draft.page + direction));
+    refreshPracticeWritingPanel();
   } else if (command === "save-handwriting") {
     saveHandwritingAnswer();
   } else if (command === "assess-practice-handwriting") {
@@ -2756,6 +2899,7 @@ function bindEvents() {
   });
   elements.unitSelect.addEventListener("change", () => {
     stopAudio();
+    closeAssistWindow();
     closePracticeWritingPanel();
     state.indices[state.section] = Number(elements.unitSelect.value);
     state.assistTab = "understand";
@@ -2780,6 +2924,11 @@ function bindEvents() {
       setAnswerMode(answerMode);
       return;
     }
+    const assistTab = event.target.closest("[data-assist-open]")?.dataset.assistOpen;
+    if (assistTab) {
+      openAssistWindow(assistTab);
+      return;
+    }
     const command = event.target.closest("[data-command]")?.dataset.command;
     if (command) handleCommand(command);
   });
@@ -2796,8 +2945,14 @@ function bindEvents() {
     renderAssistContent();
     initializeVoiceOrbs();
     if (tab === "write" && state.section === "vocabulary") {
+      closeAssistWindow();
       openWordWritingDialog();
     }
+  });
+  elements.assistZone.addEventListener("click", (event) => {
+    const command = event.target.closest("[data-assist-window-command]")?.dataset.assistWindowCommand;
+    if (command === "close") closeAssistWindow();
+    else if (command === "fullscreen") setAssistFullscreen(!state.assistFullscreen);
   });
   elements.assistContent.addEventListener("click", (event) => {
     const commandElement = event.target.closest("[data-command]");
@@ -2835,6 +2990,18 @@ function bindEvents() {
     state.wordWriting.writer?.cancelAnimation?.();
   });
   elements.practiceWritingContent.addEventListener("click", (event) => {
+    const punctuation = event.target.closest("[data-handwriting-punctuation]")?.dataset.handwritingPunctuation;
+    if (punctuation) {
+      addHandwritingPunctuation(punctuation);
+      return;
+    }
+    const manuscriptCell = event.target.closest("[data-manuscript-cell]")?.dataset.manuscriptCell;
+    if (manuscriptCell !== undefined) {
+      const draft = handwritingDraft(currentItem().id);
+      draft.selectedCell = Number(manuscriptCell);
+      refreshPracticeWritingPanel();
+      return;
+    }
     const command = event.target.closest("[data-command]")?.dataset.command;
     if (command) handleCommand(command);
   });
@@ -2852,19 +3019,43 @@ function bindEvents() {
     elements.practiceWritingPanel.style.right = "auto";
     handle.setPointerCapture(event.pointerId);
   });
+  elements.assistZone.addEventListener("pointerdown", (event) => {
+    const handle = event.target.closest("[data-assist-drag-handle]");
+    if (!handle || event.target.closest("button") || state.assistFullscreen || window.innerWidth <= 760) return;
+    const rect = elements.assistZone.getBoundingClientRect();
+    state.assistDrag = {
+      pointerId: event.pointerId,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+    };
+    elements.assistZone.style.left = `${rect.left}px`;
+    elements.assistZone.style.top = `${rect.top}px`;
+    elements.assistZone.style.right = "auto";
+    handle.setPointerCapture(event.pointerId);
+  });
   window.addEventListener("pointermove", (event) => {
     const drag = state.practiceWritingDrag;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    const panel = elements.practiceWritingPanel;
-    const maxLeft = Math.max(8, window.innerWidth - panel.offsetWidth - 8);
-    const maxTop = Math.max(8, window.innerHeight - panel.offsetHeight - 8);
-    panel.style.left = `${Math.min(maxLeft, Math.max(8, event.clientX - drag.offsetX))}px`;
-    panel.style.top = `${Math.min(maxTop, Math.max(8, event.clientY - drag.offsetY))}px`;
+    if (drag && drag.pointerId === event.pointerId) {
+      const panel = elements.practiceWritingPanel;
+      const maxLeft = Math.max(8, window.innerWidth - panel.offsetWidth - 8);
+      const maxTop = Math.max(8, window.innerHeight - panel.offsetHeight - 8);
+      panel.style.left = `${Math.min(maxLeft, Math.max(8, event.clientX - drag.offsetX))}px`;
+      panel.style.top = `${Math.min(maxTop, Math.max(8, event.clientY - drag.offsetY))}px`;
+    }
+    const assistDrag = state.assistDrag;
+    if (assistDrag && assistDrag.pointerId === event.pointerId) {
+      const assist = elements.assistZone;
+      const assistMaxLeft = Math.max(8, window.innerWidth - assist.offsetWidth - 8);
+      const assistMaxTop = Math.max(8, window.innerHeight - assist.offsetHeight - 8);
+      assist.style.left = `${Math.min(assistMaxLeft, Math.max(8, event.clientX - assistDrag.offsetX))}px`;
+      assist.style.top = `${Math.min(assistMaxTop, Math.max(8, event.clientY - assistDrag.offsetY))}px`;
+    }
   });
   window.addEventListener("pointerup", (event) => {
     if (state.practiceWritingDrag?.pointerId === event.pointerId) {
       state.practiceWritingDrag = null;
     }
+    if (state.assistDrag?.pointerId === event.pointerId) state.assistDrag = null;
   });
   elements.play.addEventListener("click", () => {
     if (state.aiWork.active) return;
