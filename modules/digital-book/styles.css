@@ -877,6 +877,7 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
 }
 .contextual-assist-tools > span small { margin-left: 5px; color: #667779; font-size: 11px; }
 .contextual-assist-tools > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.assist-button-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .assist-action {
   min-height: 50px;
   min-width: 116px;
@@ -892,6 +893,30 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
 .assist-action.coral { background: #c74d35; }
 .assist-action.gold { color: #fff; background: #94600b; }
 .assist-action.blue { background: #2d5f8d; }
+
+.word-focus-layout {
+  width: min(1120px, 100%);
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(360px, 560px) minmax(150px, 1fr);
+  align-items: center;
+  gap: clamp(34px, 5vw, 78px);
+  margin: 0 auto;
+}
+.word-core { min-width: 0; }
+.word-core .word-hanzi { font-size: 124px; }
+.word-side-tools { display: grid; justify-items: stretch; gap: 18px; }
+.word-side-tools .assist-action { width: 100%; min-width: 132px; }
+.sentence-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+.sentence-action-row .sentence-assist-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.sentence-action-row .assist-action,
+.sentence-action-row .command-button { min-width: 132px; }
 
 /* Movable AI learning window */
 .assist-zone {
@@ -1060,6 +1085,12 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
 
 @media (max-width: 900px) {
   .learning-unit { min-height: 400px; }
+  .word-focus-layout { grid-template-columns: 1fr; gap: 22px; }
+  .word-core { order: 1; }
+  .word-side-left { order: 2; }
+  .word-side-right { order: 3; }
+  .word-side-tools { display: flex; justify-content: center; gap: 10px; }
+  .word-side-tools .assist-action { width: auto; }
   .assist-zone { min-height: 0; }
   .practice-writing-layout { grid-template-columns: 1fr; }
   .practice-writing-panel { min-width: 0; }
@@ -1077,6 +1108,7 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
   }
   .assist-header { cursor: default; }
   .assist-action { min-width: 104px; font-size: 15px; }
+  .word-core .word-hanzi { font-size: 92px; }
   .practice-writing-panel { inset: 6px; width: auto; height: auto; max-width: none; max-height: none; resize: none; }
   .practice-writing-panel-body { height: calc(100dvh - 78px); }
   .practice-writing-layout { min-height: 0; }

@@ -649,19 +649,25 @@ function normalizeComparisonText(value) {
 function renderWordUnit(word, index) {
   const status = state.statuses[word.id] || {};
   const showTranslation = state.assistMode === "bilingual";
+  const assistTabs = getAssistTabs();
   elements.unitContent.innerHTML = `
     <div class="word-unit">
-      <span class="unit-order">词语 ${String(index + 1).padStart(2, "0")}</span>
-      <h2 class="word-hanzi">${escapeHtml(word.hanzi)}</h2>
-      <p class="word-pinyin">${escapeHtml(word.pinyin)}</p>
-      <span class="part-of-speech">${escapeHtml(partOfSpeechLabels[word.partOfSpeech] || word.partOfSpeech)}</span>
-      ${showTranslation ? `<p class="primary-translation">${escapeHtml(translationFor(word.translations))}</p>` : ""}
+      <div class="word-focus-layout">
+        ${renderAssistButtonGroup(assistTabs.slice(0, 2), "word-side-tools word-side-left")}
+        <div class="word-core">
+          <span class="unit-order">词语 ${String(index + 1).padStart(2, "0")}</span>
+          <h2 class="word-hanzi">${escapeHtml(word.hanzi)}</h2>
+          <p class="word-pinyin">${escapeHtml(word.pinyin)}</p>
+          <span class="part-of-speech">${escapeHtml(partOfSpeechLabels[word.partOfSpeech] || word.partOfSpeech)}</span>
+          ${showTranslation ? `<p class="primary-translation">${escapeHtml(translationFor(word.translations))}</p>` : ""}
+        </div>
+        ${renderAssistButtonGroup(assistTabs.slice(2), "word-side-tools word-side-right")}
+      </div>
       <div class="unit-actions">
         <button class="command-button coral" type="button" data-command="play">▶ 播放</button>
         <button class="quiet-button${status.mastered ? " active" : ""}" type="button" data-command="mastered">✓ 已掌握</button>
         <button class="quiet-button${status.favorite ? " active" : ""}" type="button" data-command="favorite">☆ 收藏</button>
       </div>
-      ${renderContextualAssistButtons()}
     </div>`;
 }
 
@@ -674,10 +680,10 @@ function renderTextUnit(cue, index) {
       <span class="unit-order">课文第 ${index + 1} 句</span>
       <h2 class="sentence-zh">${escapeHtml(cue.texts["zh-CN"])}</h2>
       ${showTranslation ? `<p class="sentence-translation">${escapeHtml(translationFor(cue.texts))}</p>` : ""}
-      <div class="unit-actions">
+      <div class="sentence-action-row">
         <button class="command-button coral" type="button" data-command="play">▶ 播放本句</button>
+        ${renderAssistButtonGroup(getAssistTabs(), "sentence-assist-buttons")}
       </div>
-      ${renderContextualAssistButtons()}
       <div class="sentence-neighbors">
         ${previousText ? `<span>上句：${escapeHtml(truncate(previousText, 18))}</span>` : ""}
         ${nextText ? `<span>下句：${escapeHtml(truncate(nextText, 18))}</span>` : ""}
@@ -1186,11 +1192,18 @@ function getAssistTabs() {
 
 function renderContextualAssistButtons() {
   const tabs = getAssistTabs();
-  const tones = ["teal", "coral", "gold", "blue"];
   return `<div class="contextual-assist-tools" aria-label="AI 精准伴学功能">
     <span>AI 精准伴学 <small>AI Learning Tools</small></span>
-    <div>${tabs.map((tab, index) => `<button class="assist-action ${tones[index % tones.length]}" type="button" data-assist-open="${tab.key}">${escapeHtml(tab.label)}</button>`).join("")}</div>
+    ${renderAssistButtonGroup(tabs)}
   </div>`;
+}
+
+function renderAssistButtonGroup(tabs, className = "") {
+  const tones = ["teal", "coral", "gold", "blue"];
+  return `<div class="assist-button-group ${className}">${tabs.map((tab) => {
+    const tabIndex = getAssistTabs().findIndex((candidate) => candidate.key === tab.key);
+    return `<button class="assist-action ${tones[Math.max(0, tabIndex) % tones.length]}" type="button" data-assist-open="${tab.key}">${escapeHtml(tab.label)}</button>`;
+  }).join("")}</div>`;
 }
 
 function assistContextLabel() {
