@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260801-4">
+  <link rel="stylesheet" href="styles.css?v=20260801-5">
 </head>
 <body>
   <div class="app-shell">
@@ -23,6 +23,9 @@
         <input id="globalSearch" type="search" placeholder="搜索教材或课程" autocomplete="off">
       </label>
       <button class="language-button" type="button" title="辅助语言"><span>文</span><b>中文</b></button>
+      <button class="install-button" id="installAppButton" type="button" title="安装点点汉语 / Install Diandian Chinese">
+        <span aria-hidden="true">⇩</span><span><b>安装</b><small>Install</small></span>
+      </button>
       <button class="profile-button" id="profileButton" type="button" aria-haspopup="dialog">
         <span class="profile-avatar" id="profileAvatar">学</span>
         <span><strong id="profileName">邀请码登录</strong><small id="profileRole">访客</small></span>
@@ -141,6 +144,13 @@
     </nav>
   </div>
 
+  <section class="pwa-install-banner" id="pwaInstallBanner" aria-live="polite" hidden>
+    <img src="../../icons/icon-96.png" alt="">
+    <span><strong>安装点点汉语</strong><small id="pwaInstallMessage">添加到桌面，像应用一样打开 / Install this app</small></span>
+    <button class="pwa-install-action" type="button" data-pwa-install>安装 / Install</button>
+    <button class="pwa-install-dismiss" type="button" data-pwa-dismiss aria-label="暂不安装 / Not now">×</button>
+  </section>
+
   <dialog class="role-dialog" id="roleDialog" aria-labelledby="roleDialogTitle">
     <div class="auth-dialog-shell">
       <header><div><span>账号原型</span><h2 id="roleDialogTitle">邀请码登录</h2></div><button type="button" data-auth-close aria-label="关闭">×</button></header>
@@ -187,6 +197,6 @@
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="../../config.js?v=20260801-2"></script>
   <script src="../shared/learning-api-client.js?v=20260801-2"></script>
-  <script src="app.js?v=20260801-5" defer></script>
+  <script src="app.js?v=20260801-6" defer></script>
 </body>
 </html>

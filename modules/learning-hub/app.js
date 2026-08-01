@@ -101,7 +101,63 @@ const elements = {
   classStudentList: document.querySelector("#classStudentList"),
   classStudentCount: document.querySelector("#classStudentCount"),
   toast: document.querySelector("#toast"),
+  installAppButton: document.querySelector("#installAppButton"),
+  pwaInstallBanner: document.querySelector("#pwaInstallBanner"),
+  pwaInstallMessage: document.querySelector("#pwaInstallMessage"),
 };
+
+let deferredInstallPrompt = null;
+
+function isInstalledApp() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+function hideInstallUi() {
+  elements.installAppButton.hidden = true;
+  elements.pwaInstallBanner.hidden = true;
+}
+
+function showInstallNotice() {
+  if (isInstalledApp() || sessionStorage.getItem("pwaInstallNoticeDismissed")) return;
+  elements.pwaInstallBanner.hidden = false;
+}
+
+async function requestAppInstall() {
+  if (isInstalledApp()) {
+    hideInstallUi();
+    return;
+  }
+  if (deferredInstallPrompt) {
+    await deferredInstallPrompt.prompt().catch(() => {});
+    const choice = await deferredInstallPrompt.userChoice.catch(() => null);
+    deferredInstallPrompt = null;
+    if (choice?.outcome === "accepted") {
+      hideInstallUi();
+      showToast("正在安装点点汉语 / Installing Diandian Chinese", 3600);
+      return;
+    }
+  }
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  showToast(
+    isIos
+      ? "请点浏览器“分享”，再选“添加到主屏幕” / Share → Add to Home Screen"
+      : "请点地址栏右侧的安装图标，或浏览器菜单中的“安装应用” / Use the browser Install app menu",
+    6200,
+  );
+}
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  elements.pwaInstallMessage.textContent = "添加到桌面，像应用一样打开 / Install this app";
+  showInstallNotice();
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  hideInstallUi();
+  showToast("点点汉语已安装 / App installed", 3600);
+});
 
 function bookById(id) {
   return books.find((book) => book.id === id) || books[0];
@@ -331,11 +387,11 @@ async function loadCloudTeacherStudents() {
 }
 
 let toastTimer;
-function showToast(message) {
+function showToast(message, duration = 2400) {
   clearTimeout(toastTimer);
   elements.toast.textContent = message;
   elements.toast.hidden = false;
-  toastTimer = setTimeout(() => { elements.toast.hidden = true; }, 2400);
+  toastTimer = setTimeout(() => { elements.toast.hidden = true; }, duration);
 }
 
 function escapeHtml(value) {
@@ -343,6 +399,12 @@ function escapeHtml(value) {
 }
 
 document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-pwa-install]")) { void requestAppInstall(); return; }
+  if (event.target.closest("[data-pwa-dismiss]")) {
+    elements.pwaInstallBanner.hidden = true;
+    sessionStorage.setItem("pwaInstallNoticeDismissed", "1");
+    return;
+  }
   const view = event.target.closest("[data-view]")?.dataset.view;
   if (view) { setView(view); return; }
   if (event.target.closest('[data-action="open-role-dialog"]')) { openAuth("student-login"); return; }
@@ -365,6 +427,7 @@ document.addEventListener("click", (event) => {
 });
 
 elements.profileButton.addEventListener("click", () => openAuth("student-login"));
+elements.installAppButton.addEventListener("click", () => { void requestAppInstall(); });
 elements.roleDialog.addEventListener("click", (event) => { if (event.target === elements.roleDialog) elements.roleDialog.close(); });
 elements.studentLoginForm.addEventListener("submit", (event) => { event.preventDefault(); void handleStudentLogin(event.currentTarget); });
 elements.teacherLoginForm.addEventListener("submit", (event) => { event.preventDefault(); void handleTeacherLogin(event.currentTarget); });
@@ -378,3 +441,14 @@ renderCatalog();
 renderLessons();
 applyIdentity("guest", "");
 setView("home");
+
+if (isInstalledApp()) {
+  hideInstallUi();
+} else {
+  setTimeout(() => {
+    elements.pwaInstallMessage.textContent = deferredInstallPrompt
+      ? "添加到桌面，像应用一样打开 / Install this app"
+      : "可从浏览器菜单安装到桌面 / Install from the browser menu";
+    showInstallNotice();
+  }, 1600);
+}
