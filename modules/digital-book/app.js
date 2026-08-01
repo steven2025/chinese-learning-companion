@@ -156,9 +156,20 @@ const assessmentPhaseLabels = {
   uploading: ["正在安全上传", "Uploading securely"],
   submitting: ["正在提交任务", "Submitting task"],
   assessing: ["智聆测评中", "Assessing pronunciation"],
+  reviewingWriting: ["AI 写作评价中", "Reviewing writing"],
+  reviewingHandwriting: ["AI 书写评价中", "Reviewing handwriting"],
+  reviewingHandwrittenEssay: ["手写识别与写作评价中", "Recognizing and reviewing handwriting"],
   advising: ["正在生成母语建议", "Preparing feedback"],
   saving: ["正在保存结果", "Saving results"],
 };
+
+function assessmentPhaseFor(kind, phase) {
+  if (phase !== "assessing") return phase;
+  if (kind === "writing") return "reviewingWriting";
+  if (kind === "handwriting") return "reviewingHandwriting";
+  if (kind === "handwritten-essay") return "reviewingHandwrittenEssay";
+  return phase;
+}
 
 const buttonTranslations = new Map(Object.entries({
   "词语": "Vocabulary", "课文": "Text", "练习": "Practice",
@@ -2540,8 +2551,9 @@ async function assessWordWriting() {
       locale: effectiveFeedbackLocale(),
       metrics: { characters: writing.characters, recordedStrokeCounts: writing.strokeCounts, expectedStrokeCounts: expected, layout },
     }, { onProgress: (phase) => {
-      writing.assessment.phase = phase;
-      setAiWork(true, phase);
+      const displayPhase = assessmentPhaseFor("handwriting", phase);
+      writing.assessment.phase = displayPhase;
+      setAiWork(true, displayPhase);
       renderWordWritingDialog();
     } });
     writing.assessment = { status: "ready", result, message: "" };
@@ -2606,8 +2618,9 @@ async function assessPracticeHandwriting() {
         layout,
       },
     }, { onProgress: (phase) => {
-      draft.assessment.phase = phase;
-      setAiWork(true, phase);
+      const displayPhase = assessmentPhaseFor("handwritten-essay", phase);
+      draft.assessment.phase = displayPhase;
+      setAiWork(true, displayPhase);
       refreshPracticeWritingPanel();
     } });
     draft.assessment = { status: "ready", result, message: "" };
@@ -2648,8 +2661,9 @@ async function assessPracticeKeyboard() {
         rubric: item.answer?.rubric || [],
       },
     }, { onProgress: (phase) => {
-      state.keyboardAssessments[item.id].phase = phase;
-      setAiWork(true, phase);
+      const displayPhase = assessmentPhaseFor("writing", phase);
+      state.keyboardAssessments[item.id].phase = displayPhase;
+      setAiWork(true, displayPhase);
       renderPracticeUnit(item, currentIndex());
     } });
     state.keyboardAssessments[item.id] = { status: "ready", result, message: "" };
