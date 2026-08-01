@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#123b3d">
   <title>学习中心 · 点点汉语</title>
+  <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
   <link rel="stylesheet" href="styles.css?v=20260801-4">
 </head>
 <body>
@@ -32,7 +34,6 @@
       <nav class="primary-navigation">
         <button class="active" type="button" data-view="home"><span aria-hidden="true">⌂</span><b>首页</b></button>
         <button type="button" data-view="courses"><span aria-hidden="true">册</span><b>我的课程</b></button>
-        <button type="button" data-view="games"><span aria-hidden="true">练</span><b>互动练习</b></button>
         <button type="button" data-view="progress"><span aria-hidden="true">记</span><b>学习记录</b></button>
         <button type="button" data-view="teacher" data-role-nav="teacher" hidden><span aria-hidden="true">教</span><b>教学工作台</b></button>
         <button type="button" data-view="admin" data-role-nav="admin" hidden><span aria-hidden="true">管</span><b>系统管理</b></button>
@@ -70,7 +71,6 @@
             <div class="task-list">
               <a href="../digital-book/"><span class="task-number">01</span><span><strong>词汇与课文学习</strong><small>中级综合1 · 第1课</small></span><b>继续</b></a>
               <a href="../digital-book/"><span class="task-number coral">02</span><span><strong>完成课后练习</strong><small>第41—48题</small></span><b>开始</b></a>
-              <button type="button" data-view="games"><span class="task-number gold">03</span><span><strong>单词消消乐复习</strong><small>使用第1课词汇</small></span><b>待接入</b></button>
             </div>
           </section>
 
@@ -85,15 +85,6 @@
           </section>
         </div>
 
-        <section class="tool-strip">
-          <header><span>学习工具</span><h2>按需要进入专项训练</h2></header>
-          <nav>
-            <a href="../../tools.html?module=learn"><span>字</span><strong>汉字伴写</strong><small>笔顺与跟写</small></a>
-            <a href="../listening-speaking/"><span>声</span><strong>听说训练</strong><small>跟读与录音</small></a>
-            <a href="../../tools.html?module=essay"><span>写</span><strong>写作练习</strong><small>田字格作文</small></a>
-            <button type="button" data-view="games"><span>练</span><strong>互动练习</strong><small>课程游戏</small></button>
-          </nav>
-        </section>
       </section>
 
       <section class="app-view" id="coursesView" data-view-panel="courses" hidden>
@@ -114,23 +105,12 @@
         </div>
       </section>
 
-      <section class="app-view" id="gamesView" data-view-panel="games" hidden>
-        <header class="page-heading"><div><span>互动练习</span><h1>课程游戏</h1><p>游戏使用当前教材和课程的学习内容。</p></div></header>
-        <section class="game-workspace">
-          <div class="game-identity"><span>词</span></div>
-          <div><span>发展汉语词汇游戏</span><h2>单词消消乐</h2><p>选择教材和课程后，使用对应词汇开始练习。</p></div>
-          <div class="game-selectors"><label><span>教材</span><select><option>中级综合1</option></select></label><label><span>范围</span><select><option>第1课</option><option>第1—3课</option></select></label></div>
-          <button class="primary-button" type="button" disabled>游戏模块待接入</button>
-        </section>
-      </section>
-
       <section class="app-view" id="progressView" data-view-panel="progress" hidden>
         <header class="page-heading"><div><span>学习记录</span><h1>我的学习</h1><p>正式登录接入后，这里将汇总跨设备学习记录。</p></div></header>
         <section class="record-table">
           <header><span>最近学习</span><strong>本地原型数据</strong></header>
           <div class="record-row"><time>今天 14:20</time><span><strong>第1课 · 课文学习</strong><small>完成句子41</small></span><b>已完成</b></div>
           <div class="record-row"><time>昨天 19:10</time><span><strong>第1课 · 词汇学习</strong><small>学习18个词语</small></span><b>已记录</b></div>
-          <div class="record-row"><time>7月30日</time><span><strong>听说训练</strong><small>完成1次跟读</small></span><b>本地保存</b></div>
         </section>
       </section>
 
@@ -157,7 +137,6 @@
     <nav class="mobile-navigation" aria-label="移动端导航">
       <button class="active" type="button" data-view="home"><span>⌂</span><b>首页</b></button>
       <button type="button" data-view="courses"><span>册</span><b>课程</b></button>
-      <button type="button" data-view="games"><span>练</span><b>练习</b></button>
       <button type="button" data-view="progress"><span>记</span><b>记录</b></button>
     </nav>
   </div>

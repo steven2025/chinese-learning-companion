@@ -1,28 +1,30 @@
-const CACHE_VERSION = "diandian-chinese-v1";
+const CACHE_VERSION = "diandian-chinese-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./tools.html",
-  "./styles.css",
-  "./app.js",
   "./config.js",
   "./manifest.webmanifest",
   "./vendor/hanzi-writer.min.js",
-  "./data/stroke-data.js",
-  "./data/character-lessons.js",
-  "./data/character-cultures.js",
-  "./data/textbook-library.js",
+  "./data/lessons/zjzh-1-1/vocabulary-audio.json",
+  "./data/lessons/zjzh-1-1/vocabulary-metadata.json",
+  "./data/lessons/zjzh-1-1/text-audio.json",
+  "./data/lessons/zjzh-1-1/book-pages.json",
+  "./data/lessons/zjzh-1-1/lesson-practice.json",
+  "./data/lessons/zjzh-1-1/practice-intro-translations.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/maskable-192.png",
   "./icons/maskable-512.png",
-  "./modules/listening-speaking/index.html",
-  "./modules/listening-speaking/styles.css",
-  "./modules/listening-speaking/app.js",
-  "./modules/listening-speaking/config.js",
-  "./modules/listening-speaking/data/demo-data.js",
-  "./modules/listening-speaking/js/api-client.js",
-  "./modules/listening-speaking/js/voice-orb.js"
+  "./modules/shared/learning-api-client.js",
+  "./modules/shared/voice-orb.js",
+  "./modules/learning-hub/index.html",
+  "./modules/learning-hub/styles.css",
+  "./modules/learning-hub/app.js",
+  "./modules/digital-book/index.html",
+  "./modules/digital-book/styles.css",
+  "./modules/digital-book/app.js",
+  "./modules/digital-book/book-data.js",
+  "./modules/digital-book/stroke-data.js"
 ];
 
 self.addEventListener("install", event => {
