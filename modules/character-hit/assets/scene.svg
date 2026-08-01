@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="山水与城市屋檐构成的游戏场景">
+  <rect width="1600" height="900" fill="#d9edf0"/>
+  <circle cx="1280" cy="145" r="76" fill="#efb84c" opacity=".9"/>
+  <path d="M0 490L180 320l150 135 205-245 185 225 170-142 210 177 200-220 300 265v385H0z" fill="#7fa7a0"/>
+  <path d="M0 580l210-155 180 120 180-170 190 150 180-90 180 145 210-190 270 165v345H0z" fill="#4f7e75"/>
+  <path d="M0 675l240-82 195 72 210-115 230 125 190-70 210 95 325-125v325H0z" fill="#285d58"/>
+  <g fill="#fff" opacity=".78">
+    <path d="M150 170c42-52 118-29 126 23 55-35 123 5 115 59H91c-5-42 24-77 59-82z"/>
+    <path d="M930 230c35-44 99-25 105 19 46-29 103 4 96 50H881c-4-35 20-64 49-69z"/>
+  </g>
+  <g fill="#163f42">
+    <path d="M0 786h1600v114H0z"/>
+    <path d="M90 790l115-92h250l116 92zM1030 790l110-88h276l106 88z"/>
+  </g>
+  <g fill="#d65d45">
+    <path d="M60 792h545l-35 22H95zM995 792h560l-42 22h-485z"/>
+  </g>
+  <g fill="#f5d98c" opacity=".95">
+    <circle cx="235" cy="702" r="12"/><circle cx="410" cy="702" r="12"/>
+    <circle cx="1165" cy="704" r="12"/><circle cx="1380" cy="704" r="12"/>
+  </g>
+  <g stroke="#b14c3c" stroke-width="3" fill="none" opacity=".65">
+    <path d="M235 714v40M410 714v40M1165 716v40M1380 716v40"/>
+  </g>
+</svg>
+

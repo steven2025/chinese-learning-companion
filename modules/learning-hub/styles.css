@@ -185,6 +185,18 @@ button { cursor: pointer; }
 .student-row b { flex: 0 0 auto; color: var(--teal); font-size: 10px; }
 .empty-approval { margin: 20px 0 4px; color: var(--muted); font-size: 12px; text-align: center; }
 .mobile-navigation { display: none; }
+.game-library { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, .7fr); gap: 18px; }
+.game-entry { min-height: 210px; display: grid; grid-template-columns: 190px minmax(0, 1fr) auto; align-items: center; gap: 24px; padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: #fff; box-shadow: 0 12px 32px rgba(32,67,68,.08); }
+.game-entry-visual { height: 150px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; background: var(--teal-dark); border-bottom: 7px solid var(--coral); }
+.game-entry-visual i, .game-entry-visual strong { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.34); border-radius: 50%; background: rgba(255,255,255,.12); font: 800 24px/1 "KaiTi", serif; font-style: normal; }
+.game-entry-visual strong { color: var(--teal-dark); background: #ffd982; }
+.game-entry span { color: var(--coral); font-size: 10px; font-weight: 800; }
+.game-entry h2 { margin: 5px 0 7px; font-size: 23px; }
+.game-entry p { margin: 0 0 14px; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.game-entry small { color: var(--teal); font-size: 10px; font-weight: 750; }
+.game-entry em { align-self: end; padding: 11px 14px; color: #fff; border-radius: 6px; background: var(--teal); box-shadow: 0 4px 0 #0b625c; font-size: 11px; font-style: normal; font-weight: 800; white-space: nowrap; }
+.game-entry.coming-soon { grid-template-columns: 72px 1fr; align-content: center; opacity: .78; box-shadow: none; }
+.game-entry-mark { width: 66px; height: 66px; display: grid; place-items: center; color: #fff; border-radius: 8px; background: var(--gold); font: 800 29px/1 "KaiTi", serif; }
 .role-dialog { width: min(650px, calc(100% - 24px)); padding: 0; color: var(--ink); border: 1px solid #b9cbc7; border-radius: 8px; background: #fff; box-shadow: 0 24px 70px rgba(18,59,61,.28); }
 .role-dialog::backdrop { background: rgba(18, 44, 46, .55); }
 .auth-dialog-shell { padding: 22px; }
@@ -218,6 +230,7 @@ button { cursor: pointer; }
   .topbar { grid-template-columns: 210px 1fr auto auto auto; }
   .global-search { display: none; }
   .dashboard-grid { grid-template-columns: 1fr; }
+  .game-library { grid-template-columns: 1fr; }
   .level-books { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
@@ -242,6 +255,9 @@ button { cursor: pointer; }
   .catalog-filters label, .catalog-filters > div { margin: 0; }
   .catalog-note { display: none !important; }
   .lesson-list { grid-template-columns: 1fr; }
+  .game-entry { grid-template-columns: 120px minmax(0, 1fr); padding: 16px; }
+  .game-entry-visual { height: 112px; }
+  .game-entry em { grid-column: 1 / -1; justify-self: stretch; text-align: center; }
   .record-row { grid-template-columns: 88px 1fr; }
   .record-row b { grid-column: 2; }
   .mobile-navigation { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; height: 62px; display: grid; grid-template-columns: repeat(4, 1fr); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--line); background: #fff; }

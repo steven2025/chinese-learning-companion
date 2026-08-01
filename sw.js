@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v8";
+const CACHE_VERSION = "diandian-chinese-v9";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -20,6 +20,17 @@ const APP_SHELL = [
   "./modules/learning-hub/index.html",
   "./modules/learning-hub/styles.css",
   "./modules/learning-hub/app.js",
+  "./modules/character-hit/index.html",
+  "./modules/character-hit/styles.css",
+  "./modules/character-hit/app.js",
+  "./modules/character-hit/assets/scene.svg",
+  "./modules/character-hit/assets/audio/launch.wav",
+  "./modules/character-hit/assets/audio/correct.wav",
+  "./modules/character-hit/assets/audio/shatter.wav",
+  "./modules/character-hit/assets/audio/place.wav",
+  "./modules/character-hit/assets/audio/stage.wav",
+  "./modules/character-hit/assets/audio/victory.wav",
+  "./data/games/character-hit/zjzh-1-1.json",
   "./modules/digital-book/index.html",
   "./modules/digital-book/styles.css",
   "./modules/digital-book/app.js",

@@ -37,6 +37,7 @@
       <nav class="primary-navigation">
         <button class="active" type="button" data-view="home"><span aria-hidden="true">⌂</span><b>首页</b></button>
         <button type="button" data-view="courses"><span aria-hidden="true">册</span><b>我的课程</b></button>
+        <button type="button" data-view="games"><span aria-hidden="true">趣</span><b>趣味游戏</b></button>
         <button type="button" data-view="progress"><span aria-hidden="true">记</span><b>学习记录</b></button>
         <button type="button" data-view="teacher" data-role-nav="teacher" hidden><span aria-hidden="true">教</span><b>教学工作台</b></button>
         <button type="button" data-view="admin" data-role-nav="admin" hidden><span aria-hidden="true">管</span><b>系统管理</b></button>
@@ -74,6 +75,7 @@
             <div class="task-list">
               <a href="../digital-book/"><span class="task-number">01</span><span><strong>词汇与课文学习</strong><small>中级综合1 · 第1课</small></span><b>继续</b></a>
               <a href="../digital-book/"><span class="task-number coral">02</span><span><strong>完成课后练习</strong><small>第41—48题</small></span><b>开始</b></a>
+              <a href="../character-hit/"><span class="task-number gold">03</span><span><strong>开心“打”字</strong><small>组汉字 · 辨拼音 · 认词义</small></span><b>挑战</b></a>
             </div>
           </section>
 
@@ -88,6 +90,21 @@
           </section>
         </div>
 
+      </section>
+
+      <section class="app-view" id="gamesView" data-view-panel="games" hidden>
+        <header class="page-heading"><div><span>趣味复习</span><h1>教材词汇游戏</h1><p>从当前教材和课程中选择词语，完成短时、高频的回顾练习。</p></div></header>
+        <div class="game-library">
+          <a class="game-entry featured" href="../character-hit/">
+            <div class="game-entry-visual" aria-hidden="true"><i>门</i><b>+</b><i>耳</i><b>→</b><strong>闻</strong></div>
+            <div><span>中级综合 I · 第1课</span><h2>开心“打”字</h2><p>射中正确部件组汉字，再完成拼音和母语词义辨认。</p><small>原型 · 5个教材词语</small></div>
+            <em>开始挑战 ›</em>
+          </a>
+          <article class="game-entry coming-soon">
+            <div class="game-entry-mark" aria-hidden="true">连</div>
+            <div><span>教材词汇复习</span><h2>单词连连看</h2><p>原有游戏将在完成词库接口整理后接入。</p><small>准备中</small></div>
+          </article>
+        </div>
       </section>
 
       <section class="app-view" id="coursesView" data-view-panel="courses" hidden>
@@ -146,6 +163,7 @@
     <nav class="mobile-navigation" aria-label="移动端导航">
       <button class="active" type="button" data-view="home"><span>⌂</span><b>首页</b></button>
       <button type="button" data-view="courses"><span>册</span><b>课程</b></button>
+      <button type="button" data-view="games"><span>趣</span><b>游戏</b></button>
       <button type="button" data-view="progress"><span>记</span><b>记录</b></button>
     </nav>
   </div>

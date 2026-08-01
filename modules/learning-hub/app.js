@@ -73,7 +73,7 @@ const state = {
   teacherContext: { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" },
 };
 
-const viewLabels = { home: "首页", courses: "我的课程", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
+const viewLabels = { home: "首页", courses: "我的课程", games: "趣味游戏", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
 
 if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
   window.addEventListener("load", () => {
