@@ -1,6 +1,4 @@
 const DATA_ROOT = "../../data/lessons/zjzh-1-1";
-const AUDIO_ROOT =
-  "../../Multilingual Chinese Learning Data Generator/zjzh-1-1/audio";
 const STROKE_DATA_ROOT =
   "https://hsk-1311686407.cos.ap-guangzhou.myqcloud.com/hanzi-companion/stroke-data/v2.0.1/characters";
 
@@ -78,6 +76,7 @@ const state = {
   quizResult: null,
   audioSource: "",
   audioUrls: {},
+  audioMessage: "",
   audioMode: "single",
   audioSegment: null,
   loopCurrent: false,
@@ -1845,28 +1844,84 @@ function audioSourceForSection() {
 
 async function ensureAudioSource(source) {
   if (!source) return false;
-  if (state.audioSource === source && elements.audio.src) return true;
+  if (
+    state.audioSource === source
+    && state.audioUrls[source]
+    && elements.audio.getAttribute("src")
+  ) return true;
+
   elements.audio.pause();
-  state.audioSource = source;
-  let audioUrl = state.audioUrls[source] || "";
-  if (!audioUrl && window.LearningApi?.isConfigured() && window.LearningApi.token()) {
-    try {
-      const result = await window.LearningApi.mediaUrl({ lessonId: "zjzh-1-1", mediaType: source });
-      audioUrl = result.url;
-      state.audioUrls[source] = audioUrl;
-    } catch (error) {
-      console.warn("COS 教材音频暂不可用，使用本地音频。", error);
-    }
+  state.audioSource = "";
+  state.audioMessage = "正在连接教材音频 / Loading audio";
+  updateAudioLabels();
+
+  if (!window.LearningApi?.isConfigured()) {
+    state.audioMessage = "教材音频服务尚未配置 / Audio service unavailable";
+    updateAudioLabels();
+    return false;
   }
-  elements.audio.src = audioUrl || `${AUDIO_ROOT}/${source}.mp3`;
+
+  if (!window.LearningApi.token()) {
+    state.audioMessage = "请从学习中心登录后播放 / Sign in from Learning Center";
+    updateAudioLabels();
+    return false;
+  }
+
+  let audioUrl = state.audioUrls[source] || "";
+  try {
+    if (!audioUrl) {
+      const result = await window.LearningApi.mediaUrl({
+        lessonId: "zjzh-1-1",
+        mediaType: source,
+      });
+      audioUrl = String(result?.url || "");
+      if (!audioUrl) throw new Error("云端未返回音频地址");
+      state.audioUrls[source] = audioUrl;
+    }
+  } catch (error) {
+    const message = String(error?.message || "");
+    state.audioMessage = /登录|邀请码|会话|401|token/i.test(message)
+      ? "登录已失效，请返回学习中心重新登录 / Session expired"
+      : "教材音频暂时无法加载，请稍后重试 / Audio temporarily unavailable";
+    updateAudioLabels();
+    return false;
+  }
+
+  state.audioSource = source;
+  elements.audio.src = audioUrl;
   elements.audio.load();
-  if (elements.audio.readyState >= HTMLMediaElement.HAVE_METADATA) return true;
-  return new Promise((resolve) => {
-    const finish = () => resolve(true);
-    const fail = () => resolve(false);
-    elements.audio.addEventListener("loadedmetadata", finish, { once: true });
-    elements.audio.addEventListener("error", fail, { once: true });
+  if (elements.audio.readyState >= HTMLMediaElement.HAVE_METADATA) {
+    state.audioMessage = "";
+    return true;
+  }
+
+  const ready = await new Promise((resolve) => {
+    let timeoutId;
+    const cleanup = () => {
+      clearTimeout(timeoutId);
+      elements.audio.removeEventListener("loadedmetadata", finish);
+      elements.audio.removeEventListener("error", fail);
+    };
+    const finish = () => { cleanup(); resolve(true); };
+    const fail = () => { cleanup(); resolve(false); };
+    timeoutId = setTimeout(fail, 12000);
+    elements.audio.addEventListener("loadedmetadata", finish);
+    elements.audio.addEventListener("error", fail);
   });
+
+  if (!ready) {
+    delete state.audioUrls[source];
+    state.audioSource = "";
+    elements.audio.removeAttribute("src");
+    elements.audio.load();
+    state.audioMessage = "教材音频暂时无法加载，请稍后重试 / Audio temporarily unavailable";
+    updateAudioLabels();
+    return false;
+  }
+
+  state.audioMessage = "";
+  updateAudioLabels();
+  return true;
 }
 
 async function playCurrent(mode = "single") {
@@ -1913,6 +1968,7 @@ function resetAudioSource() {
   elements.seek.value = "0";
   elements.audioTime.textContent = "00:00 / 00:00";
   state.audioSource = "";
+  state.audioMessage = "";
   state.audioMode = "single";
   state.audioSegment = null;
 }
@@ -1966,11 +2022,13 @@ function updateAudioLabels() {
         ? `课文${paragraphOrdinal(state.readingParagraphIndex)}`
       : `课文第 ${item.sourceIndex + 1} 句`;
   elements.audioLabel.textContent = label;
-  elements.audioStatus.textContent = elements.audio.paused
-    ? "准备播放"
-    : state.audioMode === "continuous"
-      ? "连续播放"
-      : "播放当前单元";
+  elements.audioStatus.textContent = state.audioMessage || (
+    elements.audio.paused
+      ? "准备播放 / Ready"
+      : state.audioMode === "continuous"
+        ? "连续播放 / Playing all"
+        : "播放当前单元 / Playing"
+  );
   elements.play.textContent = elements.audio.paused ? "▶" : "Ⅱ";
   elements.continuous.classList.toggle(
     "active",
