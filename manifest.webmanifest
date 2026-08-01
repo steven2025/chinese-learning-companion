@@ -1,7 +1,7 @@
 {
-  "name": "天天汉语伴学系统",
-  "short_name": "天天汉语",
-  "description": "面向中文学习者的听说、汉字书写、写作与综合伴学系统 · Tiantian Chinese Learning Companion",
+  "name": "点点汉语 · 智能中文伴学平台",
+  "short_name": "点点汉语",
+  "description": "面向中文学习者的听说、汉字书写、写作与综合智能伴学平台 · Diandian Chinese AI Learning Companion",
   "lang": "zh-Hans",
   "id": "./",
   "start_url": "./",
