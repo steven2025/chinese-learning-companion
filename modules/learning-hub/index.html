@@ -124,6 +124,12 @@
           <label><span>教材</span><select id="teacherBookSelect"></select></label>
           <div><span>任课教师</span><strong id="teacherContextName">—</strong></div>
         </section>
+        <section class="writing-policy-panel" aria-labelledby="writingPolicyTitle">
+          <div><span>47、48题</span><h2 id="writingPolicyTitle">写作作答方式 <small>Writing input mode</small></h2><p>此设置对当前学期、教材和班级生效。</p></div>
+          <label><span>学生可使用</span><select id="writingInputModeSelect"><option value="both">键盘输入和手写作答</option><option value="handwriting-only">仅手写作答</option><option value="keyboard-only">仅键盘输入</option></select></label>
+          <button class="primary-button" id="saveWritingPolicyButton" type="button">保存设置 <small>Save</small></button>
+          <p id="writingPolicyStatus" role="status"></p>
+        </section>
         <section class="approval-panel">
           <header><div><span>课程成员</span><h2>本班学生</h2></div><strong id="classStudentCount">0人</strong></header>
           <div id="classStudentList"></div>
@@ -196,7 +202,7 @@
 
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="../../config.js?v=20260801-2"></script>
-  <script src="../shared/learning-api-client.js?v=20260801-2"></script>
-  <script src="app.js?v=20260801-6" defer></script>
+  <script src="../shared/learning-api-client.js?v=20260802-1"></script>
+  <script src="app.js?v=20260802-1" defer></script>
 </body>
 </html>

@@ -756,6 +756,11 @@ button:disabled { filter: grayscale(.18); }
 .assessment-consent label small { color: var(--muted); font-size: 10px; }
 .assessment-language { margin: 0; color: #405253; font-size: 12px; line-height: 1.5; }
 .assessment-language small { display: block; color: var(--muted); font-size: 10px; }
+.assessment-consent .assessment-language-select { display: grid; grid-template-columns: minmax(130px, auto) minmax(180px, 1fr); align-items: center; gap: 10px; }
+.assessment-language-select > span { font-weight: 750; }
+.assessment-language-select small { display: block; color: var(--muted); font-size: 9px; }
+.assessment-language-select select { min-width: 0; min-height: 38px; padding: 0 9px; color: var(--ink); border: 1px solid #afc7c2; border-radius: 5px; background: #fff; }
+.assessment-panel li small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
 .assessment-panel.is-working { display: grid; place-items: center; gap: 8px; text-align: center; }
 .assessment-panel.is-working > p { margin: 2px 0 0; font-size: 13px; }
 .assessment-panel.is-working > small { color: var(--muted); font-size: 10px; }
@@ -842,6 +847,7 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
   .ai-mechanical-clock { gap: 12px; }
   .clock-face { width: 92px; height: 92px; }
   .assessment-consent .command-button { width: 100%; }
+  .assessment-consent .assessment-language-select { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

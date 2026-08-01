@@ -110,5 +110,7 @@
     uploadTicket: (input) => request("/uploads/ticket", input),
     assessmentHistory: () => request("/assessments/history", {}),
     classStudents: () => request("/classes/students", {}),
+    classSettings: () => request("/classes/settings", {}),
+    updateClassSettings: (input) => request("/classes/settings/update", input),
   });
 })();

@@ -66,6 +66,9 @@ const state = {
   answers: readStoredJson("digitalBookPracticeAnswers", {}),
   submitted: readStoredJson("digitalBookPracticeSubmitted", {}),
   answerModes: {},
+  keyboardAssessments: {},
+  classSettings: { writingInputMode: "both" },
+  feedbackPreference: localStorage.getItem("digitalBookFeedbackLanguage") || "native",
   handwriting: {},
   handwritingDrawing: false,
   handwritingStrokeCount: 0,
@@ -721,7 +724,10 @@ function renderPracticeUnit(item, index) {
   const choices = normalizeChoices(item.choices);
   const requiredVocabulary = item.requiredVocabulary || [];
   const supportsHandwriting = item.questionNumber >= 47;
-  const answerMode = state.answerModes[item.id] || "keyboard";
+  const allowedModes = writingInputModes();
+  const preferredMode = state.answerModes[item.id] || allowedModes[0];
+  const answerMode = allowedModes.includes(preferredMode) ? preferredMode : allowedModes[0];
+  state.answerModes[item.id] = answerMode;
   elements.unitContent.innerHTML = `
     <div class="practice-unit">
       <span class="practice-target">第 ${item.questionNumber} 题 · ${escapeHtml(item.target || item.groupTitle || item.sectionTitle)}</span>
@@ -729,8 +735,8 @@ function renderPracticeUnit(item, index) {
       ${choices.length ? `<div class="word-bank">${choices.map((choice) => `<span>${escapeHtml(choice)}</span>`).join("")}</div>` : ""}
       ${requiredVocabulary.length ? `<div class="required-vocabulary"><strong>参考词组</strong><div class="word-bank">${requiredVocabulary.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div></div>` : ""}
       ${supportsHandwriting ? `<div class="answer-mode-tabs" role="group" aria-label="作答方式">
-        <button type="button" data-answer-mode="keyboard" class="${answerMode === "keyboard" ? "active" : ""}">键盘输入</button>
-        <button type="button" data-answer-mode="handwriting" class="${answerMode === "handwriting" ? "active" : ""}">手写作答</button>
+        ${allowedModes.includes("keyboard") ? `<button type="button" data-answer-mode="keyboard" class="${answerMode === "keyboard" ? "active" : ""}">键盘输入</button>` : ""}
+        ${allowedModes.includes("handwriting") ? `<button type="button" data-answer-mode="handwriting" class="${answerMode === "handwriting" ? "active" : ""}">手写作答</button>` : ""}
       </div>` : ""}
       <div class="answer-box">
         ${answerMode === "handwriting" && supportsHandwriting
@@ -740,10 +746,38 @@ function renderPracticeUnit(item, index) {
               <button class="quiet-button" type="button" data-command="clear-answer">清空</button>
               <button class="command-button" type="button" data-command="submit-answer">提交作答</button>
             </div>
-            ${submitted ? renderPracticeFeedback(item, answer) : ""}`
+            ${submitted ? renderPracticeFeedback(item, answer) : ""}
+            ${submitted && item.type === "guidedProduction" ? renderAssessmentConsent("practice-keyboard", keyboardAssessment(item.id)) : ""}`
         }
       </div>
     </div>`;
+}
+
+function writingInputModes() {
+  const mode = state.classSettings.writingInputMode;
+  if (mode === "handwriting-only") return ["handwriting"];
+  if (mode === "keyboard-only") return ["keyboard"];
+  return ["keyboard", "handwriting"];
+}
+
+function keyboardAssessment(itemId) {
+  if (!state.keyboardAssessments[itemId]) state.keyboardAssessments[itemId] = { status: "idle", result: null, message: "" };
+  return state.keyboardAssessments[itemId];
+}
+
+function effectiveFeedbackLocale() {
+  if (state.feedbackPreference === "zh-CN") return "zh-CN";
+  if (state.feedbackPreference === "bilingual") return `bi-${state.locale}`;
+  return state.locale;
+}
+
+function feedbackLanguageOptions() {
+  const native = languageLabels[state.locale] || "English";
+  return [
+    ["native", `当前母语 · ${native}`],
+    ["zh-CN", "中文"],
+    ["bilingual", `中文 + ${native}`],
+  ];
 }
 
 function normalizeChoices(choices) {
@@ -798,6 +832,11 @@ function renderAssessmentResult(assessment) {
     ["准确度", "Accuracy", scores.accuracy],
     ["流利度", "Fluency", scores.fluency],
     ["完整度", "Completion", scores.completion],
+    ["任务完成", "Task", scores.taskCompletion],
+    ["目标词语", "Vocabulary", scores.targetVocabulary],
+    ["内容结构", "Content", scores.contentStructure],
+    ["中文表达", "Chinese", scores.chineseExpression],
+    ["综合", "Overall", scores.total],
   ].filter(([, , value]) => value !== null && value !== undefined);
   const adviceList = (key) => Array.isArray(advice[key]) && advice[key].length
     ? `<ul>${advice[key].map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
@@ -808,6 +847,11 @@ function renderAssessmentResult(assessment) {
     ${adviceList("strengths") ? `<section><strong>做得较好 <small>Strengths</small></strong>${adviceList("strengths")}</section>` : ""}
     ${adviceList("priorities") ? `<section><strong>优先改进 <small>Priorities</small></strong>${adviceList("priorities")}</section>` : ""}
     ${adviceList("practiceSteps") ? `<section><strong>练习建议 <small>Practice steps</small></strong>${adviceList("practiceSteps")}</section>` : ""}
+    ${Array.isArray(advice.revisionExamples) && advice.revisionExamples.length ? `<section><strong>局部修改示范 <small>Revision examples</small></strong><ul>${advice.revisionExamples.map((example) => `<li><b>${escapeHtml(example.original || "")}</b> → ${escapeHtml(example.revised || "")}<small>${escapeHtml(example.reason || "")}</small></li>`).join("")}</ul></section>` : ""}
+    ${adviceList("checklist") ? `<section><strong>再次检查 <small>Checklist</small></strong>${adviceList("checklist")}</section>` : ""}
+    ${result.recognizedText ? `<section><strong>手写识别文本 <small>Recognized text</small></strong><p>${escapeHtml(result.recognizedText)}</p></section>` : ""}
+    ${result.contentAssessmentAvailable === false ? `<p class="assessment-basis">手写文字未能可靠识别，本次只提供书写指标建议，不评价作文内容。</p>` : ""}
+    ${result.handwritingAdvice ? `<section><strong>汉字书写建议 <small>Handwriting</small></strong><p>${escapeHtml(result.handwritingAdvice.summary || "")}</p>${Array.isArray(result.handwritingAdvice.priorities) ? `<ul>${result.handwritingAdvice.priorities.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}</section>` : ""}
     ${advice.reviewBasis ? `<p class="assessment-basis">${escapeHtml(advice.reviewBasis)}</p>` : ""}
   </div>`;
 }
@@ -816,11 +860,22 @@ function renderAssessmentConsent(kind, assessment) {
   const working = assessment?.status === "working";
   const quota = kind === "recording" ? recordingQuota() : null;
   const exhausted = Boolean(quota && quota.remaining <= 0);
-  const command = kind === "recording" ? "assess-recording" : kind === "word-writing" ? "assess-word-writing" : "assess-practice-handwriting";
+  const unlimitedLabel = kind === "practice-keyboard"
+    ? "<strong>写作测评次数不限</strong><small>Unlimited writing reviews</small>"
+    : kind === "practice-writing"
+      ? "<strong>内容与书写测评次数不限</strong><small>Unlimited content and handwriting reviews</small>"
+      : "<strong>书写测评次数不限</strong><small>Unlimited handwriting reviews</small>";
+  const command = kind === "recording"
+    ? "assess-recording"
+    : kind === "word-writing"
+      ? "assess-word-writing"
+      : kind === "practice-keyboard"
+        ? "assess-practice-keyboard"
+        : "assess-practice-handwriting";
   const commandAttribute = kind === "word-writing" ? `data-writing-command="${command}"` : `data-command="${command}"`;
   return `<div class="assessment-consent">
-    <div class="assessment-quota ${quota ? "is-limited" : "is-unlimited"}">${quota ? `<strong>本学习点剩余 ${quota.remaining} / 2 次</strong><small>${quota.remaining} of 2 assessments remaining</small>` : `<strong>书写测评次数不限</strong><small>Unlimited handwriting reviews</small>`}</div>
-    <p class="assessment-language">评价与建议将直接使用：<strong>${escapeHtml(languageLabels[state.locale] || "English")}</strong><small> Feedback will be written directly in the selected support language.</small></p>
+    <div class="assessment-quota ${quota ? "is-limited" : "is-unlimited"}">${quota ? `<strong>本学习点剩余 ${quota.remaining} / 2 次</strong><small>${quota.remaining} of 2 assessments remaining</small>` : unlimitedLabel}</div>
+    <label class="assessment-language-select"><span>评价语言 <small>Feedback language</small></span><select data-feedback-language>${feedbackLanguageOptions().map(([value, label]) => `<option value="${value}"${state.feedbackPreference === value ? " selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>
     <label><input type="checkbox" data-assessment-consent="${kind}" ${exhausted ? "disabled" : ""}> <span>同意将本次作品保存到我的 COS 学习记录，并用于 AI 测评<br><small>I agree to save this work to my private COS learning record for AI assessment.</small></span></label>
     <button class="command-button" type="button" ${commandAttribute} ${working || exhausted ? "disabled" : ""}>${exhausted ? "测评次数已用完" : working ? "测评中…" : assessment?.status === "ready" ? "重新测评" : "AI 评估与建议"}</button>
   </div>${renderAssessmentResult(assessment)}`;
@@ -1012,6 +1067,7 @@ function saveHandwritingAnswer() {
 function setAnswerMode(mode) {
   const item = currentItem();
   if (item.questionNumber < 47) return;
+  if (!writingInputModes().includes(mode)) return;
   state.answerModes[item.id] = mode;
   if (mode === "keyboard") closePracticeWritingPanel();
   renderPracticeUnit(item);
@@ -1692,7 +1748,7 @@ function renderPracticeFeedback(item, response) {
     return `
       <div class="answer-feedback">
         <strong>键盘答案已保存</strong><br>
-        当前版本暂不进行 AI 评价，后续接入云函数和大模型后再启用。
+        可在下方选择评价语言，再获得四项内容评价和完善建议。
       </div>`;
   }
   const result = evaluatePractice(item, response);
@@ -2381,7 +2437,7 @@ async function assessRecording() {
       unitType: record.unitType,
       unitId: record.unitId,
       referenceText: record.referenceText,
-      locale: state.locale,
+      locale: effectiveFeedbackLocale(),
       mode: record.assessments[0].mode,
     }, { onProgress: (phase) => {
       state.recordingAssessment.phase = phase;
@@ -2481,7 +2537,7 @@ async function assessWordWriting() {
       unitType: "vocabularyWriting",
       unitId: `${word.id}-writing`,
       referenceText: word.hanzi,
-      locale: state.locale,
+      locale: effectiveFeedbackLocale(),
       metrics: { characters: writing.characters, recordedStrokeCounts: writing.strokeCounts, expectedStrokeCounts: expected, layout },
     }, { onProgress: (phase) => {
       writing.assessment.phase = phase;
@@ -2502,14 +2558,15 @@ async function combineHandwritingCells(cells) {
   const rows = Math.ceil(cells.length / columns);
   const cellSize = 180;
   const canvas = document.createElement("canvas");
-  canvas.width = columns * cellSize;
-  canvas.height = rows * cellSize;
+  canvas.width = Math.max(600, columns * cellSize);
+  canvas.height = Math.max(800, rows * cellSize);
   const context = canvas.getContext("2d");
   context.fillStyle = "#fff";
   context.fillRect(0, 0, canvas.width, canvas.height);
   const images = await Promise.all(cells.map(loadWritingImage));
+  const left = Math.floor((canvas.width - columns * cellSize) / 2);
   images.forEach((image, index) => {
-    const x = (index % columns) * cellSize;
+    const x = left + (index % columns) * cellSize;
     const y = Math.floor(index / columns) * cellSize;
     drawTianGrid(context, x, y, cellSize);
     context.drawImage(image, x, y, cellSize, cellSize);
@@ -2536,9 +2593,18 @@ async function assessPracticeHandwriting() {
       lessonId: "zjzh-1-1",
       unitType: "practiceHandwriting",
       unitId: item.id,
-      referenceText: `第${item.questionNumber}题手写作答`,
-      locale: state.locale,
-      metrics: { questionNumber: item.questionNumber, characterCount: draft.cells.length, recordedStrokeCounts: draft.strokeCounts, layout },
+      referenceText: `第${item.questionNumber}题手写作文`,
+      locale: effectiveFeedbackLocale(),
+      metrics: {
+        questionNumber: item.questionNumber,
+        prompt: item.prompt,
+        requiredVocabulary: item.requiredVocabulary || [],
+        referencePoints: item.answer?.referencePoints || [],
+        rubric: item.answer?.rubric || [],
+        characterCount: draft.cells.length,
+        recordedStrokeCounts: draft.strokeCounts,
+        layout,
+      },
     }, { onProgress: (phase) => {
       draft.assessment.phase = phase;
       setAiWork(true, phase);
@@ -2550,6 +2616,48 @@ async function assessPracticeHandwriting() {
   }
   if (ownsAiWork) setAiWork(false);
   refreshPracticeWritingPanel();
+}
+
+async function assessPracticeKeyboard() {
+  const item = currentItem();
+  const assessment = keyboardAssessment(item.id);
+  let ownsAiWork = false;
+  try {
+    requireAssessmentReady("practice-keyboard");
+    const answer = String(state.answers[item.id] || "").trim();
+    if (!answer) throw new Error("请先完成键盘作答并提交");
+    enforceWritingCooldown(`practice-keyboard:${item.id}`);
+    state.keyboardAssessments[item.id] = { status: "working", phase: "preparing", result: null, message: "" };
+    setAiWork(true, "preparing");
+    ownsAiWork = true;
+    renderPracticeUnit(item, currentIndex());
+    const blob = new Blob([JSON.stringify({ text: answer })], { type: "application/json" });
+    const result = await window.LearningApi.assessArtifact(blob, {
+      kind: "essay",
+      artifactId: window.crypto?.randomUUID?.() || `practice-keyboard-${Date.now()}`,
+      lessonId: "zjzh-1-1",
+      unitType: "practiceWriting",
+      unitId: item.id,
+      referenceText: answer,
+      locale: effectiveFeedbackLocale(),
+      metrics: {
+        questionNumber: item.questionNumber,
+        prompt: item.prompt,
+        requiredVocabulary: item.requiredVocabulary || [],
+        referencePoints: item.answer?.referencePoints || [],
+        rubric: item.answer?.rubric || [],
+      },
+    }, { onProgress: (phase) => {
+      state.keyboardAssessments[item.id].phase = phase;
+      setAiWork(true, phase);
+      renderPracticeUnit(item, currentIndex());
+    } });
+    state.keyboardAssessments[item.id] = { status: "ready", result, message: "" };
+  } catch (error) {
+    state.keyboardAssessments[item.id] = { status: "error", result: null, message: error.message || "写作测评失败" };
+  }
+  if (ownsAiWork) setAiWork(false);
+  renderPracticeUnit(item, currentIndex());
 }
 
 function handleCommand(command) {
@@ -2605,10 +2713,18 @@ function handleCommand(command) {
     saveHandwritingAnswer();
   } else if (command === "assess-practice-handwriting") {
     void assessPracticeHandwriting();
+  } else if (command === "assess-practice-keyboard") {
+    void assessPracticeKeyboard();
   }
 }
 
 function bindEvents() {
+  document.addEventListener("change", (event) => {
+    if (!event.target.matches("[data-feedback-language]")) return;
+    state.feedbackPreference = event.target.value;
+    localStorage.setItem("digitalBookFeedbackLanguage", state.feedbackPreference);
+    document.querySelectorAll("[data-feedback-language]").forEach((select) => { select.value = state.feedbackPreference; });
+  });
   document.querySelectorAll("[data-section]").forEach((button) => {
     button.addEventListener("click", () => setSection(button.dataset.section));
   });
@@ -2801,11 +2917,22 @@ async function start() {
   observeBilingualButtons();
   try {
     await loadData();
+    await loadClassSettings();
     await loadAssessmentUsage();
     render();
   } catch (error) {
     elements.unitContent.innerHTML =
       `<p class="load-error">数字书数据加载失败：${escapeHtml(error.message)}</p>`;
+  }
+}
+
+async function loadClassSettings() {
+  if (!window.LearningApi?.isConfigured() || !window.LearningApi.token()) return;
+  try {
+    const response = await window.LearningApi.classSettings();
+    state.classSettings = { ...state.classSettings, ...(response.settings || {}) };
+  } catch {
+    state.classSettings = { writingInputMode: "both" };
   }
 }
 

@@ -100,6 +100,9 @@ const elements = {
   teacherName: document.querySelector("#teacherContextName"),
   classStudentList: document.querySelector("#classStudentList"),
   classStudentCount: document.querySelector("#classStudentCount"),
+  writingInputMode: document.querySelector("#writingInputModeSelect"),
+  saveWritingPolicy: document.querySelector("#saveWritingPolicyButton"),
+  writingPolicyStatus: document.querySelector("#writingPolicyStatus"),
   toast: document.querySelector("#toast"),
   installAppButton: document.querySelector("#installAppButton"),
   pwaInstallBanner: document.querySelector("#pwaInstallBanner"),
@@ -363,6 +366,7 @@ function renderTeacherWorkspace() {
     elements.classStudentCount.textContent = "读取中";
     elements.classStudentList.innerHTML = '<p class="empty-approval">正在读取本班学生名单…</p>';
     void loadCloudTeacherStudents();
+    void loadCloudClassSettings();
     return;
   }
   const students = state.enrollments.filter((enrollment) => enrollment.teacher === context.teacher && enrollment.term === context.term && enrollment.book === context.book);
@@ -370,6 +374,36 @@ function renderTeacherWorkspace() {
   elements.classStudentList.innerHTML = students.length
     ? students.map((student) => `<div class="student-row"><span><strong>${escapeHtml(student.chineseName)} · ${escapeHtml(student.englishName)}</strong><small>学号 ${escapeHtml(student.studentId)}</small></span><b>已加入</b></div>`).join("")
     : '<p class="empty-approval">当前学期和教材还没有学生使用邀请码加入。</p>';
+}
+
+async function loadCloudClassSettings() {
+  elements.writingPolicyStatus.textContent = "正在读取班级设置…";
+  try {
+    const result = await window.LearningApi.classSettings();
+    elements.writingInputMode.value = result.settings?.writingInputMode || "both";
+    elements.writingPolicyStatus.textContent = "已读取当前班级设置。";
+  } catch (error) {
+    elements.writingPolicyStatus.textContent = error.message || "班级设置读取失败";
+  }
+}
+
+async function saveCloudClassSettings() {
+  if (window.LearningApi?.profile()?.role !== "teacher") {
+    localStorage.setItem("prototypeWritingInputMode", elements.writingInputMode.value);
+    elements.writingPolicyStatus.textContent = "原型设置已保存在当前设备。";
+    return;
+  }
+  elements.saveWritingPolicy.disabled = true;
+  elements.writingPolicyStatus.textContent = "正在保存…";
+  try {
+    await window.LearningApi.updateClassSettings({ writingInputMode: elements.writingInputMode.value });
+    elements.writingPolicyStatus.textContent = "已保存，学生下次进入数字书时生效。";
+    showToast("班级写作方式已更新 / Writing mode updated");
+  } catch (error) {
+    elements.writingPolicyStatus.textContent = error.message || "保存失败";
+  } finally {
+    elements.saveWritingPolicy.disabled = false;
+  }
 }
 
 async function loadCloudTeacherStudents() {
@@ -435,6 +469,7 @@ elements.adminLoginForm.addEventListener("submit", (event) => { event.preventDef
 elements.search.addEventListener("input", () => { state.search = elements.search.value; renderCatalog(); if (state.view !== "courses") setView("courses"); });
 elements.teacherTerm.addEventListener("change", () => { state.teacherContext.term = elements.teacherTerm.value; renderTeacherWorkspace(); });
 elements.teacherBook.addEventListener("change", () => { state.teacherContext.book = elements.teacherBook.value; renderTeacherWorkspace(); });
+elements.saveWritingPolicy.addEventListener("click", () => { void saveCloudClassSettings(); });
 
 populateFormOptions();
 renderCatalog();
