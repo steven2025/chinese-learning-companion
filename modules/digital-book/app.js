@@ -922,7 +922,8 @@ function renderReadingCloze(item) {
   const passage = escapeHtml(item.passage || "").replace(/\[\[(\d+)\]\]/g, (_, blankId) => {
     const selected = selections[blankId] || "";
     const resultClass = submitted ? (selected === correct[blankId] ? "is-correct" : "is-incorrect") : "";
-    return `<button type="button" class="cloze-blank ${blankId === activeBlank ? "is-active" : ""} ${resultClass}" data-cloze-blank="${blankId}"><span>${blankId}</span><strong>${escapeHtml(selected || "请选择")}</strong></button>`;
+    const blankLabel = `第${blankId}空，${selected ? `已选择${selected}` : "尚未选择"}`;
+    return `<button type="button" class="cloze-blank ${blankId === activeBlank ? "is-active" : ""} ${resultClass}" data-cloze-blank="${blankId}" aria-label="${escapeAttribute(blankLabel)}"><span class="cloze-blank-number">（${blankId}）</span><strong>${escapeHtml(selected || "请选择")}</strong></button>`;
   }).replace(/\n/g, "<br>");
   const completed = (item.blanks || []).filter((blank) => selections[blank.id]).length;
   const correctCount = submitted ? (item.blanks || []).filter((blank) => selections[blank.id] === blank.answer).length : 0;

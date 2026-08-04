@@ -228,12 +228,14 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .reading-cloze-unit > h2 { margin: 5px 0 7px; text-align: center; font: 700 clamp(32px, 4vw, 48px)/1.4 "STKaiti", "KaiTi", serif; }
 .reading-cloze-instruction { margin: 0 auto 14px; color: var(--muted); font-size: 16px; text-align: center; }
 .reading-passage { max-height: 350px; padding: 20px 23px; overflow-y: auto; border: 1px solid #c4d1ce; background: #fbfcfb; font: 500 clamp(19px, 2vw, 24px)/1.9 "STKaiti", "KaiTi", serif; }
-.cloze-blank { min-width: 76px; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; margin: 0 4px; padding: 2px 9px; color: #116e67; border: 2px solid #8ebeb6; border-radius: 5px; background: #eaf6f3; vertical-align: middle; box-shadow: none; }
-.cloze-blank span { width: 20px; height: 20px; display: grid; place-items: center; color: #fff; border-radius: 50%; background: var(--teal); font: 800 11px/1 inherit; }
-.cloze-blank strong { font-size: 14px; }
+.cloze-blank { min-width: 112px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; margin: 2px 5px; padding: 4px 11px; color: #116e67; border: 2px solid #78afa7; border-radius: 5px; background: #eaf6f3; vertical-align: middle; box-shadow: inset 0 1px rgba(255,255,255,.8); }
+.cloze-blank .cloze-blank-number { min-width: 42px; display: inline-flex; align-items: center; justify-content: center; color: #083f3b; background: transparent; font: 900 18px/1.2 "Microsoft YaHei", sans-serif; white-space: nowrap; }
+.cloze-blank strong { font-size: 14px; line-height: 1.25; white-space: nowrap; }
 .cloze-blank.is-active { outline: 3px solid rgba(216,96,71,.22); border-color: var(--coral); }
 .cloze-blank.is-correct { color: #fff; border-color: var(--teal); background: var(--teal); }
 .cloze-blank.is-incorrect { color: #8b3526; border-color: #d57f6c; background: #fff0eb; }
+.cloze-blank.is-correct .cloze-blank-number { color: #fff; }
+.cloze-blank.is-incorrect .cloze-blank-number { color: #7b2d20; }
 .cloze-choice-panel { margin-top: 16px; }
 .cloze-choice-panel > strong { display: block; margin-bottom: 8px; color: var(--coral); font-size: 14px; }
 .cloze-choices { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
