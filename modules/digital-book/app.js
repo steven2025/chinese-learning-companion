@@ -464,8 +464,9 @@ function buildPracticeUnits(practiceData, translations) {
       unitType: "sectionTitle",
       sectionId: section.id,
       sectionTitle: section.title,
+      sectionKind: section.kind || "questions",
       title: `${toChineseSectionNumber(sectionIndex + 1)}、${section.title}`,
-      instruction: section.instruction || section.introduction || "",
+      instruction: concisePracticeSectionInstruction(section),
     });
 
     (section.pages || []).forEach((page, pageIndex) => {
@@ -483,25 +484,36 @@ function buildPracticeUnits(practiceData, translations) {
     if (groups.length) {
       groups.forEach((group, groupIndex) => {
         const translatedGroup = translations.groups?.[group.id] || {};
-        units.push({
-          unitType: "practiceIntro",
-          sectionId: section.id,
-          sectionTitle: section.title,
-          groupId: group.id,
-          groupTitle: group.title,
-          introNumber: groupIndex + 1,
-          textExample: group.textExample || "",
-          explanation:
-            translatedGroup.explanation?.["zh-CN"] ||
-            group.explanation ||
-            group.instruction ||
-            group.introduction ||
-            "",
-          explanationTranslations: translatedGroup.explanation || null,
-          examples: translatedGroup.examples || [],
-          choices: group.choices || [],
-          instruction: group.instruction || group.introduction || "",
-        });
+        const groupExplanation =
+          translatedGroup.explanation?.["zh-CN"] ||
+          group.explanation ||
+          group.instruction ||
+          group.introduction ||
+          "";
+        const needsIntroPage = Boolean(
+          group.textExample ||
+          group.explanation ||
+          translatedGroup.explanation ||
+          translatedGroup.examples?.length ||
+          group.choices?.length ||
+          (!["writing", "reading"].includes(section.kind) && (group.instruction || group.introduction))
+        );
+        if (needsIntroPage) {
+          units.push({
+            unitType: "practiceIntro",
+            sectionId: section.id,
+            sectionTitle: section.title,
+            groupId: group.id,
+            groupTitle: group.title,
+            introNumber: groupIndex + 1,
+            textExample: group.textExample || "",
+            explanation: groupExplanation,
+            explanationTranslations: translatedGroup.explanation || null,
+            examples: translatedGroup.examples || [],
+            choices: group.choices || [],
+            instruction: group.instruction || group.introduction || "",
+          });
+        }
         (group.items || []).forEach((item) => {
           questionNumber += 1;
           const explicitNumber = Number.parseInt(item.displayNumber, 10);
@@ -542,6 +554,23 @@ function buildPracticeUnits(practiceData, translations) {
     });
   });
   return units;
+}
+
+function concisePracticeSectionInstruction(section) {
+  const fallback = {
+    writing: "围绕题目完成一段写作。",
+    reading: "阅读短文，按要求完成练习。",
+    content: "阅读并理解本部分内容。",
+    extension: "联系课堂内容，完成拓展学习。",
+    questions: "按要求完成本部分练习。",
+  }[section.kind || "questions"];
+  const source = String(section.instruction || section.introduction || "").trim();
+  const containsDetailedContent =
+    source.length > 160 ||
+    /(?:^|\n)\s*(?:题目|任务|答案|参考答案|范文[一二三四五六七八九十\d]*)\s*[:：]?/m.test(source);
+  if (!source || containsDetailedContent) return fallback;
+  const firstLine = source.split(/\n+/).map((line) => line.trim()).find(Boolean) || fallback;
+  return firstLine.length <= 120 ? firstLine : fallback;
 }
 
 function toChineseSectionNumber(value) {
