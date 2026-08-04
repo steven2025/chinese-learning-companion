@@ -52,7 +52,7 @@ const catalog = [
 ];
 
 const books = catalog.flatMap((level) => level.books.map(([id, label]) => ({ id, label, level: level.id })));
-const lessonTitles = ["你咋不早说", "第2课", "第3课", "第4课", "第5课", "第6课", "第7课", "第8课", "第9课", "第10课", "第11课", "第12课", "第13课", "第14课"];
+const lessonTitles = ["你咋不早说", "和时间赛跑", "第3课", "第4课", "第5课", "第6课", "第7课", "第8课", "第9课", "第10课", "第11课", "第12课", "第13课", "第14课"];
 
 function readStored(key, fallback) {
   try {
@@ -209,7 +209,7 @@ function renderCatalog() {
         <span>${level.label.slice(0, 1)}</span><span><strong>${level.label}阶段</strong><small>共${level.books.length}册</small></span><i>⌄</i>
       </button>
       <div class="level-books"${expanded ? "" : " hidden"}>
-        ${visibleBooks.map(([id, label]) => `<button class="book-row${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${id === "intermediate-comprehensive-1" ? "第1课可学习" : "内容准备中"}</small></button>`).join("")}
+        ${visibleBooks.map(([id, label]) => `<button class="book-row${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${id === "intermediate-comprehensive-1" ? "第1、2课可学习" : "内容准备中"}</small></button>`).join("")}
       </div>
     </section>`;
   }).join("") || '<p class="empty-state">没有找到符合条件的教材。</p>';
@@ -228,9 +228,10 @@ function renderLessons() {
   elements.lessonCount.textContent = "共14课";
   document.querySelector(".sidebar-course p").textContent = "第1课 · 你咋不早说";
   elements.lessonList.innerHTML = lessonTitles.map((title, index) => {
-    const available = index === 0;
+    const available = index < 2;
+    const lessonNumber = index + 1;
     const inner = `<span>${String(index + 1).padStart(2, "0")}</span><span><strong>${title}</strong><small>${available ? "词汇、课文、练习" : "内容准备中"}</small></span><b>${available ? "进入 ›" : "未开放"}</b>`;
-    return available ? `<a class="lesson-item available" href="../digital-book/">${inner}</a>` : `<button class="lesson-item" type="button" data-unavailable-lesson="${index + 1}">${inner}</button>`;
+    return available ? `<a class="lesson-item available" href="../digital-book/?lesson=zjzh-1-${lessonNumber}">${inner}</a>` : `<button class="lesson-item" type="button" data-unavailable-lesson="${lessonNumber}">${inner}</button>`;
   }).join("");
 }
 

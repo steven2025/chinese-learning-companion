@@ -1,4 +1,19 @@
-const DATA_ROOT = "../../data/lessons/zjzh-1-1";
+const LESSONS = Object.freeze({
+  "zjzh-1-1": Object.freeze({
+    number: 1,
+    topic: "你咋不早说",
+    paragraphRanges: [[0, 13], [14, 23], [24, 34], [35, 43], [44, 56], [57, 64]],
+  }),
+  "zjzh-1-2": Object.freeze({
+    number: 2,
+    topic: "和时间赛跑",
+    paragraphRanges: [[0, 13], [14, 24], [25, 27], [28, 33], [34, 36], [37, 45], [46, 54], [55, 64]],
+  }),
+});
+const requestedLessonId = new URLSearchParams(window.location.search).get("lesson");
+const LESSON_ID = LESSONS[requestedLessonId] ? requestedLessonId : "zjzh-1-1";
+const LESSON = LESSONS[LESSON_ID];
+const DATA_ROOT = `../../data/lessons/${LESSON_ID}`;
 const STROKE_DATA_ROOT =
   "https://hsk-1311686407.cos.ap-guangzhou.myqcloud.com/hanzi-companion/stroke-data/v2.0.1/characters";
 
@@ -33,14 +48,14 @@ const sectionLabels = {
 };
 
 const sectionOrder = ["vocabulary", "text", "practice"];
-const textParagraphRanges = [
-  [0, 13],
-  [14, 23],
-  [24, 34],
-  [35, 43],
-  [44, 56],
-  [57, 64],
-];
+const textParagraphRanges = LESSON.paragraphRanges;
+const storageKeys = Object.freeze({
+  wordStatuses: `digitalBookWordStatuses:${LESSON_ID}`,
+  practiceAnswers: `digitalBookPracticeAnswers:${LESSON_ID}`,
+  practiceSubmitted: `digitalBookPracticeSubmitted:${LESSON_ID}`,
+  clozeAnswers: `digitalBookClozeAnswers:${LESSON_ID}`,
+  paragraphReadingChoice: `digitalBookParagraphReadingChoice:${LESSON_ID}`,
+});
 
 function readStoredJson(key, fallback) {
   try {
@@ -51,6 +66,7 @@ function readStoredJson(key, fallback) {
 }
 
 const state = {
+  lesson: { id: LESSON_ID, number: LESSON.number, topic: LESSON.topic },
   locale: localStorage.getItem("digitalBookLocale") || "en",
   assistMode: localStorage.getItem("digitalBookAssistMode") || "assist",
   section: "vocabulary",
@@ -66,9 +82,11 @@ const state = {
   readingParagraphIndex: 0,
   practiceItems: [],
   units: { vocabulary: [], text: [], practice: [] },
-  statuses: readStoredJson("digitalBookWordStatuses", {}),
-  answers: readStoredJson("digitalBookPracticeAnswers", {}),
-  submitted: readStoredJson("digitalBookPracticeSubmitted", {}),
+  statuses: readStoredJson(storageKeys.wordStatuses, {}),
+  answers: readStoredJson(storageKeys.practiceAnswers, {}),
+  submitted: readStoredJson(storageKeys.practiceSubmitted, {}),
+  clozeAnswers: readStoredJson(storageKeys.clozeAnswers, {}),
+  activeClozeBlank: "",
   answerModes: {},
   keyboardAssessments: {},
   classSettings: { writingInputMode: "both" },
@@ -193,6 +211,7 @@ const buttonTranslations = new Map(Object.entries({
   "AI深度解释": "AI deep explanation", "重新尝试": "Try again",
   "暂不跟读，进入练习": "Skip to practice", "第一段": "Paragraph 1", "第二段": "Paragraph 2",
   "第三段": "Paragraph 3", "第四段": "Paragraph 4", "第五段": "Paragraph 5", "第六段": "Paragraph 6",
+  "第七段": "Paragraph 7", "第八段": "Paragraph 8",
   "上一个": "Previous", "下一个": "Next", "关闭": "Close", "全屏": "Full screen", "恢复": "Restore",
   "开始跟读": "Start recording", "开始段落跟读": "Record paragraph", "停止录音": "Stop recording",
   "试听录音": "Play recording", "播放课文": "Play model", "连续播放": "Continuous play", "循环当前单元": "Loop unit",
@@ -262,6 +281,24 @@ async function checkResponse(response) {
   return response.json();
 }
 
+async function optionalJson(url, fallback) {
+  const response = await fetch(url);
+  if (response.status === 404) return fallback;
+  return checkResponse(response);
+}
+
+function updateLessonIdentity(pages) {
+  const rawTopic = String(pages?.topic || LESSON.topic);
+  state.lesson = {
+    id: LESSON_ID,
+    number: Number(pages?.lessonNumber || LESSON.number),
+    topic: rawTopic.replace(/^第[一二三四五六七八九十百\d]+课\s*[·.、-]?\s*/, "") || LESSON.topic,
+  };
+  document.title = `第${state.lesson.number}课 · ${state.lesson.topic} | 点点汉语`;
+  const brandSubtitle = document.querySelector(".brand-link small");
+  if (brandSubtitle) brandSubtitle.textContent = `中级综合1 · 第${state.lesson.number}课`;
+}
+
 async function loadData() {
   let audioData;
   let metadata;
@@ -271,6 +308,7 @@ async function loadData() {
   let practiceTranslations;
 
   if (
+    LESSON_ID === "zjzh-1-1" &&
     window.DIGITAL_BOOK_DATA?.practiceData &&
     window.DIGITAL_BOOK_DATA?.practiceTranslations
   ) {
@@ -297,9 +335,11 @@ async function loadData() {
       fetch(`${DATA_ROOT}/text-audio.json`).then(checkResponse),
       fetch(`${DATA_ROOT}/book-pages.json`).then(checkResponse),
       fetch(`${DATA_ROOT}/lesson-practice.json`).then(checkResponse),
-      fetch(`${DATA_ROOT}/practice-intro-translations.json`).then(checkResponse),
+      optionalJson(`${DATA_ROOT}/practice-intro-translations.json`, { lessonId: LESSON_ID, groups: {} }),
     ]);
   }
+
+  updateLessonIdentity(pages);
 
   const wordCues = audioData.cues.filter((cue) => cue.role === "word");
   if (wordCues.length !== metadata.entries.length) {
@@ -359,6 +399,7 @@ async function loadData() {
 function buildTextParagraphs(cues) {
   return textParagraphRanges.map(([startIndex, endIndex], index) => {
     const paragraphCues = cues.slice(startIndex, endIndex + 1);
+    if (!paragraphCues.length) return null;
     const text = paragraphCues.map((cue) => cue.texts["zh-CN"]).join("");
     return {
       id: `text-paragraph-${index + 1}`,
@@ -371,7 +412,7 @@ function buildTextParagraphs(cues) {
       charCount: (text.match(/[\u3400-\u9fff]/g) || []).length,
       cues: paragraphCues,
     };
-  });
+  }).filter(Boolean);
 }
 
 function flattenPractice(practiceData) {
@@ -387,7 +428,7 @@ function flattenPractice(practiceData) {
             sectionTitle: section.title,
             groupId: group.id,
             groupTitle: group.title,
-            choices: group.choices || section.choices || [],
+            choices: item.choices || group.choices || section.choices || [],
           });
         });
       });
@@ -400,7 +441,7 @@ function flattenPractice(practiceData) {
         sectionTitle: section.title,
         groupId: "",
         groupTitle: "",
-        choices: section.choices || [],
+        choices: item.choices || section.choices || [],
       });
     });
   });
@@ -408,7 +449,6 @@ function flattenPractice(practiceData) {
 }
 
 function buildPracticeUnits(practiceData, translations) {
-  const sectionNumbers = ["一", "二", "三", "四", "五", "六"];
   const units = [
     {
       unitType: "partTitle",
@@ -424,8 +464,19 @@ function buildPracticeUnits(practiceData, translations) {
       unitType: "sectionTitle",
       sectionId: section.id,
       sectionTitle: section.title,
-      title: `${sectionNumbers[sectionIndex]}、${section.title}`,
-      instruction: section.instruction || "",
+      title: `${toChineseSectionNumber(sectionIndex + 1)}、${section.title}`,
+      instruction: section.instruction || section.introduction || "",
+    });
+
+    (section.pages || []).forEach((page, pageIndex) => {
+      units.push({
+        ...page,
+        unitType: "practiceContent",
+        sectionId: section.id,
+        sectionTitle: section.title,
+        pageNumber: pageIndex + 1,
+        sectionKind: section.kind || "content",
+      });
     });
 
     const groups = Array.isArray(section.groups) ? section.groups : [];
@@ -444,23 +495,28 @@ function buildPracticeUnits(practiceData, translations) {
             translatedGroup.explanation?.["zh-CN"] ||
             group.explanation ||
             group.instruction ||
+            group.introduction ||
             "",
           explanationTranslations: translatedGroup.explanation || null,
           examples: translatedGroup.examples || [],
           choices: group.choices || [],
-          instruction: group.instruction || "",
+          instruction: group.instruction || group.introduction || "",
         });
         (group.items || []).forEach((item) => {
           questionNumber += 1;
+          const explicitNumber = Number.parseInt(item.displayNumber, 10);
+          const resolvedNumber = Number.isFinite(explicitNumber) ? explicitNumber : questionNumber;
+          questionNumber = Math.max(questionNumber, resolvedNumber);
           units.push({
             ...item,
             unitType: "practiceItem",
-            questionNumber,
+            questionNumber: resolvedNumber,
             sectionId: section.id,
             sectionTitle: section.title,
             groupId: group.id,
             groupTitle: group.title,
-            choices: group.choices || section.choices || [],
+            choices: item.choices || group.choices || section.choices || [],
+            requiredVocabulary: item.requiredVocabulary || item.referenceWords || [],
           });
         });
       });
@@ -469,19 +525,33 @@ function buildPracticeUnits(practiceData, translations) {
 
     (section.items || []).forEach((item) => {
       questionNumber += 1;
+      const explicitNumber = Number.parseInt(item.displayNumber, 10);
+      const resolvedNumber = Number.isFinite(explicitNumber) ? explicitNumber : questionNumber;
+      questionNumber = Math.max(questionNumber, resolvedNumber);
       units.push({
         ...item,
         unitType: "practiceItem",
-        questionNumber,
+        questionNumber: resolvedNumber,
         sectionId: section.id,
         sectionTitle: section.title,
         groupId: "",
         groupTitle: "",
-        choices: section.choices || [],
+        choices: item.choices || section.choices || [],
+        requiredVocabulary: item.requiredVocabulary || item.referenceWords || [],
       });
     });
   });
   return units;
+}
+
+function toChineseSectionNumber(value) {
+  const digits = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+  const number = Number(value);
+  if (!Number.isInteger(number) || number <= 0 || number >= 100) return String(value);
+  if (number < 10) return digits[number];
+  if (number === 10) return "十";
+  if (number < 20) return `十${digits[number % 10]}`;
+  return `${digits[Math.floor(number / 10)]}十${number % 10 ? digits[number % 10] : ""}`;
 }
 
 function initializeLanguageOptions() {
@@ -513,6 +583,9 @@ function unitLabel(item, index) {
   }
   if (item.unitType === "practiceIntro") {
     return `${item.introNumber}. ${item.groupTitle}`;
+  }
+  if (item.unitType === "practiceContent") {
+    return item.title || item.sectionTitle;
   }
   if (item.unitType === "word") {
     return `${String(item.sourceIndex + 1).padStart(2, "0")} ${item.hanzi}`;
@@ -549,6 +622,8 @@ function render() {
       ? item.title
       : item.unitType === "practiceIntro"
         ? item.groupTitle
+        : item.unitType === "practiceContent"
+          ? item.title || item.sectionTitle
         : state.section === "vocabulary"
           ? "词语学习"
           : state.section === "text"
@@ -557,7 +632,7 @@ function render() {
   elements.unitKicker.textContent =
     state.section === "practice"
       ? item.sectionTitle
-      : "第1课 · 你咋不早说";
+      : `第${state.lesson.number}课 · ${state.lesson.topic}`;
   elements.unitProgress.textContent =
     `${sectionLabels[state.section]} · 第 ${index + 1} / ${items.length} 个学习页`;
   elements.footerProgress.textContent = `${index + 1} / ${items.length}`;
@@ -580,6 +655,7 @@ function render() {
   if (item.unitType === "partTitle") renderPartTitle(item);
   else if (item.unitType === "sectionTitle") renderSectionTitle(item);
   else if (item.unitType === "practiceIntro") renderPracticeIntro(item);
+  else if (item.unitType === "practiceContent") renderPracticeContent(item);
   else if (item.unitType === "word") renderWordUnit(item, item.sourceIndex);
   else if (item.unitType === "sentence") {
     renderTextUnit(item, item.sourceIndex);
@@ -640,6 +716,28 @@ function renderPracticeIntro(item) {
     </div>`;
 }
 
+function renderPracticeContent(item) {
+  const isProverb = item.type === "proverb";
+  const savedAnswer = state.answers[item.id] || "";
+  elements.unitContent.innerHTML = `
+    <div class="practice-content-unit ${isProverb ? "proverb-content-unit" : "summary-content-unit"}">
+      <span class="unit-order">${escapeHtml(item.sectionTitle)} · ${escapeHtml(item.title || "学习内容")}</span>
+      ${isProverb
+        ? `<div class="proverb-display">
+            <h2>${escapeHtml(item.proverb)}</h2>
+            ${item.pinyin ? `<p class="proverb-pinyin">${escapeHtml(item.pinyin)}</p>` : ""}
+            ${item.equivalent ? `<p class="proverb-equivalent">${escapeHtml(item.equivalent)}</p>` : ""}
+          </div>
+          <section class="content-reading-block"><strong>意义</strong><p>${escapeHtml(item.meaning || "")}</p></section>
+          <section class="content-reading-block"><strong>例句</strong><p>${escapeHtml(item.example || "")}</p></section>`
+        : `<h2>${escapeHtml(item.title || item.sectionTitle)}</h2>
+          <p class="summary-reading-text">${escapeHtml(item.content || "")}</p>
+          ${item.support?.keyPoints?.length ? `<div class="summary-key-points">${item.support.keyPoints.map((point) => `<span>${escapeHtml(point)}</span>`).join("")}</div>` : ""}`}
+      ${item.optionalTask ? `<div class="optional-extension-task"><strong>试一试</strong><p>${escapeHtml(item.optionalTask)}</p><textarea id="practiceContentAnswer" aria-label="拓展学习作答" placeholder="在这里写下自己的句子">${escapeHtml(savedAnswer)}</textarea></div>` : ""}
+      ${renderContextualAssistButtons()}
+    </div>`;
+}
+
 function normalizeComparisonText(value) {
   return String(value || "")
     .replace(/\s+/g, "")
@@ -696,12 +794,12 @@ function currentReadingParagraph() {
 }
 
 function paragraphOrdinal(index) {
-  return ["第一段", "第二段", "第三段", "第四段", "第五段", "第六段"][index];
+  return ["第一段", "第二段", "第三段", "第四段", "第五段", "第六段", "第七段", "第八段"][index] || `第${index + 1}段`;
 }
 
 function renderParagraphReadingUnit() {
   const paragraph = currentReadingParagraph();
-  const choice = localStorage.getItem("digitalBookParagraphReadingChoice") || "";
+  const choice = localStorage.getItem(storageKeys.paragraphReadingChoice) || "";
   const recordingComplete = Boolean(state.recordingUrl);
   elements.unitContent.innerHTML = `
     <div class="paragraph-reading-unit">
@@ -744,12 +842,18 @@ function renderParagraphReadingUnit() {
 }
 
 function renderPracticeUnit(item, index) {
+  if (item.type === "readingCloze") {
+    renderReadingCloze(item);
+    return;
+  }
   const answer = state.answers[item.id] || "";
   const submitted = state.submitted[item.id];
   const choices = normalizeChoices(item.choices);
   const requiredVocabulary = item.requiredVocabulary || [];
-  const supportsHandwriting = item.questionNumber >= 47;
-  const allowedModes = writingInputModes();
+  const supportedModes = Array.isArray(item.inputModes) && item.inputModes.length ? item.inputModes : ["keyboard"];
+  const allowedModes = writingInputModes().filter((mode) => supportedModes.includes(mode));
+  if (!allowedModes.length) allowedModes.push(supportedModes[0]);
+  const supportsHandwriting = allowedModes.includes("handwriting");
   const preferredMode = state.answerModes[item.id] || allowedModes[0];
   const answerMode = allowedModes.includes(preferredMode) ? preferredMode : allowedModes[0];
   state.answerModes[item.id] = answerMode;
@@ -759,6 +863,7 @@ function renderPracticeUnit(item, index) {
       <h2 class="practice-prompt">${escapeHtml(item.prompt)}</h2>
       ${choices.length ? `<div class="word-bank">${choices.map((choice) => `<span>${escapeHtml(choice)}</span>`).join("")}</div>` : ""}
       ${requiredVocabulary.length ? `<div class="required-vocabulary"><strong>参考词组</strong><div class="word-bank">${requiredVocabulary.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div></div>` : ""}
+      ${item.referenceText ? `<details class="reference-text-panel"><summary>${escapeHtml(item.referenceTitle || "参考材料")}</summary><div>${escapeHtml(item.referenceText)}</div></details>` : ""}
       ${renderContextualAssistButtons()}
       ${supportsHandwriting ? `<div class="answer-mode-tabs" role="group" aria-label="作答方式">
         ${allowedModes.includes("keyboard") ? `<button type="button" data-answer-mode="keyboard" class="${answerMode === "keyboard" ? "active" : ""}">键盘输入</button>` : ""}
@@ -773,9 +878,46 @@ function renderPracticeUnit(item, index) {
               <button class="command-button" type="button" data-command="submit-answer">提交作答</button>
             </div>
             ${submitted ? renderPracticeFeedback(item, answer) : ""}
-            ${submitted && item.type === "guidedProduction" ? renderAssessmentConsent("practice-keyboard", keyboardAssessment(item.id)) : ""}`
+            ${submitted && item.assessmentType === "writing" ? renderAssessmentConsent("practice-keyboard", keyboardAssessment(item.id)) : ""}`
         }
       </div>
+    </div>`;
+}
+
+function renderReadingCloze(item) {
+  const selections = state.clozeAnswers[item.id] || {};
+  const submitted = Boolean(state.submitted[item.id]);
+  const correct = Object.fromEntries((item.blanks || []).map((blank) => [String(blank.id), blank.answer]));
+  const activeBlank = state.activeClozeBlank || String((item.blanks || []).find((blank) => !selections[blank.id])?.id || item.blanks?.[0]?.id || "");
+  state.activeClozeBlank = activeBlank;
+  const passage = escapeHtml(item.passage || "").replace(/\[\[(\d+)\]\]/g, (_, blankId) => {
+    const selected = selections[blankId] || "";
+    const resultClass = submitted ? (selected === correct[blankId] ? "is-correct" : "is-incorrect") : "";
+    return `<button type="button" class="cloze-blank ${blankId === activeBlank ? "is-active" : ""} ${resultClass}" data-cloze-blank="${blankId}"><span>${blankId}</span><strong>${escapeHtml(selected || "请选择")}</strong></button>`;
+  }).replace(/\n/g, "<br>");
+  const completed = (item.blanks || []).filter((blank) => selections[blank.id]).length;
+  const correctCount = submitted ? (item.blanks || []).filter((blank) => selections[blank.id] === blank.answer).length : 0;
+  elements.unitContent.innerHTML = `
+    <div class="reading-cloze-unit">
+      <span class="practice-target">第 ${item.questionNumber} 题 · 阅读选句</span>
+      <h2>${escapeHtml(item.passageTitle || "阅读短文")}</h2>
+      <p class="reading-cloze-instruction">${escapeHtml(item.prompt)}</p>
+      <article class="reading-passage">${passage}</article>
+      <div class="cloze-choice-panel">
+        <strong>当前填写第 ${escapeHtml(activeBlank)} 空</strong>
+        <div class="cloze-choices">${(item.choices || []).map((choice) => {
+          const usedAt = Object.entries(selections).find(([, value]) => value === choice.id)?.[0];
+          const selected = selections[activeBlank] === choice.id;
+          return `<button type="button" class="${selected ? "is-selected" : ""}" data-cloze-choice="${escapeAttribute(choice.id)}"><b>${escapeHtml(choice.id)}</b><span>${escapeHtml(choice.text)}</span>${usedAt ? `<small>已用于第${escapeHtml(usedAt)}空</small>` : ""}</button>`;
+        }).join("")}</div>
+      </div>
+      ${renderContextualAssistButtons()}
+      <div class="cloze-actions">
+        <span>已完成 ${completed} / ${(item.blanks || []).length} 空</span>
+        <button class="quiet-button" type="button" data-command="reset-cloze">重新填写</button>
+        <button class="command-button" type="button" data-command="submit-cloze" ${completed < (item.blanks || []).length ? "disabled" : ""}>提交答案</button>
+      </div>
+      ${submitted ? `<div class="answer-feedback ${correctCount === item.blanks.length ? "" : "needs-work"}"><strong>${correctCount === item.blanks.length ? "全部正确" : `答对 ${correctCount} / ${item.blanks.length} 空`}</strong><p>${escapeHtml(item.answer?.explanation || "请结合上下文重新检查。")}</p><ol>${item.blanks.map((blank) => `<li>第${escapeHtml(blank.id)}空：你的答案 ${escapeHtml(selections[blank.id] || "未填")}${selections[blank.id] === blank.answer ? "，正确" : "，请重新判断上下文"}</li>`).join("")}</ol></div>` : ""}
     </div>`;
 }
 
@@ -987,7 +1129,7 @@ function renderHandwritingWorkspace(item) {
 
 function openPracticeWritingPanel() {
   const item = currentItem();
-  if (item.questionNumber < 47) return;
+  if (!item.inputModes?.includes("handwriting")) return;
   state.practiceWritingItemId = item.id;
   elements.practiceWritingContent.innerHTML = renderHandwritingWorkspace(item);
   bilingualizeButtons(elements.practiceWritingContent);
@@ -1157,8 +1299,7 @@ function saveHandwritingAnswer() {
 
 function setAnswerMode(mode) {
   const item = currentItem();
-  if (item.questionNumber < 47) return;
-  if (!writingInputModes().includes(mode)) return;
+  if (!item.inputModes?.includes(mode) || !writingInputModes().includes(mode)) return;
   state.answerModes[item.id] = mode;
   if (mode === "keyboard") closePracticeWritingPanel();
   renderPracticeUnit(item);
@@ -1600,7 +1741,7 @@ function persistWordWritingRecord(canvas) {
     schemaVersion: "1.0",
     artifactId: window.crypto?.randomUUID?.() || `writing-${Date.now()}`,
     userId: "local-user",
-    lessonId: "zjzh-1-1",
+    lessonId: LESSON_ID,
     unitType: "vocabularyWriting",
     unitId: `${word.id}-writing`,
     referenceText: word.hanzi,
@@ -1852,6 +1993,8 @@ function renderPracticeAssist() {
       <div class="assist-block">
         <span class="assist-label">思考方向</span>
         <p>${escapeHtml(support.thinkingHint || "先从题干中的人物、时间、动作和结果寻找线索。")}</p>
+        ${support.writingStructure?.length ? `<strong>参考结构</strong><ol>${support.writingStructure.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ol>` : ""}
+        ${support.keywordGuidance?.length ? `<strong>关键词语</strong><div class="word-bank">${support.keywordGuidance.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div>` : ""}
       </div>
       ${renderDeepAssistPanel({ unitType: "practice", unitId: item.id, assistType: "thinking-hint" })}`;
     return;
@@ -1896,7 +2039,7 @@ async function requestDeepAssist(request) {
   state.deepAssist[key] = { status: "loading" };
   renderAssistContent();
   try {
-    const response = await window.LearningApi.resolveAssist({ lessonId: "zjzh-1-1", locale: state.locale, ...request });
+    const response = await window.LearningApi.resolveAssist({ lessonId: LESSON_ID, locale: state.locale, ...request });
     state.deepAssist[key] = { status: "ready", result: response.content?.content || response.content };
   } catch (error) {
     state.deepAssist[key] = { status: "error", message: error.message || "深度解释暂时不可用" };
@@ -1905,7 +2048,7 @@ async function requestDeepAssist(request) {
 }
 
 function renderPracticeFeedback(item, response) {
-  if (item.type === "guidedProduction") {
+  if (item.assessmentType === "writing") {
     return `
       <div class="answer-feedback">
         <strong>键盘答案已保存</strong><br>
@@ -2090,7 +2233,7 @@ async function ensureAudioSource(source) {
   try {
     if (!audioUrl) {
       const result = await window.LearningApi.mediaUrl({
-        lessonId: "zjzh-1-1",
+        lessonId: LESSON_ID,
         mediaType: source,
       });
       audioUrl = String(result?.url || "");
@@ -2276,7 +2419,7 @@ function toggleWordStatus(action) {
   if (action === "mastered" && status[action]) status.review = false;
   if (action === "review" && status[action]) status.mastered = false;
   state.statuses[word.id] = status;
-  localStorage.setItem("digitalBookWordStatuses", JSON.stringify(state.statuses));
+  localStorage.setItem(storageKeys.wordStatuses, JSON.stringify(state.statuses));
   render();
 }
 
@@ -2285,12 +2428,61 @@ function submitPractice() {
   const textarea = document.querySelector("#practiceAnswer");
   state.answers[item.id] = textarea?.value || "";
   state.submitted[item.id] = true;
-  localStorage.setItem("digitalBookPracticeAnswers", JSON.stringify(state.answers));
+  localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
   localStorage.setItem(
-    "digitalBookPracticeSubmitted",
+    storageKeys.practiceSubmitted,
     JSON.stringify(state.submitted),
   );
   renderPracticeUnit(item, currentIndex());
+}
+
+function selectClozeBlank(blankId) {
+  state.activeClozeBlank = String(blankId);
+  renderReadingCloze(currentItem());
+  bilingualizeButtons(elements.unitContent);
+}
+
+function chooseClozeOption(choiceId) {
+  const item = currentItem();
+  if (item.type !== "readingCloze" || !state.activeClozeBlank) return;
+  const selections = { ...(state.clozeAnswers[item.id] || {}) };
+  Object.keys(selections).forEach((blankId) => {
+    if (selections[blankId] === choiceId) delete selections[blankId];
+  });
+  selections[state.activeClozeBlank] = choiceId;
+  state.clozeAnswers[item.id] = selections;
+  delete state.submitted[item.id];
+  const nextBlank = (item.blanks || []).find((blank) => !selections[blank.id]);
+  if (nextBlank) state.activeClozeBlank = String(nextBlank.id);
+  localStorage.setItem(storageKeys.clozeAnswers, JSON.stringify(state.clozeAnswers));
+  localStorage.setItem(storageKeys.practiceSubmitted, JSON.stringify(state.submitted));
+  renderReadingCloze(item);
+  bilingualizeButtons(elements.unitContent);
+}
+
+function submitCloze() {
+  const item = currentItem();
+  const selections = state.clozeAnswers[item.id] || {};
+  if ((item.blanks || []).some((blank) => !selections[blank.id])) return;
+  state.submitted[item.id] = true;
+  state.answers[item.id] = (item.blanks || []).map((blank) => selections[blank.id]).join(",");
+  localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+  localStorage.setItem(storageKeys.practiceSubmitted, JSON.stringify(state.submitted));
+  renderReadingCloze(item);
+  bilingualizeButtons(elements.unitContent);
+}
+
+function resetCloze() {
+  const item = currentItem();
+  delete state.clozeAnswers[item.id];
+  delete state.answers[item.id];
+  delete state.submitted[item.id];
+  state.activeClozeBlank = String(item.blanks?.[0]?.id || "");
+  localStorage.setItem(storageKeys.clozeAnswers, JSON.stringify(state.clozeAnswers));
+  localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+  localStorage.setItem(storageKeys.practiceSubmitted, JSON.stringify(state.submitted));
+  renderReadingCloze(item);
+  bilingualizeButtons(elements.unitContent);
 }
 
 async function toggleRecording() {
@@ -2323,7 +2515,7 @@ async function toggleRecording() {
     state.mediaRecorder.start();
     state.recordingStatus = "正在录音…";
     if (currentItem()?.unitType === "paragraphReading") {
-      localStorage.setItem("digitalBookParagraphReadingChoice", "started");
+      localStorage.setItem(storageKeys.paragraphReadingChoice, "started");
     }
     refreshRecordingView();
   } catch {
@@ -2435,7 +2627,7 @@ function finishRecording() {
   state.recordingStream = null;
   persistRecordingRecord(state.recordingRecord);
   if (currentItem()?.unitType === "paragraphReading") {
-    localStorage.setItem("digitalBookParagraphReadingChoice", "completed");
+    localStorage.setItem(storageKeys.paragraphReadingChoice, "completed");
   }
   refreshRecordingView();
 }
@@ -2484,7 +2676,7 @@ function createRecordingRecord(blob) {
     schemaVersion: "1.0",
     artifactId: id,
     userId: "local-user",
-    lessonId: "zjzh-1-1",
+    lessonId: LESSON_ID,
     unitType,
     unitId: paragraph?.id || item.id || id,
     referenceText,
@@ -2696,7 +2888,7 @@ async function assessWordWriting() {
     const result = await window.LearningApi.assessArtifact(writing.artifactBlob, {
       kind: "handwriting",
       artifactId: window.crypto?.randomUUID?.() || `writing-${Date.now()}`,
-      lessonId: "zjzh-1-1",
+      lessonId: LESSON_ID,
       unitType: "vocabularyWriting",
       unitId: `${word.id}-writing`,
       referenceText: word.hanzi,
@@ -2756,15 +2948,17 @@ async function assessPracticeHandwriting() {
     const result = await window.LearningApi.assessArtifact(blob, {
       kind: "handwriting",
       artifactId: window.crypto?.randomUUID?.() || `practice-writing-${Date.now()}`,
-      lessonId: "zjzh-1-1",
+      lessonId: LESSON_ID,
       unitType: "practiceHandwriting",
       unitId: item.id,
-      referenceText: `第${item.questionNumber}题手写作文`,
+      referenceText: item.referenceText || `第${item.questionNumber}题手写作文`,
       locale: effectiveFeedbackLocale(),
       metrics: {
         questionNumber: item.questionNumber,
         prompt: item.prompt,
         requiredVocabulary: item.requiredVocabulary || [],
+        writingStructure: item.writingStructure || [],
+        keywordGuidance: item.keywordGuidance || [],
         referencePoints: item.answer?.referencePoints || [],
         rubric: item.answer?.rubric || [],
         characterCount: draft.cells.length,
@@ -2802,7 +2996,7 @@ async function assessPracticeKeyboard() {
     const result = await window.LearningApi.assessArtifact(blob, {
       kind: "essay",
       artifactId: window.crypto?.randomUUID?.() || `practice-keyboard-${Date.now()}`,
-      lessonId: "zjzh-1-1",
+      lessonId: LESSON_ID,
       unitType: "practiceWriting",
       unitId: item.id,
       referenceText: answer,
@@ -2811,6 +3005,8 @@ async function assessPracticeKeyboard() {
         questionNumber: item.questionNumber,
         prompt: item.prompt,
         requiredVocabulary: item.requiredVocabulary || [],
+        writingStructure: item.writingStructure || [],
+        keywordGuidance: item.keywordGuidance || [],
         referencePoints: item.answer?.referencePoints || [],
         rubric: item.answer?.rubric || [],
       },
@@ -2843,19 +3039,23 @@ function handleCommand(command) {
   } else if (command === "assess-recording") {
     void assessRecording();
   } else if (command === "skip-paragraph-reading") {
-    localStorage.setItem("digitalBookParagraphReadingChoice", "skipped");
+    localStorage.setItem(storageKeys.paragraphReadingChoice, "skipped");
     moveUnit(1);
   } else if (["mastered", "review", "favorite"].includes(command)) {
     toggleWordStatus(command);
   } else if (command === "submit-answer") {
     submitPractice();
+  } else if (command === "submit-cloze") {
+    submitCloze();
+  } else if (command === "reset-cloze") {
+    resetCloze();
   } else if (command === "clear-answer") {
     const item = currentItem();
     state.answers[item.id] = "";
     delete state.submitted[item.id];
-    localStorage.setItem("digitalBookPracticeAnswers", JSON.stringify(state.answers));
+    localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
     localStorage.setItem(
-      "digitalBookPracticeSubmitted",
+      storageKeys.practiceSubmitted,
       JSON.stringify(state.submitted),
     );
     renderPracticeUnit(item, currentIndex());
@@ -2932,6 +3132,16 @@ function bindEvents() {
       render();
       return;
     }
+    const clozeBlank = event.target.closest("[data-cloze-blank]")?.dataset.clozeBlank;
+    if (clozeBlank) {
+      selectClozeBlank(clozeBlank);
+      return;
+    }
+    const clozeChoice = event.target.closest("[data-cloze-choice]")?.dataset.clozeChoice;
+    if (clozeChoice) {
+      chooseClozeOption(clozeChoice);
+      return;
+    }
     const answerMode = event.target.closest("[data-answer-mode]")?.dataset.answerMode;
     if (answerMode) {
       setAnswerMode(answerMode);
@@ -2946,9 +3156,14 @@ function bindEvents() {
     if (command) handleCommand(command);
   });
   elements.unitContent.addEventListener("input", (event) => {
+    if (event.target.id === "practiceContentAnswer") {
+      state.answers[currentItem().id] = event.target.value;
+      localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+      return;
+    }
     if (event.target.id !== "practiceAnswer") return;
     state.answers[currentItem().id] = event.target.value;
-    localStorage.setItem("digitalBookPracticeAnswers", JSON.stringify(state.answers));
+    localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
   });
   elements.assistTabs.addEventListener("click", (event) => {
     const tab = event.target.closest("[data-assist-tab]")?.dataset.assistTab;
