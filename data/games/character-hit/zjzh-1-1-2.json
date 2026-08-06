@@ -1,0 +1,483 @@
+{
+  "schemaVersion": 2,
+  "temporary": true,
+  "gameId": "character-hit",
+  "lessonIds": [
+    "zjzh-1-1",
+    "zjzh-1-2"
+  ],
+  "title": "开心“打”字",
+  "subtitle": "组汉字 · 辨拼音 · 认词义",
+  "items": [
+    {
+      "lessonId": "zjzh-1-1",
+      "wordId": "word-001",
+      "targetCharacter": "闻",
+      "components": [
+        {
+          "value": "门",
+          "x": 50,
+          "y": 51,
+          "size": 112
+        },
+        {
+          "value": "耳",
+          "x": 50,
+          "y": 56,
+          "size": 62
+        }
+      ],
+      "componentDistractors": [
+        "日",
+        "目",
+        "口",
+        "问"
+      ],
+      "pinyinDistractors": [
+        "wèn míng",
+        "wěn míng",
+        "mén míng",
+        "wén mín"
+      ],
+      "word": "闻名",
+      "pinyin": "wén míng",
+      "meanings": {
+        "zh-CN": "很有名",
+        "en": "be well-known;be famous;be renowned",
+        "ru": "знаменитый",
+        "fr": "célèbre",
+        "es": "famoso",
+        "ja": "有名である",
+        "ko": "유명하다",
+        "th": "มีชื่อเสียง",
+        "lo": "ມີຊື່ສຽງ",
+        "id": "terkenal",
+        "ms": "terkenal",
+        "my": "ကျော်ကြားသော"
+      }
+    },
+    {
+      "lessonId": "zjzh-1-1",
+      "wordId": "word-003",
+      "targetCharacter": "误",
+      "components": [
+        {
+          "value": "讠",
+          "x": 25,
+          "y": 53,
+          "size": 78
+        },
+        {
+          "value": "吴",
+          "x": 68,
+          "y": 51,
+          "size": 88
+        }
+      ],
+      "componentDistractors": [
+        "口",
+        "天",
+        "吾",
+        "忄"
+      ],
+      "pinyinDistractors": [
+        "wú jiě",
+        "wǔ jiě",
+        "wù jiè",
+        "yù jiě"
+      ],
+      "word": "误解",
+      "pinyin": "wù jiě",
+      "meanings": {
+        "zh-CN": "理解错误",
+        "en": "fail to understand;be confused/puzzled/bewildered",
+        "ru": "озадаченный",
+        "fr": "perplexe",
+        "es": "perplejo",
+        "ja": "納得がいかない",
+        "ko": "납득하지 못하다",
+        "th": "ไม่เข้าใจ",
+        "lo": "ບໍ່ເຂົ້າໃຈ",
+        "id": "tidak mengerti",
+        "ms": "keliru",
+        "my": "နားမလည်နိုင်သော"
+      }
+    },
+    {
+      "lessonId": "zjzh-1-1",
+      "wordId": "word-006",
+      "targetCharacter": "拥",
+      "components": [
+        {
+          "value": "扌",
+          "x": 24,
+          "y": 53,
+          "size": 80
+        },
+        {
+          "value": "用",
+          "x": 68,
+          "y": 52,
+          "size": 88
+        }
+      ],
+      "componentDistractors": [
+        "月",
+        "甬",
+        "木",
+        "忄"
+      ],
+      "pinyinDistractors": [
+        "yǒng jǐ",
+        "yòng jǐ",
+        "yōng jì",
+        "yōng qǐ"
+      ],
+      "word": "拥挤",
+      "pinyin": "yōng jǐ",
+      "meanings": {
+        "zh-CN": "人或东西很多，很挤",
+        "en": "crowded",
+        "ru": "переполненный",
+        "fr": "bondé",
+        "es": "abarrotado",
+        "ja": "混雑している",
+        "ko": "혼잡하다",
+        "th": "แออัด",
+        "lo": "ແອອັດ",
+        "id": "padat",
+        "ms": "sesak",
+        "my": "ကြပ်ညှပ်သော"
+      }
+    },
+    {
+      "lessonId": "zjzh-1-1",
+      "wordId": "word-014",
+      "targetCharacter": "客",
+      "components": [
+        {
+          "value": "宀",
+          "x": 50,
+          "y": 27,
+          "size": 90
+        },
+        {
+          "value": "各",
+          "x": 50,
+          "y": 67,
+          "size": 92
+        }
+      ],
+      "componentDistractors": [
+        "夂",
+        "口",
+        "安",
+        "木"
+      ],
+      "pinyinDistractors": [
+        "gū kè",
+        "gǔ kè",
+        "gù kē",
+        "kù kè"
+      ],
+      "word": "顾客",
+      "pinyin": "gù kè",
+      "meanings": {
+        "zh-CN": "购买商品或接受服务的人",
+        "en": "customer",
+        "ru": "покупатель",
+        "fr": "client",
+        "es": "cliente",
+        "ja": "客",
+        "ko": "손님",
+        "th": "ลูกค้า",
+        "lo": "ລູກຄ້າ",
+        "id": "pelanggan",
+        "ms": "pelanggan",
+        "my": "ဝယ်ယူသူ"
+      }
+    },
+    {
+      "lessonId": "zjzh-1-1",
+      "wordId": "word-019",
+      "targetCharacter": "分",
+      "components": [
+        {
+          "value": "八",
+          "x": 50,
+          "y": 29,
+          "size": 88
+        },
+        {
+          "value": "刀",
+          "x": 50,
+          "y": 68,
+          "size": 92
+        }
+      ],
+      "componentDistractors": [
+        "力",
+        "人",
+        "入",
+        "公"
+      ],
+      "pinyinDistractors": [
+        "fèn xiǎng",
+        "fěn xiǎng",
+        "fēn xiāng",
+        "fēng xiǎng"
+      ],
+      "word": "分享",
+      "pinyin": "fēn xiǎng",
+      "meanings": {
+        "zh-CN": "和别人共同享用或交流",
+        "en": "share;partake in",
+        "ru": "делиться",
+        "fr": "partager",
+        "es": "compartir",
+        "ja": "分かち合う",
+        "ko": "나누다",
+        "th": "แบ่งปัน",
+        "lo": "ແບ່ງປັນ",
+        "id": "berbagi",
+        "ms": "berkongsi",
+        "my": "မျှဝေသည်"
+      }
+    },
+    {
+      "lessonId": "zjzh-1-2",
+      "wordId": "word-004",
+      "targetCharacter": "消",
+      "components": [
+        {
+          "value": "氵",
+          "x": 24,
+          "y": 53,
+          "size": 80
+        },
+        {
+          "value": "肖",
+          "x": 67,
+          "y": 52,
+          "size": 88
+        }
+      ],
+      "componentDistractors": [
+        "小",
+        "月",
+        "木",
+        "忄"
+      ],
+      "pinyinDistractors": [
+        "xiǎo chú",
+        "xiào chú",
+        "xiāo chù",
+        "shāo chú"
+      ],
+      "word": "消除",
+      "pinyin": "xiāo chú",
+      "meanings": {
+        "zh-CN": "使不好的事物不存在",
+        "en": "eliminate; remove",
+        "es": "eliminar; quitar",
+        "fr": "éliminer; supprimer",
+        "id": "menghilangkan; menghapus",
+        "ja": "取り除く; 除去する",
+        "ko": "제거하다; 없애다",
+        "lo": "ກຳຈັດ; ລຶບ",
+        "ms": "menghapuskan; membuang",
+        "my": "ဖယ်ရှား; ပပျောက်စေ",
+        "ru": "устранять; удалять",
+        "th": "ขจัด; กำจัด"
+      }
+    },
+    {
+      "lessonId": "zjzh-1-2",
+      "wordId": "word-007",
+      "targetCharacter": "扑",
+      "components": [
+        {
+          "value": "扌",
+          "x": 27,
+          "y": 53,
+          "size": 82
+        },
+        {
+          "value": "卜",
+          "x": 68,
+          "y": 52,
+          "size": 90
+        }
+      ],
+      "componentDistractors": [
+        "木",
+        "下",
+        "十",
+        "讠"
+      ],
+      "pinyinDistractors": [
+        "pǔ",
+        "pù",
+        "bǔ",
+        "pūn"
+      ],
+      "word": "扑",
+      "pinyin": "pū",
+      "meanings": {
+        "zh-CN": "向前猛冲或拍打",
+        "en": "throw oneself on or at (sb.or sth.）; pounce on",
+        "es": "abalanzarse; lanzarse sobre",
+        "fr": "se jeter sur; fondre sur",
+        "id": "menerkam; menubruk",
+        "ja": "飛びかかる; 襲いかかる",
+        "ko": "덤비다; 덮치다",
+        "lo": "ໂດດໃສ່; ພຸ່ງໃສ່",
+        "ms": "menerkam; meluru ke arah",
+        "my": "ပြေးဝင်တိုက်; ခုန်အုပ်",
+        "ru": "бросаться на; набрасываться",
+        "th": "พุ่งเข้าใส่; ตะครุบ"
+      }
+    },
+    {
+      "lessonId": "zjzh-1-2",
+      "wordId": "word-008",
+      "targetCharacter": "坪",
+      "components": [
+        {
+          "value": "土",
+          "x": 25,
+          "y": 54,
+          "size": 80
+        },
+        {
+          "value": "平",
+          "x": 68,
+          "y": 52,
+          "size": 88
+        }
+      ],
+      "componentDistractors": [
+        "干",
+        "王",
+        "木",
+        "艹"
+      ],
+      "pinyinDistractors": [
+        "cǎo pín",
+        "cào píng",
+        "cǎo pǐng",
+        "chǎo píng"
+      ],
+      "word": "草坪",
+      "pinyin": "cǎo píng",
+      "meanings": {
+        "zh-CN": "平坦的草地",
+        "en": "lawn",
+        "es": "césped; prado",
+        "fr": "pelouse; gazon",
+        "id": "halaman rumput",
+        "ja": "芝生",
+        "ko": "잔디밭",
+        "lo": "ສະໜາມຫຍ້າ",
+        "ms": "padang rumput",
+        "my": "မြက်ခင်းပြင်",
+        "ru": "газон; лужайка",
+        "th": "สนามหญ้า"
+      }
+    },
+    {
+      "lessonId": "zjzh-1-2",
+      "wordId": "word-011",
+      "targetCharacter": "慰",
+      "components": [
+        {
+          "value": "尉",
+          "x": 50,
+          "y": 34,
+          "size": 88
+        },
+        {
+          "value": "心",
+          "x": 50,
+          "y": 76,
+          "size": 78
+        }
+      ],
+      "componentDistractors": [
+        "忄",
+        "思",
+        "安",
+        "口"
+      ],
+      "pinyinDistractors": [
+        "ān wěi",
+        "ān wèi",
+        "àn wèi",
+        "ān wéi"
+      ],
+      "word": "安慰",
+      "pinyin": "ān wèi",
+      "meanings": {
+        "zh-CN": "使心情平静",
+        "en": "comfort;console",
+        "es": "consolar; confortar",
+        "fr": "consoler; réconforter",
+        "id": "menghibur; menenangkan",
+        "ja": "慰める; なだめる",
+        "ko": "위로하다; 달래다",
+        "lo": "ປອບໃຈ; ປອບໂຍນ",
+        "ms": "menghibur; menenangkan",
+        "my": "နှစ်သိမ့်; ဖြေသာ",
+        "ru": "утешать; успокаивать",
+        "th": "ปลอบใจ; ปลอบโยน"
+      }
+    },
+    {
+      "lessonId": "zjzh-1-2",
+      "wordId": "word-017",
+      "targetCharacter": "谜",
+      "components": [
+        {
+          "value": "讠",
+          "x": 24,
+          "y": 53,
+          "size": 80
+        },
+        {
+          "value": "迷",
+          "x": 68,
+          "y": 52,
+          "size": 88
+        }
+      ],
+      "componentDistractors": [
+        "米",
+        "辶",
+        "口",
+        "忄"
+      ],
+      "pinyinDistractors": [
+        "mí yù",
+        "mǐ yǔ",
+        "mí yú",
+        "mì yǔ"
+      ],
+      "word": "谜语",
+      "pinyin": "mí yǔ",
+      "meanings": {
+        "zh-CN": "需要猜测答案的话",
+        "en": "riddle",
+        "es": "acertijo",
+        "fr": "devinette",
+        "id": "teka-teki",
+        "ja": "なぞなぞ",
+        "ko": "수수께끼",
+        "lo": "ປິດສະໜາ",
+        "ms": "teka-teki",
+        "my": "စကားထာ",
+        "ru": "загадка",
+        "th": "ปริศนา"
+      }
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#163f42">
+  <title>开心“打”字 · 点点汉语</title>
+  <link rel="manifest" href="../../manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
+  <link rel="stylesheet" href="styles.css?v=20260806-1">
+</head>
+<body>
+  <main class="game" id="game">
+    <header class="game-bar">
+      <a class="back-button" href="../learning-hub/" aria-label="返回学习中心">‹</a>
+      <a class="brand" href="../learning-hub/">
+        <img src="../../icons/icon-96.png" alt="">
+        <span><strong>开心“打”字</strong><small>Character Hit</small></span>
+      </a>
+      <div class="round-meter" aria-label="关卡进度"><span id="roundLabel">第 1 / 5 词</span><i><b id="roundProgress"></b></i></div>
+      <div class="score-board"><span>得分 <b id="score">0</b></span><span>连击 <b id="streak">0</b></span></div>
+      <label class="language-control"><span>辅助语言</span><select id="languageSelect"><option value="en">English</option><option value="th">ไทย</option><option value="lo">ພາສາລາວ</option><option value="fr">Français</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="ru">Русский</option><option value="es">Español</option><option value="id">Bahasa Indonesia</option><option value="ms">Bahasa Melayu</option><option value="my">မြန်မာဘာသာ</option><option value="zh-CN">中文</option></select></label>
+      <button class="sound-button" id="soundButton" type="button" aria-pressed="true" title="声音 / Sound"><span aria-hidden="true">♪</span><b>声音</b></button>
+    </header>
+
+    <section class="scene" id="scene" aria-label="开心打字游戏区">
+      <img class="scene-art" src="assets/scene.svg" alt="">
+      <div class="scene-pattern" aria-hidden="true"></div>
+
+      <section class="mission-panel" aria-live="polite">
+        <span id="stageKicker">第一步 · 组汉字</span>
+        <h1 id="stageTitle">射中正确部件</h1>
+        <p id="stageHint">移动准星，点击目标发射</p>
+        <div class="stage-steps" aria-label="本词学习步骤">
+          <i class="active" data-stage-step="components">字形</i>
+          <i data-stage-step="pinyin">拼音</i>
+          <i data-stage-step="meaning">词义</i>
+        </div>
+      </section>
+
+      <div class="playfield" id="playfield">
+        <svg class="aim-layer" id="aimLayer" aria-hidden="true"><line id="aimLine" x1="0" y1="0" x2="0" y2="0"/></svg>
+        <div class="float-layer" id="floatLayer"></div>
+        <div class="effects-layer" id="effectsLayer" aria-hidden="true"></div>
+
+        <aside class="word-card" aria-live="polite">
+          <span>本轮教材词语</span>
+          <strong id="currentWord">闻名</strong>
+          <small id="wordStatus">先完成“闻”的字形</small>
+        </aside>
+
+        <section class="assembly" id="assembly" aria-label="汉字组合区">
+          <span class="assembly-caption">目标汉字</span>
+          <div class="character-stage" id="characterStage">
+            <b class="character-ghost" id="characterGhost">闻</b>
+            <div class="placed-components" id="placedComponents"></div>
+            <b class="character-complete" id="characterComplete"></b>
+          </div>
+          <strong class="assembled-pinyin" id="assembledPinyin"></strong>
+          <p class="assembled-meaning" id="assembledMeaning"></p>
+        </section>
+
+        <div class="launcher" id="launcher" aria-hidden="true">
+          <span class="launcher-arm"></span><i></i><b>墨</b>
+        </div>
+        <div class="crosshair" id="crosshair" aria-hidden="true"><i></i><b></b></div>
+      </div>
+
+      <footer class="game-footer">
+        <button class="hint-button" id="hintButton" type="button"><span aria-hidden="true">?</span><b>提示</b><small>Hint</small></button>
+        <p id="feedback" role="status">找到构成“闻”的两个部件</p>
+        <button class="pause-button" id="pauseButton" type="button"><span aria-hidden="true">Ⅱ</span><b>暂停</b><small>Pause</small></button>
+      </footer>
+    </section>
+
+    <section class="start-screen" id="startScreen">
+      <div class="start-copy">
+        <span>中级综合 I · 第1—2课</span>
+        <h1>开心“打”字</h1>
+        <p>射中部件组汉字，再辨拼音和词义。每个目标都来自本课词汇。</p>
+        <div class="start-preview" aria-hidden="true"><i>门</i><b>+</b><i>耳</i><b>=</b><strong>闻</strong></div>
+        <button id="startButton" type="button" disabled><span aria-hidden="true">▶</span><b>正在准备</b><small>Loading</small></button>
+        <small>电脑使用鼠标，手机和平板直接触摸目标</small>
+      </div>
+    </section>
+
+    <section class="pause-screen" id="pauseScreen" hidden>
+      <div><span>练习暂停</span><h2>准备好再继续</h2><button id="resumeButton" type="button">继续游戏 / Resume</button><a href="../learning-hub/">返回学习中心</a></div>
+    </section>
+
+    <section class="result-screen" id="resultScreen" hidden>
+      <div><span>本轮完成</span><h2>五个词都打中了</h2><strong id="finalScore">0</strong><p id="resultSummary"></p><button id="replayButton" type="button">再玩一次 / Play again</button><a href="../learning-hub/">返回学习中心</a></div>
+    </section>
+  </main>
+  <script src="app.js?v=20260806-1" defer></script>
+</body>
+</html>

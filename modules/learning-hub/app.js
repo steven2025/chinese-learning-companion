@@ -1,6 +1,8 @@
 const terms = ["2026 Fall", "2027 Spring", "2027 Fall", "2028 Spring", "2028 Fall"];
 const teachers = ["曹丹丹", "袁玥", "李进"];
 const administrator = "鄢清华";
+const TEST_STUDENT_ACCOUNT = "test";
+const TEST_INVITE_CODE = "123456";
 
 const catalog = [
   {
@@ -73,7 +75,7 @@ const state = {
   teacherContext: { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" },
 };
 
-const viewLabels = { home: "首页", courses: "我的课程", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
+const viewLabels = { home: "首页", courses: "我的课程", games: "趣味游戏", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
 
 if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
   window.addEventListener("load", () => {
@@ -81,13 +83,16 @@ if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
   });
 }
 const elements = {
-  location: document.querySelector("#currentLocation"),
   search: document.querySelector("#globalSearch"),
+  currentBookLabel: document.querySelector("#currentBookLabel"),
+  currentLessonLabel: document.querySelector("#currentLessonLabel"),
   profileButton: document.querySelector("#profileButton"),
   profileAvatar: document.querySelector("#profileAvatar"),
   profileName: document.querySelector("#profileName"),
   profileRole: document.querySelector("#profileRole"),
   roleDialog: document.querySelector("#roleDialog"),
+  courseDialog: document.querySelector("#courseDialog"),
+  courseDialogLessons: document.querySelector("#courseDialogLessons"),
   levelCatalog: document.querySelector("#levelCatalog"),
   lessonTitle: document.querySelector("#lessonDirectoryTitle"),
   lessonCount: document.querySelector("#lessonCount"),
@@ -167,7 +172,7 @@ function bookById(id) {
 }
 
 function bookOptionMarkup(selected = "") {
-  return catalog.map((level) => `<optgroup label="${level.label}">${level.books.map(([id, label]) => `<option value="${id}"${id === selected ? " selected" : ""}>发展汉语·${label}</option>`).join("")}</optgroup>`).join("");
+  return catalog.map((level) => `<optgroup label="${level.label}">${level.books.map(([id, label]) => `<option value="${id}"${id === selected ? " selected" : ""}${id !== "intermediate-comprehensive-1" ? " disabled" : ""}>发展汉语·${label}${id !== "intermediate-comprehensive-1" ? "（未开放）" : ""}</option>`).join("")}</optgroup>`).join("");
 }
 
 function populateFormOptions() {
@@ -193,40 +198,47 @@ function setView(view) {
     panel.classList.toggle("active", active);
   });
   document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
-  elements.location.textContent = viewLabels[view];
   if (view === "teacher") renderTeacherWorkspace();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function renderCatalog() {
   const query = state.search.trim().toLowerCase();
-  elements.levelCatalog.innerHTML = catalog.map((level) => {
-    const visibleBooks = level.books.filter(([, label]) => !query || `发展汉语 ${label}`.toLowerCase().includes(query));
-    if (!visibleBooks.length) return "";
-    const expanded = state.openLevel === level.id;
-    return `<section class="level-group" data-level-group="${level.id}">
-      <button class="level-toggle" type="button" data-toggle-level="${level.id}" aria-expanded="${expanded}">
-        <span>${level.label.slice(0, 1)}</span><span><strong>${level.label}阶段</strong><small>共${level.books.length}册</small></span><i>⌄</i>
-      </button>
-      <div class="level-books"${expanded ? "" : " hidden"}>
-        ${visibleBooks.map(([id, label]) => `<button class="book-row${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${id === "intermediate-comprehensive-1" ? "第1、2课可学习" : "内容准备中"}</small></button>`).join("")}
-      </div>
-    </section>`;
-  }).join("") || '<p class="empty-state">没有找到符合条件的教材。</p>';
+  const level = catalog.find((item) => item.id === state.openLevel) || catalog[1];
+  const visibleBooks = level.books.filter(([, label]) => !query || `发展汉语 ${label}`.toLowerCase().includes(query));
+  document.querySelectorAll("[data-course-level]").forEach((button) => button.classList.toggle("active", button.dataset.courseLevel === level.id));
+  elements.levelCatalog.innerHTML = visibleBooks.length
+    ? `<div class="course-book-grid">${visibleBooks.map(([id, label]) => `<button class="book-choice${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${id === "intermediate-comprehensive-1" ? "第1、2课可学习" : "内容准备中"}</small></button>`).join("")}</div>`
+    : '<p class="empty-state">没有找到符合条件的教材。</p>';
+  renderCourseDialogLessons();
+}
+
+function renderCourseDialogLessons() {
+  const book = bookById(state.selectedBookId);
+  if (book.id !== "intermediate-comprehensive-1") {
+    elements.courseDialogLessons.innerHTML = `<header><span>已选择</span><strong>《发展汉语·${book.label}》</strong></header><p>该教材已建立入口，内容准备中。</p>`;
+    return;
+  }
+  elements.courseDialogLessons.innerHTML = `<header><span>选择课次 / Lesson</span><strong>《发展汉语·${book.label}》</strong></header><div class="dialog-lesson-grid">${lessonTitles.map((title, index) => {
+    const lessonNumber = index + 1;
+    return index < 2
+      ? `<a href="../digital-book/?lesson=zjzh-1-${lessonNumber}"><b>${String(lessonNumber).padStart(2, "0")}</b><span>${title}</span></a>`
+      : `<button type="button" data-unavailable-lesson="${lessonNumber}"><b>${String(lessonNumber).padStart(2, "0")}</b><span>${title}</span></button>`;
+  }).join("")}</div>`;
 }
 
 function renderLessons() {
   const book = bookById(state.selectedBookId);
   elements.lessonTitle.textContent = book.label;
-  document.querySelector(".sidebar-course strong").textContent = book.label;
+  elements.currentBookLabel.textContent = book.label;
   if (book.id !== "intermediate-comprehensive-1") {
     elements.lessonCount.textContent = "内容准备中";
     elements.lessonList.innerHTML = `<p class="empty-approval">《发展汉语·${book.label}》已建立入口，课程内容尚未接入。</p>`;
-    document.querySelector(".sidebar-course p").textContent = "课程内容准备中";
+    elements.currentLessonLabel.textContent = "内容准备中";
     return;
   }
   elements.lessonCount.textContent = "共14课";
-  document.querySelector(".sidebar-course p").textContent = "第1课 · 你咋不早说";
+  elements.currentLessonLabel.textContent = "第1课 · 你咋不早说";
   elements.lessonList.innerHTML = lessonTitles.map((title, index) => {
     const available = index < 2;
     const lessonNumber = index + 1;
@@ -241,6 +253,13 @@ function selectBook(id) {
   state.openLevel = book.level;
   renderCatalog();
   renderLessons();
+}
+
+function openCourseDialog() {
+  state.search = "";
+  elements.search.value = "";
+  renderCatalog();
+  elements.courseDialog.showModal();
 }
 
 function showAuthTab(tab) {
@@ -280,12 +299,15 @@ function saveEnrollments() {
 
 async function handleStudentLogin(form) {
   const data = new FormData(form);
-  if (!data.get("inviteCode").trim()) return;
-  const studentId = data.get("studentId").trim();
+  const studentId = data.get("studentAccount").trim();
+  if (studentId !== TEST_STUDENT_ACCOUNT || data.get("inviteCode").trim() !== TEST_INVITE_CODE) {
+    showToast("学生账号或邀请码不正确");
+    return;
+  }
   const enrollment = {
     id: `student-${studentId}-${data.get("term")}-${data.get("book")}-${data.get("teacher")}`,
-    chineseName: data.get("chineseName").trim(),
-    englishName: data.get("englishName").trim(),
+    chineseName: "测试学生",
+    englishName: TEST_STUDENT_ACCOUNT,
     studentId,
     term: data.get("term"),
     teacher: data.get("teacher"),
@@ -319,7 +341,10 @@ async function handleStudentLogin(form) {
 async function handleTeacherLogin(form) {
   const data = new FormData(form);
   const teacher = data.get("teacher");
-  if (!teachers.includes(teacher) || !data.get("inviteCode").trim()) return;
+  if (!teachers.includes(teacher) || data.get("inviteCode").trim() !== TEST_INVITE_CODE) {
+    showToast("教师姓名或邀请码不正确");
+    return;
+  }
   if (window.LearningApi?.isConfigured()) {
     try {
       await window.LearningApi.createSession({ role: "teacher", inviteCode: data.get("inviteCode").trim(), teacher, term: data.get("term"), bookId: data.get("book") });
@@ -337,7 +362,10 @@ async function handleTeacherLogin(form) {
 
 async function handleAdminLogin(form) {
   const data = new FormData(form);
-  if (!data.get("inviteCode").trim()) return;
+  if (data.get("inviteCode").trim() !== TEST_INVITE_CODE) {
+    showToast("管理员邀请码不正确");
+    return;
+  }
   if (window.LearningApi?.isConfigured()) {
     try {
       await window.LearningApi.createSession({ role: "admin", inviteCode: data.get("inviteCode").trim(), name: administrator, bookId: "system" });
@@ -442,21 +470,16 @@ document.addEventListener("click", (event) => {
   }
   const view = event.target.closest("[data-view]")?.dataset.view;
   if (view) { setView(view); return; }
+  if (event.target.closest('[data-action="open-course-dialog"]')) { openCourseDialog(); return; }
+  if (event.target.closest("[data-course-close]")) { elements.courseDialog.close(); return; }
+  const courseLevel = event.target.closest("[data-course-level]")?.dataset.courseLevel;
+  if (courseLevel) { state.openLevel = courseLevel; state.search = ""; elements.search.value = ""; renderCatalog(); return; }
   if (event.target.closest('[data-action="open-role-dialog"]')) { openAuth("student-login"); return; }
   const authTab = event.target.closest("[data-auth-tab]")?.dataset.authTab;
   if (authTab) { showAuthTab(authTab); return; }
   if (event.target.closest("[data-auth-close]")) { elements.roleDialog.close(); return; }
-  const level = event.target.closest("[data-toggle-level]")?.dataset.toggleLevel;
-  if (level) { state.openLevel = state.openLevel === level ? "" : level; renderCatalog(); return; }
   const selectedBook = event.target.closest("[data-select-book]")?.dataset.selectBook;
   if (selectedBook) { selectBook(selectedBook); return; }
-  const levelFilter = event.target.closest("[data-level]")?.dataset.level;
-  if (levelFilter) {
-    state.openLevel = levelFilter === "all" ? "intermediate" : levelFilter;
-    document.querySelectorAll("[data-level]").forEach((button) => button.classList.toggle("active", button.dataset.level === levelFilter));
-    renderCatalog();
-    return;
-  }
   const unavailableLesson = event.target.closest("[data-unavailable-lesson]")?.dataset.unavailableLesson;
   if (unavailableLesson) showToast(`第${unavailableLesson}课内容尚未接入`);
 });
@@ -464,6 +487,7 @@ document.addEventListener("click", (event) => {
 elements.profileButton.addEventListener("click", () => openAuth("student-login"));
 elements.installAppButton.addEventListener("click", () => { void requestAppInstall(); });
 elements.roleDialog.addEventListener("click", (event) => { if (event.target === elements.roleDialog) elements.roleDialog.close(); });
+elements.courseDialog.addEventListener("click", (event) => { if (event.target === elements.courseDialog) elements.courseDialog.close(); });
 elements.studentLoginForm.addEventListener("submit", (event) => { event.preventDefault(); void handleStudentLogin(event.currentTarget); });
 elements.teacherLoginForm.addEventListener("submit", (event) => { event.preventDefault(); void handleTeacherLogin(event.currentTarget); });
 elements.adminLoginForm.addEventListener("submit", (event) => { event.preventDefault(); void handleAdminLogin(event.currentTarget); });
@@ -476,7 +500,8 @@ populateFormOptions();
 renderCatalog();
 renderLessons();
 applyIdentity("guest", "");
-setView("home");
+const requestedView = new URL(window.location.href).searchParams.get("view");
+setView(viewLabels[requestedView] ? requestedView : "home");
 
 if (isInstalledApp()) {
   hideInstallUi();

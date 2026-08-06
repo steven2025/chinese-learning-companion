@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260801-5">
+  <link rel="stylesheet" href="styles.css?v=20260806-2">
 </head>
 <body>
   <div class="app-shell">
@@ -17,11 +17,12 @@
         <img src="../../icons/icon-96.png" alt="">
         <span><strong>点点汉语</strong><small>智能中文伴学平台</small></span>
       </a>
-      <div class="current-location" id="currentLocation">首页</div>
-      <label class="global-search">
-        <span aria-hidden="true">⌕</span>
-        <input id="globalSearch" type="search" placeholder="搜索教材或课程" autocomplete="off">
-      </label>
+      <button class="course-switcher-button" type="button" data-action="open-course-dialog" aria-haspopup="dialog">
+        <span class="course-switcher-icon" aria-hidden="true">册</span>
+        <span><small>当前课程 / Current course</small><strong id="currentBookLabel">中级综合（Ⅰ）</strong></span>
+        <span class="course-switcher-lesson" id="currentLessonLabel">第1课</span>
+        <i aria-hidden="true">⌄</i>
+      </button>
       <button class="language-button" type="button" title="辅助语言"><span>文</span><b>中文</b></button>
       <button class="install-button" id="installAppButton" type="button" title="安装点点汉语 / Install Diandian Chinese">
         <span aria-hidden="true">⇩</span><span><b>安装</b><small>Install</small></span>
@@ -37,16 +38,11 @@
       <nav class="primary-navigation">
         <button class="active" type="button" data-view="home"><span aria-hidden="true">⌂</span><b>首页</b></button>
         <button type="button" data-view="courses"><span aria-hidden="true">册</span><b>我的课程</b></button>
+        <button type="button" data-view="games"><span aria-hidden="true">趣</span><b>趣味游戏</b></button>
         <button type="button" data-view="progress"><span aria-hidden="true">记</span><b>学习记录</b></button>
         <button type="button" data-view="teacher" data-role-nav="teacher" hidden><span aria-hidden="true">教</span><b>教学工作台</b></button>
         <button type="button" data-view="admin" data-role-nav="admin" hidden><span aria-hidden="true">管</span><b>系统管理</b></button>
       </nav>
-      <section class="sidebar-course">
-        <span>当前课程</span>
-        <strong>中级综合1</strong>
-        <p>第1课 · 你咋不早说</p>
-        <a href="../digital-book/">继续学习</a>
-      </section>
     </aside>
 
     <main class="main-content">
@@ -74,6 +70,7 @@
             <div class="task-list">
               <a href="../digital-book/"><span class="task-number">01</span><span><strong>词汇与课文学习</strong><small>中级综合1 · 第1课</small></span><b>继续</b></a>
               <a href="../digital-book/"><span class="task-number coral">02</span><span><strong>完成课后练习</strong><small>第41—48题</small></span><b>开始</b></a>
+              <a href="../character-hit/"><span class="task-number gold">03</span><span><strong>开心“打”字</strong><small>组汉字 · 辨拼音 · 认词义</small></span><b>挑战</b></a>
             </div>
           </section>
 
@@ -90,22 +87,39 @@
 
       </section>
 
+      <section class="app-view" id="gamesView" data-view-panel="games" hidden>
+        <header class="page-heading"><div><span>趣味复习</span><h1>教材词汇游戏</h1><p>从当前教材和课程中选择词语，完成短时、高频的回顾练习。</p></div></header>
+        <div class="game-library">
+          <a class="game-entry featured" href="../character-hit/">
+            <div class="game-entry-visual" aria-hidden="true"><i>门</i><b>+</b><i>耳</i><b>→</b><strong>闻</strong></div>
+            <div><span>中级综合 I · 第1—2课</span><h2>开心“打”字</h2><p>射中正确部件组汉字，再击中彩色气球完成拼音和母语词义辨认。</p><small>10个精选教材词语</small></div>
+            <em>开始挑战 ›</em>
+          </a>
+          <a class="game-entry word-link" href="../word-link/">
+            <div class="game-entry-mark" aria-hidden="true">连</div>
+            <div><span>发展汉语 · HSK</span><h2>单词连连看</h2><p>连接汉字、拼音和母语词义，完成教材词汇的高频回顾。</p><small>多语言词义匹配</small></div>
+            <em>开始游戏 ›</em>
+          </a>
+          <a class="game-entry hanzi-challenge" href="../hanzi-challenge/">
+            <div class="game-entry-mark" aria-hidden="true">闯</div>
+            <div><span>中级综合 I · 第1—2课</span><h2>汉字大闯关</h2><p>根据拼音、教材词语和中文提示，从相近汉字中选出正确答案。</p><small>2关 · 20个教材汉字</small></div>
+            <em>开始闯关 ›</em>
+          </a>
+        </div>
+      </section>
+
       <section class="app-view" id="coursesView" data-view-panel="courses" hidden>
         <header class="page-heading"><div><span>课程</span><h1>我的课程</h1><p>按教材系列、阶段和册别查找课程。</p></div></header>
-        <div class="course-browser">
-          <aside class="catalog-filters">
-            <label><span>教材系列</span><select id="seriesFilter"><option value="fazhan">发展汉语</option><option value="other">其他教材系列</option></select></label>
-            <div><span>学习阶段</span><button class="active" type="button" data-level="all">全部</button><button type="button" data-level="beginner">初级</button><button type="button" data-level="intermediate">中级</button></div>
-            <div class="catalog-note"><strong>课程结构</strong><p>教材系列 → 册别 → 课程 → 学习单元</p></div>
-          </aside>
-          <div class="catalog-content">
-            <section class="level-catalog" id="levelCatalog" aria-label="发展汉语教材目录"></section>
-            <section class="lesson-directory" aria-labelledby="lessonDirectoryTitle">
-              <header><div><span>发展汉语</span><h2 id="lessonDirectoryTitle">中级综合（Ⅰ）</h2></div><strong id="lessonCount">共14课</strong></header>
-              <div class="lesson-list" id="lessonList"></div>
-            </section>
-          </div>
-        </div>
+        <section class="course-overview">
+          <header class="course-overview-header">
+            <div><span>当前教材</span><h2 id="lessonDirectoryTitle">中级综合（Ⅰ）</h2></div>
+            <button class="quiet-button" type="button" data-action="open-course-dialog">切换教材 / Switch</button>
+          </header>
+          <section class="lesson-directory" aria-labelledby="lessonDirectoryTitle">
+            <header><span>课程目录 / Lessons</span><strong id="lessonCount">共14课</strong></header>
+            <div class="lesson-list" id="lessonList"></div>
+          </section>
+        </section>
       </section>
 
       <section class="app-view" id="progressView" data-view-panel="progress" hidden>
@@ -146,6 +160,7 @@
     <nav class="mobile-navigation" aria-label="移动端导航">
       <button class="active" type="button" data-view="home"><span>⌂</span><b>首页</b></button>
       <button type="button" data-view="courses"><span>册</span><b>课程</b></button>
+      <button type="button" data-view="games"><span>趣</span><b>游戏</b></button>
       <button type="button" data-view="progress"><span>记</span><b>记录</b></button>
     </nav>
   </div>
@@ -168,41 +183,56 @@
 
       <form class="auth-panel active" id="studentLoginForm" data-auth-panel="student-login">
         <div class="form-grid two-columns">
-          <label><span>中文名</span><input name="chineseName" required></label>
-          <label><span>英文名</span><input name="englishName" required></label>
-          <label><span>学号</span><input name="studentId" required></label>
-          <label><span>班级邀请码</span><input name="inviteCode" required autocomplete="one-time-code"></label>
+          <label><span>学生账号 / Account</span><input name="studentAccount" value="test" required autocomplete="username"></label>
+          <label><span>邀请码 / Invite code</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
           <label><span>学期</span><select name="term" data-term-options required></select></label>
           <label><span>教师</span><select name="teacher" data-teacher-options required></select></label>
           <label class="wide-field"><span>教材</span><select name="book" data-book-options required></select></label>
         </div>
         <button class="primary-button" type="submit">进入课程</button>
-        <p>原型阶段只检查邀请码是否填写；正式系统将验证邀请码与班级是否匹配。</p>
+        <p>当前测试账号为 test，邀请码为 123456；正式开放前将重新设置。</p>
       </form>
 
       <form class="auth-panel" id="teacherLoginForm" data-auth-panel="teacher-login" hidden>
         <div class="form-grid two-columns">
           <label><span>教师姓名</span><select name="teacher" data-teacher-options required></select></label>
-          <label><span>教师邀请码</span><input name="inviteCode" required autocomplete="one-time-code"></label>
+          <label><span>教师邀请码</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
           <label><span>学期</span><select name="term" data-term-options required></select></label>
           <label><span>教材</span><select name="book" data-book-options required></select></label>
         </div>
         <button class="primary-button" type="submit">进入教学工作台</button>
-        <p>教师身份限定为曹丹丹、袁玥、李进。</p>
+        <p>教师身份限定为曹丹丹、袁玥、李进，当前测试邀请码为 123456。</p>
       </form>
 
       <form class="auth-panel" id="adminLoginForm" data-auth-panel="admin-login" hidden>
         <label><span>管理员姓名</span><input name="administrator" value="鄢清华" readonly></label>
-        <label><span>管理员邀请码</span><input name="inviteCode" required autocomplete="one-time-code"></label>
+        <label><span>管理员邀请码</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
         <button class="primary-button" type="submit">进入系统管理</button>
-        <p>当前管理员为鄢清华。</p>
+        <p>当前管理员为鄢清华，测试邀请码为 123456。</p>
       </form>
+    </div>
+  </dialog>
+
+  <dialog class="course-dialog" id="courseDialog" aria-labelledby="courseDialogTitle">
+    <div class="course-dialog-shell">
+      <header>
+        <div><span>发展汉语教材</span><h2 id="courseDialogTitle">选择课程 / Choose a course</h2></div>
+        <button type="button" data-course-close aria-label="关闭">×</button>
+      </header>
+      <nav class="course-level-tabs" aria-label="学习阶段">
+        <button type="button" data-course-level="beginner">初级 <small>Beginner</small></button>
+        <button class="active" type="button" data-course-level="intermediate">中级 <small>Intermediate</small></button>
+        <button type="button" data-course-level="advanced">高级 <small>Advanced</small></button>
+      </nav>
+      <label class="course-dialog-search"><span aria-hidden="true">⌕</span><input id="globalSearch" type="search" placeholder="搜索教材 / Search books" autocomplete="off"></label>
+      <section class="level-catalog" id="levelCatalog" aria-label="发展汉语教材目录"></section>
+      <section class="course-dialog-lessons" id="courseDialogLessons" aria-live="polite"></section>
     </div>
   </dialog>
 
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="../../config.js?v=20260801-2"></script>
   <script src="../shared/learning-api-client.js?v=20260802-1"></script>
-  <script src="app.js?v=20260804-1" defer></script>
+  <script src="app.js?v=20260806-2" defer></script>
 </body>
 </html>
