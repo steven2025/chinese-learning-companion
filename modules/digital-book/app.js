@@ -182,6 +182,7 @@ const assessmentPhaseLabels = {
   reviewingWriting: ["AI 写作评价中", "Reviewing writing"],
   reviewingHandwriting: ["AI 书写评价中", "Reviewing handwriting"],
   reviewingHandwrittenEssay: ["手写识别与写作评价中", "Recognizing and reviewing handwriting"],
+  deepAssist: ["AI 深度解释中", "Preparing AI explanation"],
   advising: ["正在生成母语建议", "Preparing feedback"],
   saving: ["正在保存结果", "Saving results"],
 };
@@ -272,7 +273,7 @@ function setAiWork(active, phase = "") {
   if (active) pauseAllLearningAudio();
   if (elements.aiWorkIndicator) {
     elements.aiWorkIndicator.hidden = !active;
-    elements.aiWorkIndicator.innerHTML = active ? mechanicalClock(phase, true) : "";
+    elements.aiWorkIndicator.innerHTML = active ? mechanicalClock(phase) : "";
   }
 }
 
@@ -1023,7 +1024,7 @@ async function loadAssessmentUsage() {
 
 function renderAssessmentResult(assessment) {
   if (!assessment || assessment.status === "idle") return "";
-  if (assessment.status === "working") return `<div class="assessment-panel is-working">${mechanicalClock(assessment.phase || "assessing")}<p>程序已进入静默状态，云端正在完成测评和母语建议。</p><small>The app is silent while the cloud assessment is running.</small></div>`;
+  if (assessment.status === "working") return `<div class="assessment-panel is-working"><p>程序已进入静默状态，云端正在完成测评和母语建议。</p><small>The app is silent while the cloud assessment is running.</small></div>`;
   if (assessment.status === "error") return `<div class="assessment-panel is-error"><strong>本次测评未完成 <small>Assessment incomplete</small></strong><p>${escapeHtml(assessment.message || "请稍后重试")}</p></div>`;
   const result = assessment.result || {};
   const scores = result.scores || {};
@@ -2066,13 +2067,21 @@ function deepAssistLabel(key) {
 
 async function requestDeepAssist(request) {
   const key = deepAssistKey(request);
+  if (state.aiWork.active) {
+    state.deepAssist[key] = { status: "error", message: "已有一个 AI 任务正在进行，请等待完成" };
+    renderAssistContent();
+    return;
+  }
   state.deepAssist[key] = { status: "loading" };
+  setAiWork(true, "deepAssist");
   renderAssistContent();
   try {
     const response = await window.LearningApi.resolveAssist({ lessonId: LESSON_ID, locale: state.locale, ...request });
     state.deepAssist[key] = { status: "ready", result: response.content?.content || response.content };
   } catch (error) {
     state.deepAssist[key] = { status: "error", message: error.message || "深度解释暂时不可用" };
+  } finally {
+    setAiWork(false);
   }
   renderAssistContent();
 }

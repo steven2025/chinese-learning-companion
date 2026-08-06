@@ -844,7 +844,26 @@ button:disabled { filter: grayscale(.18); }
 @keyframes second-turn { from { transform: translateX(-50%) rotate(var(--second-angle)); } to { transform: translateX(-50%) rotate(calc(var(--second-angle) + 360deg)); } }
 @keyframes minute-turn { from { transform: translateX(-50%) rotate(var(--minute-angle)); } to { transform: translateX(-50%) rotate(calc(var(--minute-angle) + 360deg)); } }
 @keyframes hour-turn { from { transform: translateX(-50%) rotate(var(--hour-angle)); } to { transform: translateX(-50%) rotate(calc(var(--hour-angle) + 360deg)); } }
-.ai-work-indicator { position: fixed; top: 82px; right: 18px; z-index: 120; padding: 12px 16px; border: 1px solid #9db7b2; border-radius: 7px; background: rgba(255,255,255,.97); box-shadow: 0 14px 38px rgba(15,41,44,.24); }
+.ai-work-indicator {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(238, 244, 242, .76);
+  backdrop-filter: blur(2px);
+}
+.ai-work-indicator[hidden] { display: none; }
+.ai-work-indicator .ai-mechanical-clock {
+  min-width: min(390px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  padding: 28px 32px;
+  border: 1px solid #9db7b2;
+  border-radius: 7px;
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 18px 48px rgba(15,41,44,.3);
+}
 .ai-mechanical-clock.is-compact .clock-face { width: 62px; height: 62px; border-width: 4px; box-shadow: inset 0 0 0 1px #caa867, 0 4px 0 #0f292c, 0 8px 18px rgba(15,41,44,.18); }
 .ai-mechanical-clock.is-compact .clock-face i { display: none; }
 .ai-mechanical-clock.is-compact .hour-hand { height: 15px; }
@@ -868,7 +887,6 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
 @media (max-width: 900px) {
   .learning-workspace { grid-template-columns: 1fr; }
   .assist-zone { min-height: 360px; }
-  .ai-work-indicator { top: 12px; right: 12px; }
 }
 @media (max-width: 760px) {
   .book-toolbar { grid-template-columns: 1fr; }
@@ -892,7 +910,15 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
   .writing-dialog-header h2 { font-size: 26px; }
   .practice-writing-panel { left: 8px; right: 8px; width: auto; max-width: none; }
   .practice-writing-panel .handwriting-cells { grid-template-columns: repeat(5, minmax(42px, 1fr)); }
-  .ai-work-indicator { left: 8px; right: 8px; top: 8px; }
+  .ai-work-indicator { padding: 12px; }
+  .ai-work-indicator .ai-mechanical-clock {
+    width: min(100%, 330px);
+    min-width: 0;
+    max-width: 100%;
+    flex-direction: column;
+    padding: 22px 18px;
+  }
+  .ai-work-indicator .clock-status { text-align: center; }
   .ai-mechanical-clock { gap: 12px; }
   .clock-face { width: 92px; height: 92px; }
   .assessment-consent .command-button { width: 100%; }
