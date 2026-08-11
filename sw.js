@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v18";
+const CACHE_VERSION = "diandian-chinese-v29";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,7 @@ const APP_SHELL = [
   "./data/lessons/zjzh-1-1/vocabulary-audio.json",
   "./data/lessons/zjzh-1-1/vocabulary-metadata.json",
   "./data/lessons/zjzh-1-1/text-audio.json",
+  "./data/lessons/zjzh-1-1/text-pinyin.json",
   "./data/lessons/zjzh-1-1/book-pages.json",
   "./data/lessons/zjzh-1-1/lesson-practice.json",
   "./data/lessons/zjzh-1-1/practice-intro-translations.json",
@@ -19,7 +20,11 @@ const APP_SHELL = [
   "./modules/shared/voice-orb.js",
   "./modules/learning-hub/index.html",
   "./modules/learning-hub/styles.css",
+  "./modules/learning-hub/writing-zone.css",
+  "./modules/learning-hub/practice-analytics.css",
   "./modules/learning-hub/app.js",
+  "./modules/learning-hub/writing-zone.js",
+  "./modules/learning-hub/practice-analytics.js",
   "./modules/character-hit/index.html",
   "./modules/character-hit/styles.css",
   "./modules/character-hit/app.js",

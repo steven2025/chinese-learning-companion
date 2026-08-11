@@ -90,11 +90,34 @@
       contentType: blob.type,
       consentGranted: true,
     });
-    if (created.status === "completed") return { ...created.result, quota: created.quota || created.result?.quota };
+    if (created.status === "completed") return { ...created.result, quota: created.quota || created.result?.quota, _jobId: created.jobId || "" };
     if (!created.jobId) throw new Error("云服务没有返回测评任务编号");
     const result = await waitForJob(created.jobId, { ...options, onProgress: options.onProgress });
     options.onProgress?.("saving");
-    return { ...result, quota: created.quota || result?.quota };
+    return { ...result, quota: created.quota || result?.quota, _jobId: created.jobId };
+  }
+
+  async function uploadJson(value, artifactId) {
+    const blob = new Blob([JSON.stringify(value)], { type: "application/json" });
+    const ticket = await request("/uploads/ticket", { kind: "essay", contentType: blob.type, artifactId });
+    const upload = await fetch(ticket.uploadUrl, { method: "PUT", headers: ticket.headers, body: blob });
+    if (!upload.ok) throw new Error(`作文草稿上传失败：${upload.status}`);
+    return ticket;
+  }
+
+  async function writingAssist(input) {
+    const result = await request("/writing/assist", input);
+    if (result.status === "ready") return result.content?.content || result.content;
+    if (!result.jobId) throw new Error("云服务没有返回写作辅助任务编号");
+    const completed = await waitForJob(result.jobId, { attempts: 60, interval: 1500 });
+    return completed?.content || completed;
+  }
+
+  async function writingAnalyze(input, options = {}) {
+    const result = await request("/writing/analyze", input);
+    if (result.status === "ready") return result.content;
+    if (!result.jobId) throw new Error("云服务没有返回班级分析任务编号");
+    return waitForJob(result.jobId, { attempts: 90, interval: 1500, onProgress: options.onProgress });
   }
 
   window.LearningApi = Object.freeze({
@@ -112,5 +135,21 @@
     classStudents: () => request("/classes/students", {}),
     classSettings: () => request("/classes/settings", {}),
     updateClassSettings: (input) => request("/classes/settings/update", input),
+    practiceRecord: (input) => request("/practice/record", input),
+    practiceReport: (input) => request("/practice/report", input),
+    subjectivePracticeRecord: (input) => request("/practice/subjective/record", input),
+    subjectivePracticeReport: (input) => request("/practice/subjective/report", input),
+    vocabularyRecord: (input) => request("/vocabulary/record", input),
+    vocabularyReport: (input) => request("/vocabulary/report", input),
+    textRecord: (input) => request("/text/record", input),
+    textReport: (input) => request("/text/report", input),
+    uploadJson,
+    writingAssist,
+    writingSave: (input) => request("/writing/save", input),
+    writingSubmit: (input) => request("/writing/submit", input),
+    writingList: () => request("/writing/list", {}),
+    writingDetail: (id) => request("/writing/detail", { id }),
+    writingReview: (input) => request("/writing/review", input),
+    writingAnalyze,
   });
 })();

@@ -529,6 +529,144 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .paragraph-reading-choice { margin-top: 7px; }
 .paragraph-controls .privacy-note { margin-top: 6px !important; }
 .paragraph-reading-choice .active { color: #8b3526; border-color: #d9a496; background: var(--coral-soft); }
+.paragraph-reader-launcher {
+  width: min(760px, 100%);
+  min-height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 18px auto 0;
+  padding: 20px 22px;
+  border: 1px solid #b9cfca;
+  border-left: 5px solid var(--teal);
+  border-radius: 7px;
+  background: #f8fbfa;
+  text-align: left;
+}
+.paragraph-reader-launcher strong,
+.paragraph-reader-launcher span,
+.paragraph-reader-launcher small { display: block; }
+.paragraph-reader-launcher strong { color: var(--ink); font-size: 20px; }
+.paragraph-reader-launcher span { margin-top: 6px; color: #405354; font-size: 15px; line-height: 1.55; }
+.paragraph-reader-launcher small { margin-top: 5px; color: var(--muted); font-size: 12px; }
+.paragraph-reading-unit > .paragraph-reading-choice { margin-top: 14px; }
+
+.paragraph-reader-panel[hidden] { display: none; }
+.paragraph-reader-panel {
+  position: fixed;
+  top: 46px;
+  left: 50%;
+  z-index: 82;
+  width: min(980px, calc(100vw - 32px));
+  min-width: min(620px, calc(100vw - 24px));
+  height: min(760px, calc(100dvh - 70px));
+  min-height: 480px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  overflow: hidden;
+  resize: both;
+  color: var(--ink);
+  border: 1px solid #769c96;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 24px 68px rgba(15, 41, 44, .34);
+  transform: translateX(-50%);
+}
+.paragraph-reader-panel.is-fullscreen {
+  inset: 8px;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  resize: none;
+  transform: none;
+}
+.paragraph-reader-panel > div,
+.paragraph-reader-shell { height: 100%; min-height: 0; }
+.paragraph-reader-shell { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.paragraph-reader-header {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 16px;
+  color: #fff;
+  background: var(--shell);
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+.paragraph-reader-panel.is-fullscreen .paragraph-reader-header { cursor: default; }
+.paragraph-reader-header span { color: #a9d3ce; font-size: 11px; font-weight: 800; }
+.paragraph-reader-header h2 { margin: 3px 0 0; color: #fff; font: 700 25px/1.2 "STKaiti", "KaiTi", serif; }
+.paragraph-reader-window-actions { display: flex; gap: 8px; }
+.paragraph-reader-window-actions button {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 5px;
+  background: transparent;
+  font-size: 23px;
+}
+.paragraph-display-switches {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  padding: 7px;
+  border-bottom: 1px solid var(--line);
+  background: #edf2f0;
+}
+.paragraph-display-switches button {
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  padding: 5px 10px;
+  color: #506263;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+}
+.paragraph-display-switches button strong { font-size: 14px; }
+.paragraph-display-switches button small { font-size: 9px; }
+.paragraph-display-switches button.active { color: #fff; border-color: #0d6e67; background: var(--teal); box-shadow: 0 3px 0 #0c5752; }
+.paragraph-display-switches button:disabled { opacity: 1; cursor: default; }
+.paragraph-reader-body { min-height: 0; overflow: auto; padding: 24px 30px 30px; scroll-behavior: smooth; }
+.paragraph-script-block + .paragraph-script-block { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.paragraph-script-block > strong { display: block; margin-bottom: 8px; color: var(--coral); font-size: 12px; }
+.paragraph-script-block > strong small { color: var(--muted); font-size: 9px; }
+.paragraph-script-block p { margin: 0; text-align: left; }
+.paragraph-script-block p span { border-radius: 3px; transition: color .18s ease, background .18s ease, box-shadow .18s ease; }
+.paragraph-script-zh p { color: #142729; font: 500 30px/1.9 "STKaiti", "KaiTi", serif; }
+.paragraph-script-pinyin p { color: #116f69; font-size: 18px; line-height: 1.9; }
+.paragraph-script-translation p { color: #3d5052; font-size: 18px; line-height: 1.8; }
+.paragraph-script-block p span.is-current { color: #7e2d20; background: #ffe8a8; box-shadow: 0 0 0 3px #ffe8a8; }
+.paragraph-reader-footer {
+  min-height: 126px;
+  display: grid;
+  grid-template-columns: auto minmax(250px, 1fr);
+  align-items: center;
+  gap: 22px;
+  padding: 12px 18px;
+  overflow-y: auto;
+  border-top: 1px solid #b8cbc7;
+  background: #f5f9f7;
+}
+.paragraph-reader-orbs { display: flex; align-items: start; justify-content: center; gap: 8px; }
+.paragraph-reader-orbs .voice-orb-unit { width: 105px; gap: 3px; font-size: 11px; }
+.paragraph-reader-orbs .voice-orb-medium { width: 62px; height: 62px; }
+.paragraph-reader-recording { min-width: 0; }
+.paragraph-reader-recording .recording-status { margin: 0; }
+.paragraph-reader-recording .assessment-consent { margin-top: 8px; }
+.paragraph-reader-recording .privacy-note { margin: 7px 0 0 !important; }
 
 @keyframes orb-breathe {
   from { transform: scale(.97); }
@@ -1188,4 +1326,24 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
   .practice-writing-panel-body { height: calc(100dvh - 78px); }
   .practice-writing-layout { min-height: 0; }
   .manuscript-page { min-width: 500px; }
+  .paragraph-reader-panel {
+    inset: 6px;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    max-width: none;
+    max-height: none;
+    resize: none;
+    transform: none;
+  }
+  .paragraph-reader-header { cursor: default; }
+  .paragraph-reader-footer { grid-template-columns: 1fr; max-height: 46dvh; gap: 10px; }
+  .paragraph-reader-orbs { flex-wrap: wrap; }
+  .paragraph-reader-body { padding: 16px 18px 22px; }
+  .paragraph-script-zh p { font-size: 23px; line-height: 1.75; }
+  .paragraph-script-pinyin p,
+  .paragraph-script-translation p { font-size: 16px; }
+  .paragraph-reader-launcher { align-items: stretch; flex-direction: column; gap: 14px; }
+  .paragraph-reader-launcher .command-button { width: 100%; }
 }

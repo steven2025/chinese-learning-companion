@@ -80,9 +80,17 @@ const state = {
   textCues: [],
   textParagraphs: [],
   readingParagraphIndex: 0,
+  paragraphPinyin: {},
+  paragraphReaderOpen: false,
+  paragraphReaderDrag: null,
+  paragraphReaderFullscreen: false,
+  paragraphReaderPreviousStyle: "",
+  paragraphDisplay: readStoredJson("digitalBookParagraphDisplay", { pinyin: false, translation: false }),
   practiceItems: [],
   units: { vocabulary: [], text: [], practice: [] },
   statuses: readStoredJson(storageKeys.wordStatuses, {}),
+  trackedWordViews: new Set(),
+  trackedTextViews: new Set(),
   answers: readStoredJson(storageKeys.practiceAnswers, {}),
   submitted: readStoredJson(storageKeys.practiceSubmitted, {}),
   clozeAnswers: readStoredJson(storageKeys.clozeAnswers, {}),
@@ -171,6 +179,8 @@ const elements = {
   writingContent: document.querySelector("#wordWritingContent"),
   practiceWritingPanel: document.querySelector("#practiceWritingPanel"),
   practiceWritingContent: document.querySelector("#practiceWritingContent"),
+  paragraphReaderPanel: document.querySelector("#paragraphReaderPanel"),
+  paragraphReaderContent: document.querySelector("#paragraphReaderContent"),
   aiWorkIndicator: document.querySelector("#aiWorkIndicator"),
 };
 
@@ -341,6 +351,7 @@ async function loadData() {
   }
 
   updateLessonIdentity(pages);
+  const paragraphPinyin = await optionalJson(`${DATA_ROOT}/text-pinyin.json`, { cues: {} });
 
   const wordCues = audioData.cues.filter((cue) => cue.role === "word");
   if (wordCues.length !== metadata.entries.length) {
@@ -352,6 +363,7 @@ async function loadData() {
     cue: wordCues[index],
   }));
   state.textCues = textData.cues.filter((cue) => cue.role === "sentence");
+  state.paragraphPinyin = paragraphPinyin.cues || {};
   state.textParagraphs = buildTextParagraphs(state.textCues);
   state.practiceItems = flattenPractice(practiceData);
   state.units = {
@@ -794,9 +806,11 @@ function renderWordUnit(word, index) {
       <div class="unit-actions">
         <button class="command-button coral" type="button" data-command="play">▶ 播放</button>
         <button class="quiet-button${status.mastered ? " active" : ""}" type="button" data-command="mastered">✓ 已掌握</button>
+        <button class="quiet-button${status.review ? " active" : ""}" type="button" data-command="review">↻ 待复习</button>
         <button class="quiet-button${status.favorite ? " active" : ""}" type="button" data-command="favorite">☆ 收藏</button>
       </div>
     </div>`;
+  trackVocabularyView(word);
 }
 
 function renderTextUnit(cue, index) {
@@ -817,6 +831,7 @@ function renderTextUnit(cue, index) {
         ${nextText ? `<span>下句：${escapeHtml(truncate(nextText, 18))}</span>` : ""}
       </div>
     </div>`;
+  trackTextView({ unitType: "sentence", unitId: cue.id, label: cue.texts["zh-CN"], order: index + 1 });
 }
 
 function currentReadingParagraph() {
@@ -843,32 +858,114 @@ function renderParagraphReadingUnit() {
         <strong>${paragraphOrdinal(paragraph.index)}</strong>
         <span>课文第 ${paragraph.startIndex + 1}–${paragraph.endIndex + 1} 句 · ${paragraph.charCount} 个汉字</span>
       </div>
-      <div class="paragraph-learning-body">
-        <div class="paragraph-controls">
-          <div class="paragraph-reading-orbs">
-            ${voiceOrbButton("paragraph-model", "cyan", "▶", `听${paragraphOrdinal(paragraph.index)}`, "play")}
-            ${voiceOrbButton(
-              "paragraph-record",
-              "violet",
-              state.mediaRecorder?.state === "recording" ? "■" : "●",
-              state.mediaRecorder?.state === "recording" ? "停止录音" : "开始段落跟读",
-              "record",
-            )}
-            ${recordingComplete ? voiceOrbButton("paragraph-replay", "green", "▶", "试听录音", "play-recording") : ""}
-          </div>
-          <p class="recording-status paragraph-reading-status">${escapeHtml(state.recordingStatus)}</p>
-          ${recordingComplete ? renderAssessmentConsent("recording", state.recordingAssessment) : ""}
-          <div class="paragraph-reading-choice">
-            <button class="quiet-button${choice === "skipped" ? " active" : ""}" type="button" data-command="skip-paragraph-reading">暂不跟读，进入练习</button>
-          </div>
-          <p class="privacy-note">录音停止后只保留在当前设备，不会自动上传。</p>
+      <div class="paragraph-reader-launcher">
+        <div>
+          <strong>独立跟读稿</strong>
+          <span>连续显示本段课文，可累加拼音和${escapeHtml(languageLabels[state.locale] || state.locale)}翻译。</span>
+          <small>${recordingComplete ? "录音已完成，可打开跟读稿试听或提交测评。" : escapeHtml(state.recordingStatus)}</small>
         </div>
-        <div class="paragraph-reference" aria-label="本段参考句子">
-          <strong>参考句子</strong>
-          ${paragraph.cues.map((cue, cueIndex) => `<p><span>${paragraph.startIndex + cueIndex + 1}</span><b>${escapeHtml(cue.texts["zh-CN"])}</b>${state.assistMode === "bilingual" ? `<small>${escapeHtml(translationFor(cue.texts))}</small>` : ""}</p>`).join("")}
-        </div>
+        <button class="command-button" type="button" data-command="open-paragraph-reader">打开跟读稿</button>
+      </div>
+      <div class="paragraph-reading-choice">
+        <button class="quiet-button${choice === "skipped" ? " active" : ""}" type="button" data-command="skip-paragraph-reading">暂不跟读，进入练习</button>
       </div>
     </div>`;
+  trackTextView({ unitType: "paragraph", unitId: paragraph.id, label: paragraphOrdinal(state.readingParagraphIndex), order: state.readingParagraphIndex + 1 });
+  if (state.paragraphReaderOpen) renderParagraphReaderPanel();
+}
+
+function paragraphScript(cues, type) {
+  return cues.map((cue, index) => {
+    const value = type === "zh"
+      ? cue.texts["zh-CN"]
+      : type === "pinyin"
+        ? state.paragraphPinyin[cue.id] || ""
+        : translationFor(cue.texts);
+    return `<span data-paragraph-cue-index="${index}">${escapeHtml(value)}</span>`;
+  }).join(type === "zh" ? "" : " ");
+}
+
+function renderParagraphReaderPanel() {
+  if (!state.paragraphReaderOpen) return;
+  const paragraph = currentReadingParagraph();
+  const recordingComplete = Boolean(state.recordingUrl);
+  const previousScroll = elements.paragraphReaderContent.querySelector(".paragraph-reader-body")?.scrollTop || 0;
+  elements.paragraphReaderContent.innerHTML = `
+    <div class="paragraph-reader-shell">
+      <header class="paragraph-reader-header" data-paragraph-reader-drag-handle>
+        <div><span>课文跟读 · ${paragraphOrdinal(paragraph.index)}</span><h2 id="paragraphReaderTitle">段落跟读稿</h2></div>
+        <div class="paragraph-reader-window-actions">
+          <button type="button" data-paragraph-reader-command="fullscreen" aria-label="${state.paragraphReaderFullscreen ? "恢复窗口 / Restore window" : "全屏显示 / Full screen"}" title="${state.paragraphReaderFullscreen ? "恢复 / Restore" : "全屏 / Full screen"}">${state.paragraphReaderFullscreen ? "❐" : "⛶"}</button>
+          <button type="button" data-paragraph-reader-command="close" aria-label="关闭跟读稿 / Close reading script" title="关闭 / Close">×</button>
+        </div>
+      </header>
+      <div class="paragraph-display-switches" role="group" aria-label="跟读稿显示内容">
+        <button type="button" class="active" aria-pressed="true" disabled><strong>全中文</strong><small>Chinese only</small></button>
+        <button type="button" data-paragraph-display="translation" class="${state.paragraphDisplay.translation ? "active" : ""}" aria-pressed="${state.paragraphDisplay.translation}"><strong>母语翻译</strong><small>Translation</small></button>
+        <button type="button" data-paragraph-display="pinyin" class="${state.paragraphDisplay.pinyin ? "active" : ""}" aria-pressed="${state.paragraphDisplay.pinyin}"><strong>拼音</strong><small>Pinyin</small></button>
+      </div>
+      <div class="paragraph-reader-body">
+        <section class="paragraph-script-block paragraph-script-zh"><strong>中文原文 <small>Chinese</small></strong><p>${paragraphScript(paragraph.cues, "zh")}</p></section>
+        ${state.paragraphDisplay.translation ? `<section class="paragraph-script-block paragraph-script-translation"><strong>${escapeHtml(languageLabels[state.locale] || state.locale)} <small>Translation</small></strong><p>${paragraphScript(paragraph.cues, "translation")}</p></section>` : ""}
+        ${state.paragraphDisplay.pinyin ? `<section class="paragraph-script-block paragraph-script-pinyin"><strong>拼音 <small>Pinyin</small></strong><p>${paragraphScript(paragraph.cues, "pinyin")}</p></section>` : ""}
+      </div>
+      <footer class="paragraph-reader-footer">
+        <div class="paragraph-reader-orbs">
+          ${voiceOrbButton("reader-paragraph-model", "cyan", "▶", `听${paragraphOrdinal(paragraph.index)}`, "play")}
+          ${voiceOrbButton("reader-paragraph-record", "violet", state.mediaRecorder?.state === "recording" ? "■" : "●", state.mediaRecorder?.state === "recording" ? "停止录音" : "开始段落跟读", "record")}
+          ${recordingComplete ? voiceOrbButton("reader-paragraph-replay", "green", "▶", "试听录音", "play-recording") : ""}
+        </div>
+        <div class="paragraph-reader-recording">
+          <p class="recording-status">${escapeHtml(state.recordingStatus)}</p>
+          ${recordingComplete ? renderAssessmentConsent("recording", state.recordingAssessment) : ""}
+          <p class="privacy-note">录音停止后只保留在当前设备；确认测评后才会上传。</p>
+        </div>
+      </footer>
+    </div>`;
+  const body = elements.paragraphReaderContent.querySelector(".paragraph-reader-body");
+  if (body) body.scrollTop = previousScroll;
+  bilingualizeButtons(elements.paragraphReaderContent);
+}
+
+function openParagraphReaderPanel() {
+  state.paragraphReaderOpen = true;
+  elements.paragraphReaderPanel.hidden = false;
+  renderParagraphReaderPanel();
+  initializeVoiceOrbs();
+}
+
+function closeParagraphReaderPanel() {
+  if (state.paragraphReaderFullscreen) setParagraphReaderFullscreen(false);
+  state.paragraphReaderOpen = false;
+  state.paragraphReaderDrag = null;
+  elements.paragraphReaderPanel.hidden = true;
+  initializeVoiceOrbs();
+}
+
+function setParagraphReaderFullscreen(fullscreen) {
+  const panel = elements.paragraphReaderPanel;
+  if (fullscreen === state.paragraphReaderFullscreen) return;
+  if (fullscreen) {
+    state.paragraphReaderPreviousStyle = panel.getAttribute("style") || "";
+    panel.removeAttribute("style");
+    panel.classList.add("is-fullscreen");
+  } else {
+    panel.classList.remove("is-fullscreen");
+    if (state.paragraphReaderPreviousStyle) panel.setAttribute("style", state.paragraphReaderPreviousStyle);
+    else panel.removeAttribute("style");
+    state.paragraphReaderPreviousStyle = "";
+  }
+  state.paragraphReaderFullscreen = fullscreen;
+  renderParagraphReaderPanel();
+  initializeVoiceOrbs();
+}
+
+function toggleParagraphDisplay(option) {
+  if (!["pinyin", "translation"].includes(option)) return;
+  state.paragraphDisplay[option] = !state.paragraphDisplay[option];
+  localStorage.setItem("digitalBookParagraphDisplay", JSON.stringify(state.paragraphDisplay));
+  renderParagraphReaderPanel();
+  initializeVoiceOrbs();
 }
 
 function renderPracticeUnit(item, index) {
@@ -1325,6 +1422,7 @@ function saveHandwritingAnswer() {
   const draft = handwritingDraft(item.id);
   if (!draft.cells.length) return;
   draft.saved = true;
+  recordSubjectivePractice(item, "submit", "handwriting", draft.cells.length);
   refreshPracticeWritingPanel();
 }
 
@@ -2182,6 +2280,7 @@ function setSection(section, index = state.indices[section] || 0) {
   if (!sectionOrder.includes(section)) return;
   closeAssistWindow();
   closePracticeWritingPanel();
+  closeParagraphReaderPanel();
   resetAudioSource();
   state.section = section;
   state.indices[section] = Math.max(
@@ -2206,6 +2305,7 @@ function moveUnit(direction) {
     state.indices[state.section] = index + direction;
     closeAssistWindow();
     closePracticeWritingPanel();
+    closeParagraphReaderPanel();
     stopAudio();
     state.assistTab = "understand";
     state.quizResult = null;
@@ -2352,6 +2452,8 @@ async function playCurrent(mode = "single") {
   } catch {
     return;
   }
+  if (item.unitType === "word") recordVocabularyActivity(item, "play");
+  else if (["sentence", "paragraphReading"].includes(item.unitType)) recordTextLearningActivity("play");
   updateAudioLabels();
 }
 
@@ -2408,7 +2510,20 @@ function handleTimeUpdate() {
     elements.audioTime.textContent =
       `${formatTime(elements.audio.currentTime)} / ${formatTime(elements.audio.duration)}`;
   }
+  syncParagraphCueHighlight(time);
   updateAudioLabels();
+}
+
+function syncParagraphCueHighlight(time) {
+  if (!state.paragraphReaderOpen || elements.paragraphReaderPanel.hidden) return;
+  const paragraph = currentReadingParagraph();
+  const cueIndex = paragraph.cues.findIndex((cue) => time >= cue.start && time <= cue.end);
+  elements.paragraphReaderPanel.querySelectorAll("[data-paragraph-cue-index]").forEach((element) => {
+    element.classList.toggle("is-current", Number(element.dataset.paragraphCueIndex) === cueIndex);
+  });
+  if (cueIndex < 0 || elements.paragraphReaderPanel.dataset.activeCue === String(cueIndex)) return;
+  elements.paragraphReaderPanel.dataset.activeCue = String(cueIndex);
+  elements.paragraphReaderPanel.querySelector(`.paragraph-script-zh [data-paragraph-cue-index="${cueIndex}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 function updateAudioLabels() {
@@ -2459,7 +2574,101 @@ function toggleWordStatus(action) {
   if (action === "review" && status[action]) status.mastered = false;
   state.statuses[word.id] = status;
   localStorage.setItem(storageKeys.wordStatuses, JSON.stringify(state.statuses));
+  if (["mastered", "review"].includes(action)) recordVocabularyActivity(word, "status");
   render();
+}
+
+function recordVocabularyActivity(word, action) {
+  const profile = window.LearningApi?.profile?.();
+  if (!window.LearningApi?.isConfigured?.() || profile?.role !== "student") return;
+  const status = state.statuses[word.id] || {};
+  window.LearningApi.vocabularyRecord({
+    lessonId: LESSON_ID,
+    wordId: word.id,
+    hanzi: word.hanzi,
+    pinyin: word.pinyin,
+    order: Number(word.sourceIndex || 0) + 1,
+    action,
+    mastered: status.mastered === true,
+    review: status.review === true,
+  }).catch((error) => console.warn("词汇学习记录同步失败", error?.message || error));
+}
+
+function trackVocabularyView(word) {
+  if (state.trackedWordViews.has(word.id)) return;
+  state.trackedWordViews.add(word.id);
+  recordVocabularyActivity(word, "view");
+}
+
+function currentTextProgressUnit(record = null) {
+  if (record) {
+    if (record.unitType === "sentence") return { unitType: "sentence", unitId: record.unitId, label: record.referenceText, order: Number(currentItem()?.sourceIndex || 0) + 1 };
+    if (record.unitType === "paragraphReading") return { unitType: "paragraph", unitId: record.unitId, label: paragraphOrdinal(state.readingParagraphIndex), order: state.readingParagraphIndex + 1 };
+    return null;
+  }
+  const item = currentItem();
+  if (item?.unitType === "sentence") return { unitType: "sentence", unitId: item.id, label: item.texts?.["zh-CN"] || "", order: Number(item.sourceIndex || 0) + 1 };
+  if (item?.unitType === "paragraphReading") {
+    const paragraph = currentReadingParagraph();
+    return { unitType: "paragraph", unitId: paragraph.id, label: paragraphOrdinal(state.readingParagraphIndex), order: state.readingParagraphIndex + 1 };
+  }
+  return null;
+}
+
+function recordTextLearningActivity(action, score = null, record = null) {
+  const profile = window.LearningApi?.profile?.();
+  const unit = currentTextProgressUnit(record);
+  if (!unit || !window.LearningApi?.isConfigured?.() || profile?.role !== "student") return;
+  window.LearningApi.textRecord({ lessonId: LESSON_ID, ...unit, action, ...(score === null ? {} : { score }) })
+    .catch((error) => console.warn("课文学习记录同步失败", error?.message || error));
+}
+
+function trackTextView(unit) {
+  const key = `${unit.unitType}:${unit.unitId}`;
+  if (state.trackedTextViews.has(key)) return;
+  state.trackedTextViews.add(key);
+  const profile = window.LearningApi?.profile?.();
+  if (!window.LearningApi?.isConfigured?.() || profile?.role !== "student") return;
+  window.LearningApi.textRecord({ lessonId: LESSON_ID, ...unit, action: "view" })
+    .catch((error) => console.warn("课文学习记录同步失败", error?.message || error));
+}
+
+const TRACKED_PRACTICE_TYPES = new Set(["choice", "fillBlank", "dialogueFill", "wordBankFill", "readingCloze"]);
+const SUBJECTIVE_PRACTICE_TYPES = new Set(["rewrite", "openDialogue", "shortAnswer", "personalReflection", "guidedProduction", "guidedWriting", "dialogueCompletion", "cultureComparison", "needsReview"]);
+
+function recordObjectivePractice(item, score) {
+  const profile = window.LearningApi?.profile?.();
+  if (!window.LearningApi?.isConfigured?.() || profile?.role !== "student" || !TRACKED_PRACTICE_TYPES.has(item.type)) return;
+  window.LearningApi.practiceRecord({
+    lessonId: LESSON_ID,
+    itemId: item.id,
+    itemType: item.type,
+    sectionId: item.sectionId,
+    sectionTitle: item.sectionTitle,
+    groupId: item.groupId || "",
+    groupTitle: item.groupTitle || "",
+    questionNumber: item.questionNumber,
+    score,
+  }).catch((error) => console.warn("练习记录同步失败", error?.message || error));
+}
+
+function recordSubjectivePractice(item, action, inputMode, characterCount, scores = null) {
+  const profile = window.LearningApi?.profile?.();
+  if (!window.LearningApi?.isConfigured?.() || profile?.role !== "student" || !SUBJECTIVE_PRACTICE_TYPES.has(item.type)) return;
+  window.LearningApi.subjectivePracticeRecord({
+    lessonId: LESSON_ID,
+    itemId: item.id,
+    itemType: item.type,
+    sectionId: item.sectionId,
+    sectionTitle: item.sectionTitle,
+    groupId: item.groupId || "",
+    groupTitle: item.groupTitle || "",
+    questionNumber: item.questionNumber,
+    action,
+    inputMode,
+    characterCount,
+    scores,
+  }).catch((error) => console.warn("主观练习记录同步失败", error?.message || error));
 }
 
 function submitPractice() {
@@ -2472,6 +2681,10 @@ function submitPractice() {
     storageKeys.practiceSubmitted,
     JSON.stringify(state.submitted),
   );
+  const result = evaluatePractice(item, state.answers[item.id]);
+  recordObjectivePractice(item, result.correct ? 100 : 0);
+  const subjectiveAnswer = String(state.answers[item.id] || "").trim();
+  if (subjectiveAnswer) recordSubjectivePractice(item, "submit", "keyboard", [...subjectiveAnswer].length);
   renderPracticeUnit(item, currentIndex());
 }
 
@@ -2507,6 +2720,8 @@ function submitCloze() {
   state.answers[item.id] = (item.blanks || []).map((blank) => selections[blank.id]).join(",");
   localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
   localStorage.setItem(storageKeys.practiceSubmitted, JSON.stringify(state.submitted));
+  const correctCount = (item.blanks || []).filter((blank) => selections[blank.id] === blank.answer).length;
+  recordObjectivePractice(item, item.blanks?.length ? correctCount / item.blanks.length * 100 : 0);
   renderReadingCloze(item);
   bilingualizeButtons(elements.unitContent);
 }
@@ -2665,6 +2880,7 @@ function finishRecording() {
   state.recordingStream?.getTracks().forEach((track) => track.stop());
   state.recordingStream = null;
   persistRecordingRecord(state.recordingRecord);
+  recordTextLearningActivity("record", null, state.recordingRecord);
   if (currentItem()?.unitType === "paragraphReading") {
     localStorage.setItem(storageKeys.paragraphReadingChoice, "completed");
   }
@@ -2839,6 +3055,8 @@ async function assessRecording() {
       refreshRecordingView();
     } });
     state.recordingAssessment = { status: "ready", result, message: "" };
+    const pronunciationScore = Number(result.scores?.suggestedScore ?? result.scores?.overallScore ?? result.scores?.total);
+    if (Number.isFinite(pronunciationScore)) recordTextLearningActivity("assessment", pronunciationScore, record);
     if (result.quota) state.assessmentUsage[recordingQuota().key] = result.quota.limit - result.quota.remaining;
     state.recordingStatus = "测评完成，录音已保存到个人 COS 学习记录。";
   } catch (error) {
@@ -3011,6 +3229,7 @@ async function assessPracticeHandwriting() {
       refreshPracticeWritingPanel();
     } });
     draft.assessment = { status: "ready", result, message: "" };
+    recordSubjectivePractice(item, "assessment", "handwriting", draft.cells.length, result.scores);
   } catch (error) {
     draft.assessment = { status: "error", result: null, message: error.message || "书写测评失败" };
   }
@@ -3056,6 +3275,7 @@ async function assessPracticeKeyboard() {
       renderPracticeUnit(item, currentIndex());
     } });
     state.keyboardAssessments[item.id] = { status: "ready", result, message: "" };
+    recordSubjectivePractice(item, "assessment", "keyboard", [...answer].length, result.scores);
   } catch (error) {
     state.keyboardAssessments[item.id] = { status: "error", result: null, message: error.message || "写作测评失败" };
   }
@@ -3073,11 +3293,14 @@ function handleCommand(command) {
     openAssistWindow("shadow");
   } else if (command === "open-word-writing") {
     openWordWritingDialog();
+  } else if (command === "open-paragraph-reader") {
+    openParagraphReaderPanel();
   } else if (command === "play-recording") {
     playRecordedAudio();
   } else if (command === "assess-recording") {
     void assessRecording();
   } else if (command === "skip-paragraph-reading") {
+    closeParagraphReaderPanel();
     localStorage.setItem(storageKeys.paragraphReadingChoice, "skipped");
     moveUnit(1);
   } else if (["mastered", "review", "favorite"].includes(command)) {
@@ -3153,6 +3376,7 @@ function bindEvents() {
     stopAudio();
     closeAssistWindow();
     closePracticeWritingPanel();
+    closeParagraphReaderPanel();
     state.indices[state.section] = Number(elements.unitSelect.value);
     state.assistTab = "understand";
     state.quizResult = null;
@@ -3286,6 +3510,33 @@ function bindEvents() {
     elements.practiceWritingPanel.style.right = "auto";
     handle.setPointerCapture(event.pointerId);
   });
+  elements.paragraphReaderContent.addEventListener("click", (event) => {
+    const displayOption = event.target.closest("[data-paragraph-display]")?.dataset.paragraphDisplay;
+    if (displayOption) {
+      toggleParagraphDisplay(displayOption);
+      return;
+    }
+    const windowCommand = event.target.closest("[data-paragraph-reader-command]")?.dataset.paragraphReaderCommand;
+    if (windowCommand === "close") closeParagraphReaderPanel();
+    else if (windowCommand === "fullscreen") setParagraphReaderFullscreen(!state.paragraphReaderFullscreen);
+    const command = event.target.closest("[data-command]")?.dataset.command;
+    if (command) handleCommand(command);
+  });
+  elements.paragraphReaderContent.addEventListener("pointerdown", (event) => {
+    const handle = event.target.closest("[data-paragraph-reader-drag-handle]");
+    if (!handle || event.target.closest("button") || state.paragraphReaderFullscreen || window.innerWidth <= 760) return;
+    const rect = elements.paragraphReaderPanel.getBoundingClientRect();
+    state.paragraphReaderDrag = {
+      pointerId: event.pointerId,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+    };
+    elements.paragraphReaderPanel.style.left = `${rect.left}px`;
+    elements.paragraphReaderPanel.style.top = `${rect.top}px`;
+    elements.paragraphReaderPanel.style.right = "auto";
+    elements.paragraphReaderPanel.style.transform = "none";
+    handle.setPointerCapture(event.pointerId);
+  });
   elements.assistZone.addEventListener("pointerdown", (event) => {
     const handle = event.target.closest("[data-assist-drag-handle]");
     if (!handle || event.target.closest("button") || state.assistFullscreen || window.innerWidth <= 760) return;
@@ -3317,12 +3568,21 @@ function bindEvents() {
       assist.style.left = `${Math.min(assistMaxLeft, Math.max(8, event.clientX - assistDrag.offsetX))}px`;
       assist.style.top = `${Math.min(assistMaxTop, Math.max(8, event.clientY - assistDrag.offsetY))}px`;
     }
+    const paragraphDrag = state.paragraphReaderDrag;
+    if (paragraphDrag && paragraphDrag.pointerId === event.pointerId) {
+      const panel = elements.paragraphReaderPanel;
+      const maxLeft = Math.max(8, window.innerWidth - panel.offsetWidth - 8);
+      const maxTop = Math.max(8, window.innerHeight - panel.offsetHeight - 8);
+      panel.style.left = `${Math.min(maxLeft, Math.max(8, event.clientX - paragraphDrag.offsetX))}px`;
+      panel.style.top = `${Math.min(maxTop, Math.max(8, event.clientY - paragraphDrag.offsetY))}px`;
+    }
   });
   window.addEventListener("pointerup", (event) => {
     if (state.practiceWritingDrag?.pointerId === event.pointerId) {
       state.practiceWritingDrag = null;
     }
     if (state.assistDrag?.pointerId === event.pointerId) state.assistDrag = null;
+    if (state.paragraphReaderDrag?.pointerId === event.pointerId) state.paragraphReaderDrag = null;
   });
   elements.play.addEventListener("click", () => {
     if (state.aiWork.active) return;

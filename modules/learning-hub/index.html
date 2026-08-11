@@ -8,7 +8,9 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260806-2">
+  <link rel="stylesheet" href="styles.css?v=20260811-1">
+  <link rel="stylesheet" href="writing-zone.css?v=20260811-3">
+  <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
 <body>
   <div class="app-shell">
@@ -38,6 +40,7 @@
       <nav class="primary-navigation">
         <button class="active" type="button" data-view="home"><span aria-hidden="true">⌂</span><b>首页</b></button>
         <button type="button" data-view="courses"><span aria-hidden="true">册</span><b>我的课程</b></button>
+        <button type="button" data-view="writing"><span aria-hidden="true">写</span><b>写作专区</b></button>
         <button type="button" data-view="games"><span aria-hidden="true">趣</span><b>趣味游戏</b></button>
         <button type="button" data-view="progress"><span aria-hidden="true">记</span><b>学习记录</b></button>
         <button type="button" data-view="teacher" data-role-nav="teacher" hidden><span aria-hidden="true">教</span><b>教学工作台</b></button>
@@ -87,6 +90,30 @@
 
       </section>
 
+      <section class="app-view" id="writingView" data-view-panel="writing" hidden>
+        <header class="page-heading writing-page-heading">
+          <div><span>独立写作</span><h1>写作专区</h1><p>录入题目和要求，在田字格中完成并提交手写作文。</p></div>
+          <button class="primary-button compact-action" id="newEssayButton" type="button"><span aria-hidden="true">＋</span>新建作文</button>
+        </header>
+        <section class="writing-toolbar" aria-label="作文筛选">
+          <nav id="writingStatusTabs">
+            <button class="active" type="button" data-writing-filter="all">全部</button>
+            <button type="button" data-writing-filter="draft">草稿</button>
+            <button type="button" data-writing-filter="submitted">已提交</button>
+            <button type="button" data-writing-filter="returned">待修改</button>
+            <button type="button" data-writing-filter="completed">已完成</button>
+          </nav>
+          <span id="writingItemCount">0篇</span>
+        </section>
+        <section class="writing-batch-toolbar" id="writingBatchToolbar" aria-label="作文批量分析" hidden>
+          <label class="batch-select-all"><input id="writingSelectAll" type="checkbox"><span>全选当前列表 <small>Select all</small></span></label>
+          <strong id="writingSelectedCount">已选0篇</strong>
+          <label class="batch-analysis-basis"><span>分析依据</span><select id="writingAnalysisMode"><option value="teacher">教师终评（推荐）</option><option value="ai">AI初评</option></select></label>
+          <button class="primary-button" id="writingAnalyzeButton" type="button" disabled>生成班级分析 <small>Analyze</small></button>
+        </section>
+        <section class="writing-list" id="writingList" aria-live="polite"></section>
+      </section>
+
       <section class="app-view" id="gamesView" data-view-panel="games" hidden>
         <header class="page-heading"><div><span>趣味复习</span><h1>教材词汇游戏</h1><p>从当前教材和课程中选择词语，完成短时、高频的回顾练习。</p></div></header>
         <div class="game-library">
@@ -132,7 +159,7 @@
       </section>
 
       <section class="app-view" id="teacherView" data-view-panel="teacher" hidden>
-        <header class="page-heading"><div><span>教师身份</span><h1>教学工作台</h1><p>班级、作业和学情功能将在登录系统接入后启用。</p></div></header>
+        <header class="page-heading"><div><span>教师身份</span><h1>教学工作台</h1><p>集中查看班级成员、写作作业和课程练习学情。</p></div></header>
         <section class="class-context">
           <label><span>学期</span><select id="teacherTermSelect"></select></label>
           <label><span>教材</span><select id="teacherBookSelect"></select></label>
@@ -148,7 +175,25 @@
           <header><div><span>课程成员</span><h2>本班学生</h2></div><strong id="classStudentCount">0人</strong></header>
           <div id="classStudentList"></div>
         </section>
-        <div class="management-list"><button>班级学习进度 <span>待接入</span></button><button>布置课程与作业 <span>待接入</span></button><a href="../digital-book/">以学生视图预览第1课 <span>打开 ›</span></a></div>
+        <section class="teacher-practice-panel" id="teacherPracticePanel" aria-labelledby="teacherPracticeTitle">
+          <header>
+            <div><span>课程学情</span><h2 id="teacherPracticeTitle">班级学习简报 <small>Learning insights</small></h2><p>快速定位全班的词汇、课文和练习薄弱点。</p></div>
+            <div class="practice-report-controls">
+              <label><span>课次</span><select id="practiceReportLesson"><option value="zjzh-1-1">第1课 · 你咋不早说</option><option value="zjzh-1-2">第2课 · 和时间赛跑</option></select></label>
+              <button class="quiet-button" id="refreshPracticeReport" type="button">刷新 <small>Refresh</small></button>
+            </div>
+          </header>
+          <nav class="learning-report-tabs" aria-label="学情类型"><button class="active" type="button" data-learning-report="vocabulary">词汇 <small>Vocabulary</small></button><button type="button" data-learning-report="text">课文 <small>Text</small></button><button type="button" data-learning-report="practice">练习 <small>Practice</small></button></nav>
+          <nav class="practice-kind-tabs" id="practiceKindTabs" aria-label="练习类型" hidden><button class="active" type="button" data-practice-kind="objective">客观题 <small>Objective</small></button><button type="button" data-practice-kind="subjective">主观题 <small>Subjective</small></button></nav>
+          <p class="practice-report-status" id="practiceReportStatus" role="status">选择课次后查看班级学习情况。</p>
+          <div id="practiceReportContent"></div>
+        </section>
+        <section class="teacher-writing-summary">
+          <div><span>写作专区</span><h2>作文收件箱</h2><p>查看学生手写作文、AI评价和待批阅记录。</p></div>
+          <strong id="teacherWritingPending">0篇待批阅</strong>
+          <button class="quiet-button" type="button" data-view="writing">打开收件箱</button>
+        </section>
+        <div class="management-list"><button>课文学习进度 <span>下一阶段</span></button><button>布置课程与作业 <span>待接入</span></button><a href="../digital-book/">以学生视图预览第1课 <span>打开 ›</span></a></div>
       </section>
 
       <section class="app-view" id="adminView" data-view-panel="admin" hidden>
@@ -160,6 +205,7 @@
     <nav class="mobile-navigation" aria-label="移动端导航">
       <button class="active" type="button" data-view="home"><span>⌂</span><b>首页</b></button>
       <button type="button" data-view="courses"><span>册</span><b>课程</b></button>
+      <button type="button" data-view="writing"><span>写</span><b>写作</b></button>
       <button type="button" data-view="games"><span>趣</span><b>游戏</b></button>
       <button type="button" data-view="progress"><span>记</span><b>记录</b></button>
     </nav>
@@ -213,6 +259,76 @@
     </div>
   </dialog>
 
+  <dialog class="writing-setup-dialog" id="writingSetupDialog" aria-labelledby="writingSetupTitle">
+    <form class="writing-setup-shell" id="writingSetupForm">
+      <header><div><span>新作文</span><h2 id="writingSetupTitle">录入作文任务</h2></div><button type="button" data-writing-close="setup" aria-label="关闭">×</button></header>
+      <label><span>作文题目</span><input id="essayTitleInput" name="title" maxlength="120" required placeholder="请输入老师布置的作文题目"></label>
+      <label><span>作文要求</span><textarea id="essayRequirementsInput" name="requirements" maxlength="1200" required placeholder="请输入字数、内容、词语或结构要求"></textarea></label>
+      <div class="writing-setup-row">
+        <label><span>提交给</span><select id="essayTeacherSelect" name="teacher" required></select></label>
+        <label><span>AI反馈语言</span><select id="essayLocaleSelect" name="locale"></select></label>
+      </div>
+      <footer><button class="quiet-button" type="button" data-writing-close="setup">取消</button><button class="primary-button" type="submit">建立作文并开始手写</button></footer>
+    </form>
+  </dialog>
+
+  <dialog class="writing-assist-dialog" id="writingAssistDialog" aria-labelledby="writingAssistTitle">
+    <div class="writing-assist-shell">
+      <header><div><span>多语言辅助</span><h2 id="writingAssistTitle">AI写作准备</h2></div><button type="button" data-writing-close="assist" aria-label="关闭">×</button></header>
+      <nav id="writingAssistTabs" aria-label="AI辅助类型">
+        <button class="active" type="button" data-assist-tab="understand">理解题目</button>
+        <button type="button" data-assist-tab="outline">写作结构</button>
+        <button type="button" data-assist-tab="expressions">参考表达</button>
+      </nav>
+      <section id="writingAssistContent" class="writing-assist-content"></section>
+    </div>
+  </dialog>
+
+  <dialog class="essay-writing-dialog" id="essayWritingDialog" aria-labelledby="essayWritingTitle">
+    <div class="essay-writing-window" id="essayWritingWindow">
+      <header data-essay-drag-handle>
+        <div><span id="essayWritingMeta">手写作文</span><h2 id="essayWritingTitle">田字格作文稿</h2></div>
+        <div class="essay-window-actions"><button type="button" data-essay-action="toggle-fullscreen" title="全屏 / Full screen" aria-label="全屏">⛶</button><button type="button" data-writing-close="canvas" title="关闭 / Close" aria-label="关闭">×</button></div>
+      </header>
+      <section class="essay-task-strip"><div><strong id="essayPromptTitle"></strong><p id="essayPromptRequirements"></p></div><button class="quiet-button" type="button" data-essay-action="assist">AI辅助</button></section>
+      <div class="essay-writing-body">
+        <section class="active-writing-column">
+          <div class="column-heading"><span>当前一格</span><strong id="activeCellLabel">写下第1个字</strong></div>
+          <div class="tian-writing-board"><i></i><i></i><i></i><i></i><canvas id="essayHandwritingCanvas" width="600" height="600" aria-label="单字手写田字格"></canvas></div>
+          <div class="cell-actions"><button class="quiet-button" type="button" data-essay-action="clear-cell">清空</button><button class="primary-button" type="button" data-essay-action="confirm-cell">确认此字</button></div>
+          <div class="punctuation-row" aria-label="添加标点"><button type="button" data-essay-punctuation="，">，</button><button type="button" data-essay-punctuation="。">。</button><button type="button" data-essay-punctuation="？">？</button><button type="button" data-essay-punctuation="！">！</button><button type="button" data-essay-punctuation="；">；</button><button type="button" data-essay-punctuation="：">：</button></div>
+        </section>
+        <section class="manuscript-column">
+          <div class="column-heading"><span>田字格草稿</span><strong id="essayWordCount">0字</strong></div>
+          <div class="manuscript-grid" id="essayManuscriptGrid"></div>
+          <footer class="manuscript-pagination"><button type="button" data-essay-action="previous-page" aria-label="上一页">‹</button><span id="essayPageLabel">第1页</span><button type="button" data-essay-action="next-page" aria-label="下一页">›</button></footer>
+        </section>
+      </div>
+      <footer class="essay-writing-footer"><button class="quiet-button" type="button" data-essay-action="undo-cell">撤销上一格</button><span id="essaySaveStatus">尚未保存</span><button class="quiet-button" type="button" data-essay-action="save-draft">保存草稿</button><button class="primary-button submit-essay-button" type="button" data-essay-action="submit">提交作文</button></footer>
+    </div>
+  </dialog>
+
+  <dialog class="writing-review-dialog" id="writingReviewDialog" aria-labelledby="writingReviewTitle">
+    <div class="writing-review-shell">
+      <header><div><span id="writingReviewEyebrow">作文详情</span><h2 id="writingReviewTitle">作文批阅</h2></div><button type="button" data-writing-close="review" aria-label="关闭">×</button></header>
+      <div id="writingReviewContent"></div>
+    </div>
+  </dialog>
+
+  <dialog class="writing-analysis-dialog" id="writingAnalysisDialog" aria-labelledby="writingAnalysisTitle">
+    <div class="writing-analysis-shell">
+      <header>
+        <div><span>匿名班级学情</span><h2 id="writingAnalysisTitle">作文班级分析</h2></div>
+        <div><button type="button" data-analysis-action="classroom" title="课堂展示 / Classroom view">⛶</button><button type="button" data-writing-close="analysis" aria-label="关闭">×</button></div>
+      </header>
+      <div id="writingAnalysisContent" class="writing-analysis-content"></div>
+    </div>
+  </dialog>
+
+  <div class="writing-ai-overlay" id="writingAiOverlay" hidden>
+    <div><div class="writing-clock" aria-hidden="true"><i class="hour"></i><i class="minute"></i><i class="second"></i><b></b></div><strong>AI正在工作</strong><span id="writingAiStatus">正在整理手写作文</span></div>
+  </div>
+
   <dialog class="course-dialog" id="courseDialog" aria-labelledby="courseDialogTitle">
     <div class="course-dialog-shell">
       <header>
@@ -232,7 +348,9 @@
 
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="../../config.js?v=20260801-2"></script>
-  <script src="../shared/learning-api-client.js?v=20260802-1"></script>
-  <script src="app.js?v=20260806-2" defer></script>
+  <script src="../shared/learning-api-client.js?v=20260811-7"></script>
+  <script src="practice-analytics.js?v=20260811-8"></script>
+  <script src="app.js?v=20260811-6" defer></script>
+  <script src="writing-zone.js?v=20260811-3" defer></script>
 </body>
 </html>

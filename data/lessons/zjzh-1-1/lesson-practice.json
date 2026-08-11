@@ -1,9 +1,9 @@
 {
   "lessonId": "zjzh-1-1",
-  "version": 1,
+  "version": 2,
   "sourceLanguage": "zh-CN",
   "title": "中级综合1 第一课课后练习",
-  "sourceFile": "Multilingual Chinese Learning Data Generator/zjzh-1-1/practice/课后练习.txt",
+  "sourceFile": "Multilingual Chinese Learning Data Generator/zjzh-1-1/practice/第一课课后练习.txt",
   "helpPolicy": {
     "levels": [
       {
@@ -26,6 +26,100 @@
     "openQuestionPolicy": "开放题提交后显示参考要点，不显示唯一标准答案。"
   },
   "sections": [
+    {
+      "id": "lesson-summary",
+      "title": "课文总结",
+      "module": "reading",
+      "kind": "content",
+      "countsAsQuestion": false,
+      "pages": [
+        {
+          "id": "lesson-summary-main",
+          "type": "summary",
+          "title": "你咋不早说",
+          "content": "作者中午独自去一家远近闻名的牛肉面馆，点了两碗面，服务员两次心生疑惑。作者打算把一碗面装进饭盒带走，却被做面师傅制止。师傅说明面条放久后会粘连、影响口感，坚持等作者吃完后再单独重做一份。作者吃面时观察到师傅认真做面、坚守品质，也理解了这家店广受好评的原因。",
+          "support": {
+            "promptMeaning": "用人物、事件、原因和结果四个方面回顾课文。",
+            "thinkingHint": "注意“我”的计划、师傅的决定以及面馆口碑之间的关系。",
+            "keyPoints": [
+              "作者点了两碗面",
+              "师傅拒绝提前打包",
+              "面条久放影响口感",
+              "坚持品质带来好口碑"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "culture-awareness",
+      "title": "文化差异认知",
+      "module": "reading",
+      "kind": "questions",
+      "instruction": "联系自己国家的饮食与服务文化，完成比较。文化差异没有唯一正确答案，请说明事实和理由。",
+      "items": [
+        {
+          "id": "reading-3",
+          "type": "cultureComparison",
+          "prompt": "在你们国家，哪些食物像中国的面条一样，做好了需要立即食用，如果打包带走晚点再吃，口感会很糟糕？",
+          "support": {
+            "promptMeaning": "介绍自己国家一种适合马上吃、不适合久放的食物，并说明原因。",
+            "thinkingHint": "可以从变软、变硬、失去香味、冷热变化或酥脆度变化来说明。",
+            "similarExample": {
+              "prompt": "炸物放久后会发生什么变化？",
+              "answer": "可能会变软、不再酥脆。",
+              "explanation": "先说食物，再解释久放后的具体变化。"
+            }
+          },
+          "answer": {
+            "mode": "rubric",
+            "referencePoints": [
+              "说出具体食物",
+              "说明需要立即食用的原因",
+              "描述久放后的口感变化"
+            ],
+            "rubric": [
+              "内容具体",
+              "文化信息",
+              "因果表达",
+              "语言清楚"
+            ],
+            "allowEquivalentAnswers": true,
+            "visibleBeforeSubmit": false
+          }
+        },
+        {
+          "id": "reading-4",
+          "type": "cultureComparison",
+          "prompt": "在你们国家，类似面馆师傅与“我”的对话及做出的决定，会不会赢得顾客的尊重？为什么？",
+          "support": {
+            "promptMeaning": "结合自己国家的服务文化，评价师傅的态度和决定。",
+            "thinkingHint": "可以分别考虑顾客是否理解、师傅说话的方式，以及坚持品质是否值得尊重。",
+            "similarExample": {
+              "prompt": "商家为了质量拒绝顾客的某个要求，你会怎样评价？",
+              "answer": "既要看商家的理由，也要看沟通方式。",
+              "explanation": "文化比较题可以表达赞同、保留意见或不同看法。"
+            }
+          },
+          "answer": {
+            "mode": "rubric",
+            "referencePoints": [
+              "明确表达会或不会",
+              "结合本国服务习惯",
+              "说明至少一个理由"
+            ],
+            "rubric": [
+              "观点明确",
+              "文化比较",
+              "理由充分",
+              "尊重差异"
+            ],
+            "allowEquivalentAnswers": true,
+            "visibleBeforeSubmit": false
+          }
+        }
+      ]
+    },
     {
       "id": "grammar",
       "title": "语法练习",
@@ -464,7 +558,8 @@
             }
           ]
         }
-      ]
+      ],
+      "kind": "questions"
     },
     {
       "id": "character-word-building",
@@ -690,7 +785,8 @@
             }
           ]
         }
-      ]
+      ],
+      "kind": "questions"
     },
     {
       "id": "vocabulary-selection",
@@ -883,7 +979,8 @@
             "explanation": "刚学会时动作通常还不熟练。"
           }
         }
-      ]
+      ],
+      "kind": "questions"
     },
     {
       "id": "dialogue-completion",
@@ -1096,11 +1193,12 @@
             "explanation": "答案需要构成比喻，并说明两位演员非常相像。"
           }
         }
-      ]
+      ],
+      "kind": "questions"
     },
     {
       "id": "reading-and-culture",
-      "title": "课文深度理解及文化差异比较",
+      "title": "课文理解与应用",
       "module": "reading",
       "items": [
         {
@@ -1155,66 +1253,6 @@
               "课文事实",
               "品质意识",
               "顾客角度"
-            ],
-            "allowEquivalentAnswers": true,
-            "visibleBeforeSubmit": false
-          }
-        },
-        {
-          "id": "reading-3",
-          "type": "cultureComparison",
-          "prompt": "在你们国家，哪些食物像中国的面条一样，做好了需要立即食用，如果打包带走晚点再吃，口感会很糟糕？",
-          "support": {
-            "promptMeaning": "介绍自己国家一种适合马上吃、不适合久放的食物，并说明原因。",
-            "thinkingHint": "可以从变软、变硬、失去香味、冷热变化或酥脆度变化来说明。",
-            "similarExample": {
-              "prompt": "炸物放久后会发生什么变化？",
-              "answer": "可能会变软、不再酥脆。",
-              "explanation": "先说食物，再解释久放后的具体变化。"
-            }
-          },
-          "answer": {
-            "mode": "rubric",
-            "referencePoints": [
-              "说出具体食物",
-              "说明需要立即食用的原因",
-              "描述久放后的口感变化"
-            ],
-            "rubric": [
-              "内容具体",
-              "文化信息",
-              "因果表达",
-              "语言清楚"
-            ],
-            "allowEquivalentAnswers": true,
-            "visibleBeforeSubmit": false
-          }
-        },
-        {
-          "id": "reading-4",
-          "type": "cultureComparison",
-          "prompt": "在你们国家，类似面馆师傅与“我”的对话及做出的决定，会不会赢得顾客的尊重？为什么？",
-          "support": {
-            "promptMeaning": "结合自己国家的服务文化，评价师傅的态度和决定。",
-            "thinkingHint": "可以分别考虑顾客是否理解、师傅说话的方式，以及坚持品质是否值得尊重。",
-            "similarExample": {
-              "prompt": "商家为了质量拒绝顾客的某个要求，你会怎样评价？",
-              "answer": "既要看商家的理由，也要看沟通方式。",
-              "explanation": "文化比较题可以表达赞同、保留意见或不同看法。"
-            }
-          },
-          "answer": {
-            "mode": "rubric",
-            "referencePoints": [
-              "明确表达会或不会",
-              "结合本国服务习惯",
-              "说明至少一个理由"
-            ],
-            "rubric": [
-              "观点明确",
-              "文化比较",
-              "理由充分",
-              "尊重差异"
             ],
             "allowEquivalentAnswers": true,
             "visibleBeforeSubmit": false
@@ -1279,7 +1317,9 @@
             "visibleBeforeSubmit": false
           }
         }
-      ]
+      ],
+      "kind": "questions",
+      "instruction": "在理解课文的基础上，回答下面的问题。"
     },
     {
       "id": "guided-expression",
@@ -1333,7 +1373,13 @@
             ],
             "allowEquivalentAnswers": true,
             "visibleBeforeSubmit": false
-          }
+          },
+          "displayNumber": 47,
+          "inputModes": [
+            "keyboard",
+            "handwriting"
+          ],
+          "assessmentType": "writing"
         },
         {
           "id": "expression-2",
@@ -1375,9 +1421,187 @@
             ],
             "allowEquivalentAnswers": true,
             "visibleBeforeSubmit": false
+          },
+          "displayNumber": 48,
+          "inputModes": [
+            "keyboard",
+            "handwriting"
+          ],
+          "assessmentType": "writing"
+        }
+      ],
+      "kind": "writing"
+    },
+    {
+      "id": "guided-writing",
+      "title": "写一写",
+      "module": "speaking-writing",
+      "kind": "writing",
+      "instruction": "完成一篇短文。参考范文用于观察结构和表达，不需要模仿其中的具体故事。",
+      "items": [
+        {
+          "id": "writing-49",
+          "displayNumber": 49,
+          "type": "guidedWriting",
+          "prompt": "请以“让我难忘的‘坚持’”为题，写一篇短文，讲一讲发生在你身边的故事；也可以围绕“坚持”自拟题目。",
+          "referenceTitle": "参考范文",
+          "referenceText": "题目：让我难忘的“坚持”\n\n这周五举行了迎春3000米跑。说实话，我对自己的耐力真没什么信心，平时训练时就经常掉队，然后开始行走。\n\n比赛时，第一圈400米我尽力跟住队伍，但还是有一点儿吃力。后来越来越累，体力也越来越差。我心里想着，只要迈开一步再一步，就会离终点越来越近。于是我没有一刻停下脚步。虽然速度不快，但我从未改变。\n\n渐渐地，我身边的人越来越少。我明白，并不是我突然超过了谁，而是有人的步伐变慢了。到最后，我眼前只剩几个人。我依旧没有加速去超过她们，而是保持原来的速度。又过了一会儿，原来在我前面的人由于速度减慢，都被我超过了。\n\n400米也许所有人都能坚持下来，800米也许大部分人能坚持下来，1500米也许只有一小部分人能坚持下来，而3000米能坚持下来的人很少。因为在中途会有很多人选择放弃，所以不必急着超越别人，坚持本身也是一种超越。\n\n人生的长跑也是如此。成功不取决于你跑得有多快，而取决于你是否能坚持下来。坚持创造奇迹。",
+          "inputModes": [
+            "keyboard",
+            "handwriting"
+          ],
+          "assessmentType": "writing",
+          "support": {
+            "promptMeaning": "围绕一次与“坚持”有关的真实经历写一篇短文，既要写清事情经过，也要写出自己的认识。",
+            "thinkingHint": "可以按“遇到困难—想要放弃—继续坚持—结果和感受”的顺序组织。",
+            "writingStructure": [
+              "开头：交代时间、人物和事情",
+              "经过：写出困难及心理变化",
+              "转折：说明为什么继续坚持",
+              "结尾：写结果、感受或获得的道理"
+            ],
+            "keywordGuidance": [
+              "坚持",
+              "信心",
+              "困难",
+              "放弃",
+              "不知不觉",
+              "成功"
+            ],
+            "similarExample": {
+              "prompt": "写一次坚持练习汉语发音的经历。",
+              "answer": "可以写最初发音不准、每天跟读、逐渐进步以及获得信心的过程。",
+              "explanation": "相似实例只展示叙事结构，不提供本题可直接提交的成文答案。"
+            }
+          },
+          "answer": {
+            "mode": "rubric",
+            "referencePoints": [
+              "围绕坚持讲述一件具体事情",
+              "写清困难、行动和结果",
+              "表达自己的感受或认识"
+            ],
+            "rubric": [
+              "切合主题",
+              "事件完整",
+              "结构清楚",
+              "中文表达",
+              "感受真实"
+            ],
+            "allowEquivalentAnswers": true,
+            "visibleBeforeSubmit": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "extended-reading",
+      "title": "阅读短文",
+      "module": "reading",
+      "kind": "reading",
+      "instruction": "阅读短文，根据上下文选择合适的句子填入空格。",
+      "items": [
+        {
+          "id": "reading-cloze-50",
+          "displayNumber": 50,
+          "type": "readingCloze",
+          "prompt": "选句填空：将A—E五个句子分别填入短文中最合适的空格。",
+          "passageTitle": "把握住生命中的每一分钟",
+          "passage": "著名教育家班杰明曾经接到一个青年人的求教电话，并与那个渴望成功的青年人约好了见面的时间和地点。当那个青年人来到时，没想到班杰明的房间里乱七八糟，狼藉一片。见了面，[[1]]，班杰明就打招呼道：“你看我这房间太不整洁了，请你在门外等一分钟，我收拾一下，你再进来吧。”说着，[[2]]。\n\n很快，一分钟过去了。班杰明打开房门，热情地把青年人请进客厅，还递给他一杯红酒。青年人简直不敢相信自己的眼睛，他眼前出现了另一番景象——房间内的一切都变得整整齐齐。\n\n没等青年人开口，[[3]]：“干杯！你可以走了。”青年人手持酒杯，一下子愣住了，遗憾地说：“可是，我……我还没有向您请教呢……”班杰明一边微笑着，一边看着自己的房间说：“[[4]]。”\n\n“一分钟……一分钟……”青年人好像一下子明白了。他大声说：“我懂了，一分钟的时间可以做许多事情。[[5]]，也就把握住了理想的人生。”",
+          "choices": [
+            {
+              "id": "A",
+              "text": "只要把握住生命里的每一分钟"
+            },
+            {
+              "id": "B",
+              "text": "他轻轻关上了房门"
+            },
+            {
+              "id": "C",
+              "text": "你进来又有一分钟了"
+            },
+            {
+              "id": "D",
+              "text": "班杰明就非常客气地说"
+            },
+            {
+              "id": "E",
+              "text": "没等青年人开口"
+            }
+          ],
+          "blanks": [
+            {
+              "id": "1",
+              "answer": "E"
+            },
+            {
+              "id": "2",
+              "answer": "B"
+            },
+            {
+              "id": "3",
+              "answer": "D"
+            },
+            {
+              "id": "4",
+              "answer": "C"
+            },
+            {
+              "id": "5",
+              "answer": "A"
+            }
+          ],
+          "answerStatus": "teacher-confirmed",
+          "support": {
+            "promptMeaning": "把五个句子放回短文，重点判断人物动作的先后、说话人以及前后句的语法衔接。",
+            "thinkingHint": "先找含有人称代词和连接关系的句子，再检查每个空格前后的主语、标点和情节顺序。",
+            "similarExample": {
+              "prompt": "小王走到门口，____。随后，房间里安静下来。（A. 他关上了门 B. 天气很好）",
+              "answer": "A",
+              "explanation": "“随后”和“房间里安静下来”都与关门动作衔接，但这个答案不涉及原文五个空格。"
+            }
+          },
+          "answer": {
+            "mode": "orderedChoice",
+            "accepted": [
+              "E",
+              "B",
+              "D",
+              "C",
+              "A"
+            ],
+            "visibleBeforeSubmit": false,
+            "explanation": "根据动作顺序、说话人和句子衔接依次判断。"
+          }
+        }
+      ]
+    },
+    {
+      "id": "classroom-extension",
+      "title": "走出课堂，拓展学习",
+      "module": "reading",
+      "kind": "extension",
+      "countsAsQuestion": false,
+      "pages": [
+        {
+          "id": "proverb-effort-reward",
+          "type": "proverb",
+          "title": "每课一句",
+          "instruction": "阅读并理解下面俗语的意义，再参考例句尝试造句。",
+          "proverb": "一分耕耘，一分收获。",
+          "pinyin": "yī fēn gēng yún, yī fēn shōu huò",
+          "equivalent": "No pains, no gains.",
+          "meaning": "如果没有春天辛勤的劳动，就不会有秋天美好的收获。比喻付出多少努力，就会得到多少收获；如果没有平日的付出、准备与积累，也很难取得成功。",
+          "example": "经过几年的艰苦努力，他们公司终于从一个无名的小公司发展成为行业内知名的大公司，这真是“一分耕耘，一分收获”啊！",
+          "optionalTask": "结合自己的学习或生活经历，用“一分耕耘，一分收获”说一句话。",
+          "support": {
+            "promptMeaning": "理解这句俗语所表达的“付出与收获”关系，并学习在真实情境中使用。",
+            "thinkingHint": "可以联系学习、运动、工作或技能训练，先说长期付出，再说取得的收获。"
           }
         }
       ]
     }
-  ]
+  ],
+  "schemaVersion": "2.0"
 }

@@ -73,9 +73,10 @@ const state = {
   search: "",
   enrollments: readStored("learningHubStudentEnrollments", []),
   teacherContext: { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" },
+  studentProfile: null,
 };
 
-const viewLabels = { home: "首页", courses: "我的课程", games: "趣味游戏", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
+const viewLabels = { home: "首页", courses: "我的课程", writing: "写作专区", games: "趣味游戏", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
 
 if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
   window.addEventListener("load", () => {
@@ -199,6 +200,7 @@ function setView(view) {
   });
   document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
   if (view === "teacher") renderTeacherWorkspace();
+  if (view === "writing") window.WritingZone?.render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -291,6 +293,37 @@ function applyIdentity(role, name) {
   elements.profileRole.textContent = profile.role;
   document.querySelectorAll('[data-role-nav="teacher"]').forEach((button) => { button.hidden = !["teacher", "admin"].includes(role); });
   document.querySelectorAll('[data-role-nav="admin"]').forEach((button) => { button.hidden = role !== "admin"; });
+  window.WritingZone?.identityChanged();
+}
+
+function restoreStoredIdentity() {
+  const profile = window.LearningApi?.profile?.();
+  if (!profile?.role) {
+    applyIdentity("guest", "");
+    return;
+  }
+  if (profile.role === "student") {
+    state.studentProfile = {
+      chineseName: profile.name || profile.chineseName || profile.userId,
+      englishName: profile.englishName || "",
+      studentId: profile.userId,
+      teacher: profile.teacher || teachers[0],
+      term: profile.term || terms[0],
+      book: profile.bookId || "intermediate-comprehensive-1",
+    };
+    applyIdentity("student", state.studentProfile.chineseName);
+    return;
+  }
+  if (profile.role === "teacher") {
+    state.teacherContext = { teacher: profile.teacher || profile.name, term: profile.term || terms[0], book: profile.bookId || "intermediate-comprehensive-1" };
+    applyIdentity("teacher", profile.teacher || profile.name);
+    return;
+  }
+  if (profile.role === "admin") {
+    applyIdentity("admin", profile.name || administrator);
+    return;
+  }
+  applyIdentity("guest", "");
 }
 
 function saveEnrollments() {
@@ -331,6 +364,7 @@ async function handleStudentLogin(form) {
     else state.enrollments.push(enrollment);
     saveEnrollments();
   }
+  state.studentProfile = enrollment;
   applyIdentity("student", enrollment.chineseName);
   elements.roleDialog.close();
   selectBook(enrollment.book);
@@ -353,6 +387,7 @@ async function handleTeacherLogin(form) {
       return;
     }
   }
+  state.studentProfile = null;
   applyIdentity("teacher", teacher);
   state.teacherContext = { teacher, term: data.get("term"), book: data.get("book") };
   elements.roleDialog.close();
@@ -374,6 +409,7 @@ async function handleAdminLogin(form) {
       return;
     }
   }
+  state.studentProfile = null;
   applyIdentity("admin", administrator);
   elements.roleDialog.close();
   setView("admin");
@@ -391,6 +427,8 @@ function renderTeacherWorkspace() {
   elements.teacherTerm.disabled = Boolean(cloudProfile?.role === "teacher");
   elements.teacherBook.disabled = Boolean(cloudProfile?.role === "teacher");
   elements.teacherName.textContent = context.teacher || state.userName || "—";
+  window.WritingZone?.renderTeacherSummary();
+  window.PracticeAnalytics?.render();
   if (cloudProfile?.role === "teacher") {
     elements.classStudentCount.textContent = "读取中";
     elements.classStudentList.innerHTML = '<p class="empty-approval">正在读取本班学生名单…</p>';
@@ -499,7 +537,7 @@ elements.saveWritingPolicy.addEventListener("click", () => { void saveCloudClass
 populateFormOptions();
 renderCatalog();
 renderLessons();
-applyIdentity("guest", "");
+restoreStoredIdentity();
 const requestedView = new URL(window.location.href).searchParams.get("view");
 setView(viewLabels[requestedView] ? requestedView : "home");
 

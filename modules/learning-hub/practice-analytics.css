@@ -1,0 +1,115 @@
+.teacher-practice-panel { margin-bottom: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.teacher-practice-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-bottom: 13px; border-bottom: 1px solid var(--line); }
+.teacher-practice-panel > header span, .practice-focus header span { color: var(--coral); font-size: 10px; font-weight: 800; }
+.teacher-practice-panel h2 { margin: 3px 0 0; font-size: 19px; }
+.teacher-practice-panel h2 small { color: var(--muted); font-size: 10px; }
+.teacher-practice-panel header p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+.practice-report-controls { display: flex; align-items: end; gap: 8px; }
+.practice-report-controls label { display: grid; gap: 4px; }
+.practice-report-controls select { min-width: 210px; min-height: 40px; padding: 0 9px; border: 1px solid #b9c9c5; border-radius: 6px; background: #fff; }
+.practice-report-controls .quiet-button { min-height: 40px; }
+.practice-report-status { margin: 12px 0; color: var(--muted); font-size: 10px; }
+.learning-report-tabs { width: min(480px, 100%); display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-top: 12px; padding: 3px; border: 1px solid var(--line); border-radius: 6px; background: #edf2f0; }
+.learning-report-tabs button { min-height: 38px; color: var(--muted); border: 0; border-radius: 4px; background: transparent; font-size: 12px; font-weight: 800; }
+.learning-report-tabs button small { margin-left: 4px; font-size: 9px; }
+.learning-report-tabs button.active { color: #fff; background: var(--teal); }
+.practice-kind-tabs { width: min(330px, 100%); display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; margin-top: 7px; padding: 3px; border: 1px solid #d8e2df; border-radius: 6px; background: #f7f9f8; }
+.practice-kind-tabs[hidden] { display: none; }
+.practice-kind-tabs button { min-height: 34px; border: 0; border-radius: 4px; color: var(--muted); background: transparent; font-size: 11px; font-weight: 800; }
+.practice-kind-tabs button small { margin-left: 4px; font-size: 8px; }
+.practice-kind-tabs button.active { color: #fff; background: #2f6690; }
+.practice-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.practice-metric { min-height: 92px; display: grid; align-content: center; padding: 12px; border-left: 4px solid var(--teal); background: #f0f6f4; }
+.practice-metric:nth-child(2) { border-color: var(--coral); background: #fff2ee; }
+.practice-metric:nth-child(3) { border-color: #2f6690; background: #eef5fb; }
+.practice-metric:nth-child(4) { border-color: var(--gold); background: #fff7df; }
+.practice-metric span, .practice-metric small { color: var(--muted); font-size: 10px; }
+.practice-metric strong { margin: 4px 0; font-size: 24px; }
+.practice-focus { margin-top: 12px; padding: 14px; border: 1px solid var(--line); }
+.practice-focus > header { display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+.practice-focus h3 { margin: 2px 0 0; font-size: 16px; }
+.practice-focus header small { color: var(--muted); font-size: 9px; }
+.practice-focus-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 10px; }
+.practice-focus-list > div { min-width: 0; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 10px; border: 1px solid #d8e2df; background: #fff; }
+.practice-focus-list b { width: 26px; height: 26px; display: grid; place-items: center; color: #fff; border-radius: 50%; background: var(--coral); font-size: 11px; }
+.practice-focus-list strong, .practice-focus-list small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.practice-focus-list strong { font-size: 11px; }
+.practice-focus-list small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+.practice-focus-list em { color: var(--coral); font-size: 16px; font-style: normal; font-weight: 850; }
+.vocabulary-focus-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.vocabulary-focus-list > div { min-width: 0; display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; gap: 7px; padding: 10px; border: 1px solid #d8e2df; background: #fff; }
+.vocabulary-focus-list b { width: 23px; height: 23px; display: grid; place-items: center; color: #fff; border-radius: 50%; background: #2f6690; font-size: 10px; }
+.vocabulary-focus-list span { min-width: 0; }
+.vocabulary-focus-list strong, .vocabulary-focus-list small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vocabulary-focus-list strong { font-size: 17px; }
+.vocabulary-focus-list small { margin-top: 2px; color: var(--muted); font-size: 8px; }
+.vocabulary-focus-list em { grid-column: 1 / -1; color: var(--coral); font-size: 9px; font-style: normal; font-weight: 800; text-align: center; }
+.text-focus-list { display: grid; gap: 6px; margin-top: 10px; }
+.text-focus-list > div { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 9px 10px; border: 1px solid #d8e2df; background: #fff; }
+.text-focus-list b { width: 24px; height: 24px; display: grid; place-items: center; color: #fff; border-radius: 50%; background: #2f6690; font-size: 10px; }
+.text-focus-list strong, .text-focus-list small { display: block; }
+.text-focus-list strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.text-focus-list small { margin-top: 2px; color: var(--muted); font-size: 9px; }
+.text-focus-list em { color: var(--coral); font-size: 14px; font-style: normal; font-weight: 850; }
+.practice-empty { margin: 18px 0 4px; color: var(--muted); font-size: 11px; text-align: center; }
+.practice-section-details { margin-top: 10px; border-top: 1px solid var(--line); }
+.practice-section-details > summary { padding: 12px 3px 2px; color: var(--teal); cursor: pointer; font-size: 11px; font-weight: 800; }
+.practice-section-details > summary small { margin-left: 5px; color: var(--muted); font-size: 9px; }
+.practice-section-list { display: grid; gap: 6px; margin-top: 10px; }
+.practice-section-list > details { border: 1px solid var(--line); }
+.practice-section-list > details > summary { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 12px; cursor: pointer; background: #f7f9f8; }
+.practice-section-list summary strong, .practice-section-list summary small { display: block; }
+.practice-section-list summary strong { font-size: 11px; }
+.practice-section-list summary small { margin-top: 2px; color: var(--muted); font-size: 9px; }
+.practice-section-list summary b { color: var(--teal); font-size: 13px; }
+.practice-item-table { padding: 6px 12px 10px; }
+.practice-item-table > div { display: grid; grid-template-columns: 1fr 80px 80px 80px; gap: 8px; padding: 7px 0; border-bottom: 1px solid #e8eeec; font-size: 10px; }
+.practice-item-table > div:last-child { border-bottom: 0; }
+.practice-item-table strong { color: var(--teal); }
+.practice-item-head { color: var(--muted); font-weight: 750; }
+.vocabulary-item-table > div { grid-template-columns: minmax(120px, 1fr) repeat(4, 64px); }
+.vocabulary-item-table span strong, .vocabulary-item-table span small { display: block; }
+.vocabulary-item-table span small { margin-top: 2px; color: var(--muted); font-size: 8px; }
+.text-detail-title { margin: 12px 0 5px; color: var(--muted); font-size: 10px; }
+.text-item-table > div { grid-template-columns: minmax(180px, 1fr) repeat(4, 64px); }
+.text-item-table span strong, .text-item-table span small { display: block; }
+.text-item-table span small { max-width: 520px; overflow: hidden; margin-top: 2px; color: var(--muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.subjective-dimensions { margin-top: 12px; padding: 14px; border: 1px solid var(--line); background: #fff; }
+.subjective-dimensions > header { display: flex; align-items: end; justify-content: space-between; gap: 10px; }
+.subjective-dimensions header span { color: #2f6690; font-size: 10px; font-weight: 800; }
+.subjective-dimensions h3 { margin: 2px 0 0; font-size: 16px; }
+.subjective-dimensions header small { color: var(--muted); font-size: 9px; }
+.subjective-dimensions > div { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 11px; }
+.subjective-dimensions article span { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; }
+.subjective-dimensions article em { color: #2f6690; font-style: normal; font-weight: 800; }
+.subjective-dimensions article > i { height: 7px; display: block; overflow: hidden; margin-top: 6px; border-radius: 4px; background: #e5ecea; }
+.subjective-dimensions article u { height: 100%; display: block; border-radius: inherit; background: #2f6690; text-decoration: none; }
+.subjective-item-table > div { grid-template-columns: minmax(120px, 1fr) repeat(4, 78px); }
+.student-report-details { margin-top: 10px; border-top: 1px solid var(--line); }
+.student-report-details > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 3px 2px; color: var(--teal); cursor: pointer; font-size: 11px; font-weight: 800; }
+.student-report-details > summary small { color: var(--muted); font-size: 9px; }
+.student-report-details > summary button { min-height: 32px; padding: 4px 10px; border: 1px solid #9bb9b4; border-radius: 5px; color: #fff; background: #2f6690; font-size: 10px; font-weight: 800; }
+.student-report-details > summary button small { margin-left: 3px; color: #fff; }
+.student-report-table { margin-top: 9px; overflow-x: auto; border: 1px solid var(--line); }
+.student-report-table > div { min-width: calc(var(--student-columns) * 94px); display: grid; grid-template-columns: repeat(var(--student-columns), minmax(94px, 1fr)); }
+.student-report-table span { min-width: 0; padding: 8px 9px; overflow: hidden; border-bottom: 1px solid #e8eeec; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.student-report-table > div:last-child span { border-bottom: 0; }
+.student-report-head { color: var(--muted); background: #f7f9f8; font-weight: 800; }
+
+@media (max-width: 760px) {
+  .teacher-practice-panel { padding: 14px; }
+  .teacher-practice-panel > header { align-items: stretch; flex-direction: column; }
+  .practice-report-controls { display: grid; grid-template-columns: 1fr auto; }
+  .practice-report-controls select { width: 100%; min-width: 0; }
+  .practice-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .practice-focus-list { grid-template-columns: 1fr; }
+  .vocabulary-focus-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .practice-item-table > div { grid-template-columns: 1fr 58px 58px 58px; }
+  .vocabulary-item-table { overflow-x: auto; }
+  .vocabulary-item-table > div { min-width: 480px; grid-template-columns: minmax(120px, 1fr) repeat(4, 58px); }
+  .text-item-table { overflow-x: auto; }
+  .text-item-table > div { min-width: 540px; grid-template-columns: minmax(180px, 1fr) repeat(4, 58px); }
+  .subjective-dimensions > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .subjective-item-table { overflow-x: auto; }
+  .subjective-item-table > div { min-width: 520px; grid-template-columns: minmax(120px, 1fr) repeat(4, 76px); }
+}
