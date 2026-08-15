@@ -9,6 +9,11 @@ const LESSONS = Object.freeze({
     topic: "和时间赛跑",
     paragraphRanges: [[0, 13], [14, 24], [25, 27], [28, 33], [34, 36], [37, 45], [46, 54], [55, 64]],
   }),
+  "zjzh-1-3": Object.freeze({
+    number: 3,
+    topic: "租房那些事",
+    paragraphRanges: [[0, 4], [5, 12], [13, 18], [19, 28], [29, 31], [32, 40], [41, 49], [50, 54], [55, 63], [64, 69]],
+  }),
 });
 const requestedLessonId = new URLSearchParams(window.location.search).get("lesson");
 const LESSON_ID = LESSONS[requestedLessonId] ? requestedLessonId : "zjzh-1-1";
@@ -2107,7 +2112,7 @@ function renderPracticeAssist() {
       ${renderDeepAssistPanel({ unitType: "practice-intro", unitId: item.groupId, assistType: "deep-explain" })}`;
     return;
   }
-  const support = item.support || {};
+  const support = localizedPracticeSupport(item);
   if (state.assistTab === "understand") {
     elements.assistContent.innerHTML = `
       <div class="assist-block">
@@ -2138,6 +2143,13 @@ function renderPracticeAssist() {
       ${example ? `<div class="assist-block"><span class="assist-label">实例解析</span><p>${escapeHtml(example.answer)}\n${escapeHtml(example.explanation)}</p></div>` : ""}
     </div>
     ${renderDeepAssistPanel({ unitType: "practice", unitId: item.id, assistType: "similar-example" })}`;
+}
+
+function localizedPracticeSupport(item) {
+  const support = item.support || {};
+  if (state.assistMode === "immersion" || state.locale === "zh-CN") return support;
+  const translated = support.translations?.[state.locale];
+  return translated ? { ...support, ...translated } : support;
 }
 
 function deepAssistKey(request) {

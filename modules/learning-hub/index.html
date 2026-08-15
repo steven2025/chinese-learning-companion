@@ -231,23 +231,20 @@
         <div class="form-grid two-columns">
           <label><span>学生账号 / Account</span><input name="studentAccount" value="test" required autocomplete="username"></label>
           <label><span>邀请码 / Invite code</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
-          <label><span>学期</span><select name="term" data-term-options required></select></label>
-          <label><span>教师</span><select name="teacher" data-teacher-options required></select></label>
-          <label class="wide-field"><span>教材</span><select name="book" data-book-options required></select></label>
+          <label class="wide-field" data-auth-context hidden><span>选择班级与教材 / Class and textbook</span><select name="contextId"></select></label>
         </div>
-        <button class="primary-button" type="submit">进入课程</button>
-        <p>当前测试账号为 test，邀请码为 123456；正式开放前将重新设置。</p>
+        <button class="primary-button" type="submit" data-auth-submit>验证并进入课程</button>
+        <p>账号验证后，系统会自动读取班级、学期、教师和可用教材。</p>
       </form>
 
       <form class="auth-panel" id="teacherLoginForm" data-auth-panel="teacher-login" hidden>
         <div class="form-grid two-columns">
-          <label><span>教师姓名</span><select name="teacher" data-teacher-options required></select></label>
+          <label><span>教师姓名或账号</span><input name="teacherAccount" value="曹丹丹" required autocomplete="username"></label>
           <label><span>教师邀请码</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
-          <label><span>学期</span><select name="term" data-term-options required></select></label>
-          <label><span>教材</span><select name="book" data-book-options required></select></label>
+          <label class="wide-field" data-auth-context hidden><span>选择班级与教材 / Class and textbook</span><select name="contextId"></select></label>
         </div>
-        <button class="primary-button" type="submit">进入教学工作台</button>
-        <p>教师身份限定为曹丹丹、袁玥、李进，当前测试邀请码为 123456。</p>
+        <button class="primary-button" type="submit" data-auth-submit>验证并进入工作台</button>
+        <p>登录后可进入已分配的学期、班级和教材。</p>
       </form>
 
       <form class="auth-panel" id="adminLoginForm" data-auth-panel="admin-login" hidden>

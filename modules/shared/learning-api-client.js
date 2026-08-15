@@ -37,6 +37,10 @@
     return result;
   }
 
+  function authenticationOptions(input) {
+    return request("/auth/options", input, { auth: false });
+  }
+
   function clearSession() {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(PROFILE_KEY);
@@ -124,6 +128,7 @@
     isConfigured,
     token,
     profile,
+    authenticationOptions,
     createSession,
     clearSession,
     resolveAssist,

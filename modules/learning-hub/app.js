@@ -1,5 +1,5 @@
 const terms = ["2026 Fall", "2027 Spring", "2027 Fall", "2028 Spring", "2028 Fall"];
-const teachers = ["曹丹丹", "袁玥", "李进"];
+const defaultTeacher = "曹丹丹";
 const administrator = "鄢清华";
 const TEST_STUDENT_ACCOUNT = "test";
 const TEST_INVITE_CODE = "123456";
@@ -54,7 +54,8 @@ const catalog = [
 ];
 
 const books = catalog.flatMap((level) => level.books.map(([id, label]) => ({ id, label, level: level.id })));
-const lessonTitles = ["你咋不早说", "和时间赛跑", "第3课", "第4课", "第5课", "第6课", "第7课", "第8课", "第9课", "第10课", "第11课", "第12课", "第13课", "第14课"];
+const lessonTitles = ["你咋不早说", "和时间赛跑", "租房那些事", "第4课", "第5课", "第6课", "第7课", "第8课", "第9课", "第10课", "第11课", "第12课", "第13课", "第14课"];
+const availableLessonCount = 3;
 
 function readStored(key, fallback) {
   try {
@@ -74,6 +75,7 @@ const state = {
   enrollments: readStored("learningHubStudentEnrollments", []),
   teacherContext: { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" },
   studentProfile: null,
+  authenticationOptions: { student: null, teacher: null },
 };
 
 const viewLabels = { home: "首页", courses: "我的课程", writing: "写作专区", games: "趣味游戏", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
@@ -180,9 +182,6 @@ function populateFormOptions() {
   document.querySelectorAll("[data-term-options]").forEach((select) => {
     select.innerHTML = terms.map((term) => `<option>${term}</option>`).join("");
   });
-  document.querySelectorAll("[data-teacher-options]").forEach((select) => {
-    select.innerHTML = teachers.map((teacher) => `<option>${teacher}</option>`).join("");
-  });
   document.querySelectorAll("[data-book-options]").forEach((select) => {
     select.innerHTML = bookOptionMarkup("intermediate-comprehensive-1");
   });
@@ -210,7 +209,7 @@ function renderCatalog() {
   const visibleBooks = level.books.filter(([, label]) => !query || `发展汉语 ${label}`.toLowerCase().includes(query));
   document.querySelectorAll("[data-course-level]").forEach((button) => button.classList.toggle("active", button.dataset.courseLevel === level.id));
   elements.levelCatalog.innerHTML = visibleBooks.length
-    ? `<div class="course-book-grid">${visibleBooks.map(([id, label]) => `<button class="book-choice${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${id === "intermediate-comprehensive-1" ? "第1、2课可学习" : "内容准备中"}</small></button>`).join("")}</div>`
+    ? `<div class="course-book-grid">${visibleBooks.map(([id, label]) => `<button class="book-choice${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${id === "intermediate-comprehensive-1" ? `第1-${availableLessonCount}课可学习` : "内容准备中"}</small></button>`).join("")}</div>`
     : '<p class="empty-state">没有找到符合条件的教材。</p>';
   renderCourseDialogLessons();
 }
@@ -223,7 +222,7 @@ function renderCourseDialogLessons() {
   }
   elements.courseDialogLessons.innerHTML = `<header><span>选择课次 / Lesson</span><strong>《发展汉语·${book.label}》</strong></header><div class="dialog-lesson-grid">${lessonTitles.map((title, index) => {
     const lessonNumber = index + 1;
-    return index < 2
+    return index < availableLessonCount
       ? `<a href="../digital-book/?lesson=zjzh-1-${lessonNumber}"><b>${String(lessonNumber).padStart(2, "0")}</b><span>${title}</span></a>`
       : `<button type="button" data-unavailable-lesson="${lessonNumber}"><b>${String(lessonNumber).padStart(2, "0")}</b><span>${title}</span></button>`;
   }).join("")}</div>`;
@@ -242,7 +241,7 @@ function renderLessons() {
   elements.lessonCount.textContent = "共14课";
   elements.currentLessonLabel.textContent = "第1课 · 你咋不早说";
   elements.lessonList.innerHTML = lessonTitles.map((title, index) => {
-    const available = index < 2;
+    const available = index < availableLessonCount;
     const lessonNumber = index + 1;
     const inner = `<span>${String(index + 1).padStart(2, "0")}</span><span><strong>${title}</strong><small>${available ? "词汇、课文、练习" : "内容准备中"}</small></span><b>${available ? "进入 ›" : "未开放"}</b>`;
     return available ? `<a class="lesson-item available" href="../digital-book/?lesson=zjzh-1-${lessonNumber}">${inner}</a>` : `<button class="lesson-item" type="button" data-unavailable-lesson="${lessonNumber}">${inner}</button>`;
@@ -307,7 +306,9 @@ function restoreStoredIdentity() {
       chineseName: profile.name || profile.chineseName || profile.userId,
       englishName: profile.englishName || "",
       studentId: profile.userId,
-      teacher: profile.teacher || teachers[0],
+      classId: profile.classId || "",
+      className: profile.className || "",
+      teacher: profile.teacher || defaultTeacher,
       term: profile.term || terms[0],
       book: profile.bookId || "intermediate-comprehensive-1",
     };
@@ -333,32 +334,37 @@ function saveEnrollments() {
 async function handleStudentLogin(form) {
   const data = new FormData(form);
   const studentId = data.get("studentAccount").trim();
-  if (studentId !== TEST_STUDENT_ACCOUNT || data.get("inviteCode").trim() !== TEST_INVITE_CODE) {
-    showToast("学生账号或邀请码不正确");
-    return;
-  }
-  const enrollment = {
-    id: `student-${studentId}-${data.get("term")}-${data.get("book")}-${data.get("teacher")}`,
-    chineseName: "测试学生",
-    englishName: TEST_STUDENT_ACCOUNT,
-    studentId,
-    term: data.get("term"),
-    teacher: data.get("teacher"),
-    book: data.get("book"),
-    joinedAt: new Date().toISOString(),
-  };
+  const inviteCode = data.get("inviteCode").trim();
+  const selection = await resolveAuthenticationContext(form, "student", studentId, inviteCode);
+  if (!selection) return;
+  let profile;
   if (window.LearningApi?.isConfigured()) {
     try {
-      await window.LearningApi.createSession({
-        role: "student", inviteCode: data.get("inviteCode").trim(), userId: studentId,
-        chineseName: enrollment.chineseName, englishName: enrollment.englishName,
-        teacher: enrollment.teacher, term: enrollment.term, bookId: enrollment.book,
-      });
+      const session = await window.LearningApi.createSession({ role: "student", inviteCode, userId: studentId, contextId: selection.context.id });
+      profile = session.profile;
     } catch (error) {
       showToast(error.message || "邀请码登录失败");
       return;
     }
   } else {
+    profile = {
+      role: "student", userId: studentId, name: "测试学生", englishName: TEST_STUDENT_ACCOUNT,
+      ...selection.context,
+    };
+  }
+  const enrollment = {
+    id: `student-${profile.userId}-${profile.classId || profile.term}-${profile.bookId}`,
+    chineseName: profile.name || profile.userId,
+    englishName: profile.englishName || "",
+    studentId: profile.userId,
+    classId: profile.classId || "",
+    className: profile.className || "",
+    term: profile.term,
+    teacher: profile.teacher,
+    book: profile.bookId,
+    joinedAt: new Date().toISOString(),
+  };
+  if (!window.LearningApi?.isConfigured()) {
     const existingIndex = state.enrollments.findIndex((item) => item.id === enrollment.id);
     if (existingIndex >= 0) state.enrollments[existingIndex] = enrollment;
     else state.enrollments.push(enrollment);
@@ -374,40 +380,94 @@ async function handleStudentLogin(form) {
 
 async function handleTeacherLogin(form) {
   const data = new FormData(form);
-  const teacher = data.get("teacher");
-  if (!teachers.includes(teacher) || data.get("inviteCode").trim() !== TEST_INVITE_CODE) {
-    showToast("教师姓名或邀请码不正确");
-    return;
-  }
+  const teacherAccount = data.get("teacherAccount").trim();
+  const inviteCode = data.get("inviteCode").trim();
+  const selection = await resolveAuthenticationContext(form, "teacher", teacherAccount, inviteCode);
+  if (!selection) return;
+  let profile;
   if (window.LearningApi?.isConfigured()) {
     try {
-      await window.LearningApi.createSession({ role: "teacher", inviteCode: data.get("inviteCode").trim(), teacher, term: data.get("term"), bookId: data.get("book") });
+      const session = await window.LearningApi.createSession({ role: "teacher", inviteCode, teacherId: teacherAccount, teacher: teacherAccount, contextId: selection.context.id });
+      profile = session.profile;
     } catch (error) {
       showToast(error.message || "教师邀请码登录失败");
       return;
     }
+  } else {
+    profile = { role: "teacher", userId: teacherAccount, name: teacherAccount, ...selection.context };
   }
   state.studentProfile = null;
-  applyIdentity("teacher", teacher);
-  state.teacherContext = { teacher, term: data.get("term"), book: data.get("book") };
+  applyIdentity("teacher", profile.teacher || profile.name);
+  state.teacherContext = { teacher: profile.teacher || profile.name, term: profile.term, book: profile.bookId };
   elements.roleDialog.close();
   setView("teacher");
-  showToast(`已进入${teacher}老师的教学工作台`);
+  showToast(`已进入${profile.teacher || profile.name}老师的教学工作台`);
+}
+
+function localAuthenticationOptions(role, account, inviteCode) {
+  const validAccount = role === "student" ? account === TEST_STUDENT_ACCOUNT : Boolean(account);
+  if (!validAccount || inviteCode !== TEST_INVITE_CODE) throw new Error("账号或邀请码不正确");
+  const teacher = role === "teacher" ? account : defaultTeacher;
+  return {
+    account: { id: account, name: role === "student" ? "测试学生" : teacher, englishName: role === "student" ? "Test" : "" },
+    contexts: [{ id: `local-class:${books[0].id}`, classId: "local-class", className: "本地测试班", teacher, term: terms[0], bookId: books[0].id }],
+  };
+}
+
+function authenticationContextLabel(context) {
+  return `${context.term} · ${context.className} · ${context.teacher} · 发展汉语·${bookById(context.bookId).label}`;
+}
+
+function showAuthenticationContexts(form, contexts) {
+  const field = form.querySelector("[data-auth-context]");
+  const select = field.querySelector("select");
+  select.innerHTML = contexts.map((context) => `<option value="${escapeHtml(context.id)}">${escapeHtml(authenticationContextLabel(context))}</option>`).join("");
+  field.hidden = false;
+  form.querySelector("[data-auth-submit]").textContent = "进入所选课程 / Continue";
+}
+
+async function resolveAuthenticationContext(form, role, account, inviteCode) {
+  const signature = `${account}\u0000${inviteCode}`;
+  let record = state.authenticationOptions[role];
+  if (!record || record.signature !== signature) {
+    try {
+      const result = window.LearningApi?.isConfigured()
+        ? await window.LearningApi.authenticationOptions({ role, inviteCode, ...(role === "student" ? { userId: account } : { teacherId: account, teacher: account }) })
+        : localAuthenticationOptions(role, account, inviteCode);
+      record = { signature, account: result.account, contexts: result.contexts || [] };
+      state.authenticationOptions[role] = record;
+    } catch (error) {
+      showToast(error.message || "账号验证失败");
+      return null;
+    }
+    if (record.contexts.length > 1) {
+      showAuthenticationContexts(form, record.contexts);
+      showToast("请选择本次进入的班级和教材");
+      return null;
+    }
+  }
+  const selectedId = form.querySelector('[name="contextId"]')?.value || record.contexts[0]?.id;
+  const context = record.contexts.find((item) => item.id === selectedId) || record.contexts[0];
+  if (!context) {
+    showToast("该账号尚未分配班级或教材");
+    return null;
+  }
+  return { account: record.account, context };
 }
 
 async function handleAdminLogin(form) {
   const data = new FormData(form);
-  if (data.get("inviteCode").trim() !== TEST_INVITE_CODE) {
-    showToast("管理员邀请码不正确");
-    return;
-  }
+  const inviteCode = data.get("inviteCode").trim();
   if (window.LearningApi?.isConfigured()) {
     try {
-      await window.LearningApi.createSession({ role: "admin", inviteCode: data.get("inviteCode").trim(), name: administrator, bookId: "system" });
+      await window.LearningApi.createSession({ role: "admin", inviteCode, name: administrator, bookId: "system" });
     } catch (error) {
       showToast(error.message || "管理员邀请码登录失败");
       return;
     }
+  } else if (inviteCode !== TEST_INVITE_CODE) {
+    showToast("管理员邀请码不正确");
+    return;
   }
   state.studentProfile = null;
   applyIdentity("admin", administrator);
