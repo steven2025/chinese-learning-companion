@@ -1,4 +1,5 @@
-const DATA_URL = "../../data/games/character-hit/zjzh-1-1-2.json";
+const RUNTIME_DATA_ROOT = window.HANZI_COMPANION_CONFIG?.runtimeDataRoot || "../../data";
+const DATA_URL = `${RUNTIME_DATA_ROOT}/games/character-hit/developing-lessons.json`;
 const STAGES = ["components", "pinyin", "meaning"];
 const AUDIO_FILES = {
   launch: "assets/audio/launch.wav",
@@ -39,6 +40,8 @@ const elements = {
   pause: document.querySelector("#pauseButton"),
   startScreen: document.querySelector("#startScreen"),
   start: document.querySelector("#startButton"),
+  book: document.querySelector("#gameBookSelect"),
+  lesson: document.querySelector("#gameLessonSelect"),
   pauseScreen: document.querySelector("#pauseScreen"),
   resume: document.querySelector("#resumeButton"),
   resultScreen: document.querySelector("#resultScreen"),
@@ -49,6 +52,7 @@ const elements = {
 
 const state = {
   data: null,
+  sourceData: null,
   itemIndex: 0,
   stageIndex: 0,
   score: 0,
@@ -482,7 +486,8 @@ async function loadGame() {
   try {
     const response = await fetch(DATA_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    state.data = await response.json();
+    state.sourceData = await response.json();
+    setupGameIndex();
     elements.roundLabel.textContent = `第 1 / ${state.data.items.length} 词`;
     elements.start.disabled = false;
     elements.start.querySelector("b").textContent = "开始挑战";
@@ -494,7 +499,23 @@ async function loadGame() {
   }
 }
 
+function setupGameIndex() {
+  const catalog = state.sourceData.lessonCatalog || [];
+  const books = [...new Map(catalog.map((item) => [item.bookId, item.bookTitle])).entries()];
+  const requested = new URL(location.href).searchParams.get("lesson");
+  const requestedBook = catalog.find((item) => item.lessonId === requested)?.bookId;
+  const bookId = requestedBook || elements.book.value || books[0]?.[0];
+  elements.book.innerHTML = books.map(([id, title]) => `<option value="${id}"${id === bookId ? " selected" : ""}>${title}</option>`).join("");
+  const lessons = catalog.filter((item) => item.bookId === bookId);
+  const lessonId = requested && lessons.some((item) => item.lessonId === requested) ? requested : lessons[0]?.lessonId;
+  elements.lesson.innerHTML = lessons.map((item) => `<option value="${item.lessonId}"${item.lessonId === lessonId ? " selected" : ""}>${item.title}</option>`).join("");
+  state.data = { ...state.sourceData, items: state.sourceData.items.filter((item) => item.lessonId === elements.lesson.value) };
+  elements.roundLabel.textContent = `第 1 / ${state.data.items.length} 词`;
+}
+
 elements.start.addEventListener("click", startGame);
+elements.book.addEventListener("change", () => { const url = new URL(location.href); url.searchParams.delete("lesson"); history.replaceState(null, "", url); setupGameIndex(); });
+elements.lesson.addEventListener("change", () => { const url = new URL(location.href); url.searchParams.set("lesson", elements.lesson.value); history.replaceState(null, "", url); setupGameIndex(); });
 elements.replay.addEventListener("click", startGame);
 elements.pause.addEventListener("click", () => setPaused(true));
 elements.resume.addEventListener("click", () => setPaused(false));

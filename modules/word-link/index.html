@@ -7,7 +7,7 @@
   <title>单词连连看 · 点点汉语</title>
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
-  <link rel="stylesheet" href="styles.css?v=20260806-1">
+  <link rel="stylesheet" href="styles.css?v=20260818-2">
 </head>
 <body>
   <main class="game-shell">
@@ -31,6 +31,7 @@
 
     <section class="status-bar" aria-live="polite">
       <div><span id="sourceKicker">发展汉语 · 中级综合 I</span><h1 id="setTitle">第1—2课教材词汇</h1></div>
+      <div class="lesson-index" id="lessonIndex"><label>教材<select id="bookSelect" aria-label="选择教材"></select></label><label>课程<select id="lessonSelect" aria-label="选择课程"></select></label></div>
       <div class="round-progress"><span id="roundLabel">第 1 轮</span><i><b id="progressFill"></b></i><small id="wordProgress">0 / 0</small></div>
       <div class="score-panel"><span>得分 <b id="scoreValue">0</b></span><span>失误 <b id="mistakeValue">0</b></span></div>
     </section>
@@ -75,6 +76,7 @@
     <div class="loader"><i></i><span>正在读取词库</span><small>Loading vocabulary</small></div>
   </section>
 
-  <script src="app.js?v=20260806-1" defer></script>
+  <script src="../../config.js?v=20260818-2"></script>
+  <script src="app.js?v=20260818-4" defer></script>
 </body>
 </html>

@@ -1,17 +1,10 @@
-const CACHE_VERSION = "diandian-chinese-v30";
+const CACHE_VERSION = "diandian-chinese-v32";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./config.js",
   "./manifest.webmanifest",
   "./vendor/hanzi-writer.min.js",
-  "./data/lessons/zjzh-1-1/vocabulary-audio.json",
-  "./data/lessons/zjzh-1-1/vocabulary-metadata.json",
-  "./data/lessons/zjzh-1-1/text-audio.json",
-  "./data/lessons/zjzh-1-1/text-pinyin.json",
-  "./data/lessons/zjzh-1-1/book-pages.json",
-  "./data/lessons/zjzh-1-1/lesson-practice.json",
-  "./data/lessons/zjzh-1-1/practice-intro-translations.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/maskable-192.png",
@@ -35,16 +28,10 @@ const APP_SHELL = [
   "./modules/character-hit/assets/audio/place.wav",
   "./modules/character-hit/assets/audio/stage.wav",
   "./modules/character-hit/assets/audio/victory.wav",
-  "./data/games/character-hit/zjzh-1-1.json",
-  "./data/games/character-hit/zjzh-1-1-2.json",
   "./modules/word-link/index.html",
   "./modules/word-link/styles.css",
   "./modules/word-link/app.js",
-  "./data/games/word-link/catalog.json",
-  "./data/games/word-link/zjzh-1-1-2.json",
-  "./data/games/word-link/hsk-1.json",
   "./modules/hanzi-challenge/index.html",
-  "./modules/hanzi-challenge/hanzi-data.js",
   "./modules/hanzi-challenge/sfx/correct_1.mp3",
   "./modules/hanzi-challenge/sfx/correct_2.mp3",
   "./modules/hanzi-challenge/sfx/correct_3.mp3",
@@ -58,9 +45,9 @@ const APP_SHELL = [
   "./modules/hanzi-challenge/sfx/celebrate.mp3",
   "./modules/digital-book/index.html",
   "./modules/digital-book/styles.css",
+  "./modules/digital-book/pronunciation.css",
   "./modules/digital-book/app.js",
-  "./modules/digital-book/book-data.js",
-  "./modules/digital-book/stroke-data.js"
+  "./modules/digital-book/pronunciation.js"
 ];
 
 self.addEventListener("install", event => {
@@ -103,6 +90,11 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
+  const isAudio = /\.(mp3|m4a|wav)$/i.test(url.pathname);
+  if (request.headers.has("range") || isAudio) {
+    event.respondWith(fetch(request));
+    return;
+  }
   if (request.mode === "navigate") {
     event.respondWith(networkFirst(request));
     return;

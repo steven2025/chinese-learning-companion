@@ -304,7 +304,8 @@
     elements.status.textContent = mode === "vocabulary" ? "正在汇总班级词汇记录…" : mode === "text" ? "正在汇总班级课文记录…" : `正在汇总班级${practiceKind === "subjective" ? "主观" : "客观"}练习记录…`;
     try {
       const file = mode === "vocabulary" ? "vocabulary-metadata.json" : mode === "text" ? "text-audio.json" : "lesson-practice.json";
-      const response = await fetch(`../../data/lessons/${lessonId}/${file}`, { cache: "no-cache" });
+      const dataRoot = window.HANZI_COMPANION_CONFIG?.runtimeDataRoot || "../../data";
+      const response = await fetch(`${dataRoot}/lessons/${lessonId}/${file}`, { cache: "no-cache" });
       if (!response.ok) throw new Error("课程数据读取失败");
       const source = await response.json();
       const result = mode === "vocabulary"

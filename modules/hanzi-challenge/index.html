@@ -65,6 +65,9 @@
       color: rgba(255,255,255,0.85);
       margin-bottom: 40px;
     }
+    .home-index { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: -20px 0 20px; }
+    .home-index label { display: grid; gap: 4px; color: rgba(255,255,255,.84); font-size: 11px; font-weight: 700; text-align: left; }
+    .home-index select { min-width: 0; height: 42px; padding: 0 8px; border: 1px solid rgba(255,255,255,.45); border-radius: 6px; background: #fff; color: #17383a; }
     .home-btn {
       background: #df6049;
       color: #fff;
@@ -431,7 +434,8 @@
     <div class="home-screen" id="homeScreen">
       <div class="home-logo">📖</div>
       <div class="home-title">汉字大闯关</div>
-      <div class="home-subtitle">看拼音 · 认汉字 · 闯关卡<br>复习中级综合 I 第1—2课教材汉字</div>
+      <div class="home-subtitle">看拼音 · 认汉字 · 闯关卡<br>按当前教材与课程复习汉字</div>
+      <div class="home-index"><label>教材<select id="hanziBookSelect" aria-label="选择教材"></select></label><label>课程<select id="hanziLessonSelect" aria-label="选择课程"></select></label></div>
       <button class="home-btn" id="startBtn" onclick="startGame()">
         开始闯关 🚀
       </button>
@@ -486,8 +490,17 @@
   <!-- 粒子画布 -->
   <canvas id="confetti-canvas"></canvas>
 
-  <script src="hanzi-data.js"></script>
+  <script src="../../config.js?v=20260818-2"></script>
   <script>
+    let HANZI_DATA = [];
+    let HANZI_LESSON_CATALOG = [];
+    let activeHanziLessonId = "";
+    function setHanziLesson(id) { activeHanziLessonId = HANZI_LESSON_CATALOG.some(item => item.lessonId === id) ? id : HANZI_LESSON_CATALOG[0]?.lessonId || ""; }
+    function activeHanziData() { return HANZI_DATA.filter(item => item.lessonId === activeHanziLessonId); }
+    function getTotalLevels() { return Math.ceil(activeHanziData().length / 10); }
+    function getLevelData(level) { return activeHanziData().slice((level - 1) * 10, level * 10); }
+    function getSimilarChars(char, count = 3) { return shuffleArray(activeHanziData().map(item => item.char).filter(item => item !== char)).slice(0, count); }
+    function shuffleArray(items) { const copy = [...items]; for (let index = copy.length - 1; index > 0; index--) { const target = Math.floor(Math.random() * (index + 1)); [copy[index], copy[target]] = [copy[target], copy[index]]; } return copy; }
     // ===== 游戏状态 =====
     let currentLevel = 1;
     let currentCharIndex = 0;
@@ -632,6 +645,7 @@
 
     // ===== 初始化 =====
     function init() {
+      setupHanziIndex();
       const saved = localStorage.getItem('diandian_hanzi_challenge_progress');
       if (saved) currentLevel = parseInt(saved) || 1;
 
@@ -639,6 +653,23 @@
       if (currentLevel > totalLevels) currentLevel = 1;
 
       updateHomeProgress();
+    }
+
+    function setupHanziIndex() {
+      const bookSelect = document.getElementById('hanziBookSelect');
+      const lessonSelect = document.getElementById('hanziLessonSelect');
+      const books = [...new Map(HANZI_LESSON_CATALOG.map(item => [item.bookId, item.bookTitle])).entries()];
+      const requested = new URL(location.href).searchParams.get('lesson');
+      const requestedBook = HANZI_LESSON_CATALOG.find(item => item.lessonId === requested)?.bookId;
+      const bookId = requestedBook || bookSelect.value || books[0][0];
+      bookSelect.innerHTML = books.map(([id, title]) => `<option value="${id}"${id === bookId ? ' selected' : ''}>${title}</option>`).join('');
+      const lessons = HANZI_LESSON_CATALOG.filter(item => item.bookId === bookId);
+      const lessonId = requested && lessons.some(item => item.lessonId === requested) ? requested : lessons[0].lessonId;
+      lessonSelect.innerHTML = lessons.map(item => `<option value="${item.lessonId}"${item.lessonId === lessonId ? ' selected' : ''}>${item.title}</option>`).join('');
+      setHanziLesson(lessonSelect.value);
+      currentLevel = 1;
+      bookSelect.onchange = () => { history.replaceState(null, '', location.pathname); setupHanziIndex(); updateHomeProgress(); };
+      lessonSelect.onchange = () => { setHanziLesson(lessonSelect.value); currentLevel = 1; const url = new URL(location.href); url.searchParams.set('lesson', lessonSelect.value); history.replaceState(null, '', url); updateHomeProgress(); };
     }
 
     function updateHomeProgress() {
@@ -939,8 +970,17 @@
     });
 
     // ===== 启动 =====
-    init();
-    preloadSFX();
+    async function bootstrapGame() {
+      const root = window.HANZI_COMPANION_CONFIG?.runtimeDataRoot || "../../data";
+      const response = await fetch(`${root}/games/hanzi-challenge/developing-lessons.json`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`游戏数据加载失败：${response.status}`);
+      const payload = await response.json();
+      HANZI_DATA = payload.items || [];
+      HANZI_LESSON_CATALOG = payload.lessonCatalog || [];
+      init();
+      preloadSFX();
+    }
+    bootstrapGame().catch(error => { document.getElementById('homeProgress').textContent = error.message; document.getElementById('startBtn').disabled = true; });
   </script>
 </body>
 </html>

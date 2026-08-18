@@ -7,7 +7,7 @@
   <title>开心“打”字 · 点点汉语</title>
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
-  <link rel="stylesheet" href="styles.css?v=20260806-1">
+  <link rel="stylesheet" href="styles.css?v=20260818-2">
 </head>
 <body>
   <main class="game" id="game">
@@ -75,9 +75,10 @@
 
     <section class="start-screen" id="startScreen">
       <div class="start-copy">
-        <span>中级综合 I · 第1—2课</span>
+        <span>按教材与课程练习</span>
         <h1>开心“打”字</h1>
         <p>射中部件组汉字，再辨拼音和词义。每个目标都来自本课词汇。</p>
+        <div class="start-index"><label>教材<select id="gameBookSelect" aria-label="选择教材"></select></label><label>课程<select id="gameLessonSelect" aria-label="选择课程"></select></label></div>
         <div class="start-preview" aria-hidden="true"><i>门</i><b>+</b><i>耳</i><b>=</b><strong>闻</strong></div>
         <button id="startButton" type="button" disabled><span aria-hidden="true">▶</span><b>正在准备</b><small>Loading</small></button>
         <small>电脑使用鼠标，手机和平板直接触摸目标</small>
@@ -92,6 +93,7 @@
       <div><span>本轮完成</span><h2>五个词都打中了</h2><strong id="finalScore">0</strong><p id="resultSummary"></p><button id="replayButton" type="button">再玩一次 / Play again</button><a href="../learning-hub/">返回学习中心</a></div>
     </section>
   </main>
-  <script src="app.js?v=20260806-1" defer></script>
+  <script src="../../config.js?v=20260818-2"></script>
+  <script src="app.js?v=20260818-3" defer></script>
 </body>
 </html>

@@ -1,7 +1,8 @@
 "use strict";
 
 const ROUND_SIZE = 5;
-const CATALOG_URL = "../../data/games/word-link/catalog.json";
+const RUNTIME_DATA_ROOT = window.HANZI_COMPANION_CONFIG?.runtimeDataRoot || "../../data";
+const CATALOG_URL = `${RUNTIME_DATA_ROOT}/games/word-link/catalog-v2.json`;
 const LANGUAGES = [
   ["en", "English"],
   ["th", "ไทย"],
@@ -24,6 +25,9 @@ const elements = {
   language: document.getElementById("languageSelect"),
   sourceKicker: document.getElementById("sourceKicker"),
   setTitle: document.getElementById("setTitle"),
+  lessonIndex: document.getElementById("lessonIndex"),
+  book: document.getElementById("bookSelect"),
+  lesson: document.getElementById("lessonSelect"),
   roundLabel: document.getElementById("roundLabel"),
   progressFill: document.getElementById("progressFill"),
   wordProgress: document.getElementById("wordProgress"),
@@ -49,6 +53,8 @@ const elements = {
 
 const state = {
   catalog: null,
+  allWords: [],
+  lessonCatalog: [],
   source: "developing",
   words: [],
   round: 0,
@@ -82,7 +88,30 @@ function normalizeWord(word, index) {
     hanzi,
     pinyin,
     translations
+    , lessonId: word.lessonId || ""
   };
+}
+
+function applyLessonIndex({ reset = true } = {}) {
+  if (state.source !== "developing" || !state.lessonCatalog.length) {
+    elements.lessonIndex.hidden = true;
+    state.words = state.allWords;
+    return;
+  }
+  elements.lessonIndex.hidden = false;
+  const books = [...new Map(state.lessonCatalog.map((item) => [item.bookId, item.bookTitle])).entries()];
+  const requestedLesson = new URL(location.href).searchParams.get("lesson");
+  const requestedBook = state.lessonCatalog.find((item) => item.lessonId === requestedLesson)?.bookId;
+  const bookId = requestedBook || elements.book.value || books[0][0];
+  elements.book.innerHTML = books.map(([id, title]) => `<option value="${id}"${id === bookId ? " selected" : ""}>${title}</option>`).join("");
+  const lessons = state.lessonCatalog.filter((item) => item.bookId === bookId);
+  const lessonId = requestedLesson && lessons.some((item) => item.lessonId === requestedLesson) ? requestedLesson : elements.lesson.value || "all";
+  elements.lesson.innerHTML = `<option value="all">本册全部课程</option>${lessons.map((item) => `<option value="${item.lessonId}"${item.lessonId === lessonId ? " selected" : ""}>${item.title}</option>`).join("")}`;
+  const selected = elements.lesson.value;
+  state.words = state.allWords.filter((word) => selected === "all" ? lessons.some((item) => item.lessonId === word.lessonId) : word.lessonId === selected);
+  elements.sourceKicker.textContent = `发展汉语 · ${lessons[0].bookTitle}`;
+  elements.setTitle.textContent = selected === "all" ? "本册已收录课程" : lessons.find((item) => item.lessonId === selected)?.title || "教材词汇";
+  if (reset) { state.round = 0; state.score = 0; state.mistakes = 0; renderRound(); }
 }
 
 function normalizePayload(payload, schema) {
@@ -122,11 +151,13 @@ async function loadSource(sourceKey) {
   try {
     if (!state.catalog) state.catalog = await fetchJson(CATALOG_URL);
     const source = state.catalog.sources[sourceKey] || state.catalog.sources.developing;
-    const payload = await fetchJson(source.dataUrl);
+    const payload = await fetchJson(new URL(source.dataUrl, new URL(CATALOG_URL, window.location.href)).href);
     if (token !== state.loadToken) return;
 
     state.source = sourceKey in state.catalog.sources ? sourceKey : "developing";
-    state.words = normalizePayload(payload, source.schema);
+    state.allWords = normalizePayload(payload, source.schema);
+    state.lessonCatalog = payload.lessonCatalog || [];
+    state.words = state.allWords;
     state.round = 0;
     state.score = 0;
     state.mistakes = 0;
@@ -140,6 +171,7 @@ async function loadSource(sourceKey) {
     url.searchParams.set("source", state.source);
     history.replaceState(null, "", url);
     localStorage.setItem("wordLinkSource", state.source);
+    applyLessonIndex({ reset: false });
     renderRound();
   } catch (error) {
     elements.feedback.textContent = `词库读取失败：${error.message}`;
@@ -148,6 +180,9 @@ async function loadSource(sourceKey) {
     if (token === state.loadToken) elements.loading.hidden = true;
   }
 }
+
+elements.book.addEventListener("change", () => { elements.lesson.value = "all"; const url = new URL(location.href); url.searchParams.delete("lesson"); history.replaceState(null, "", url); applyLessonIndex(); });
+elements.lesson.addEventListener("change", () => { const url = new URL(location.href); if (elements.lesson.value === "all") url.searchParams.delete("lesson"); else url.searchParams.set("lesson", elements.lesson.value); history.replaceState(null, "", url); applyLessonIndex(); });
 
 function clearColumns() {
   Object.values(elements.columns).forEach((column) => column.replaceChildren());

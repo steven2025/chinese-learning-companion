@@ -82,7 +82,7 @@ const viewLabels = { home: "首页", courses: "我的课程", writing: "写作�
 
 if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("../../sw.js", { scope: "../../" }).catch(() => {});
+    navigator.serviceWorker.register("../../sw.js?v=31", { scope: "../../" }).catch(() => {});
   });
 }
 const elements = {

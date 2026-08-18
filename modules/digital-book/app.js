@@ -1,4 +1,16 @@
 const LESSONS = Object.freeze({
+  "cjzh-1-1": Object.freeze({
+    number: 1,
+    topic: "你好",
+    paragraphRanges: [],
+    renderer: "pronunciation",
+  }),
+  "cjzh-1-2": Object.freeze({
+    number: 2,
+    topic: "你是哪国人？",
+    paragraphRanges: [],
+    renderer: "pronunciation",
+  }),
   "zjzh-1-1": Object.freeze({
     number: 1,
     topic: "你咋不早说",
@@ -18,7 +30,8 @@ const LESSONS = Object.freeze({
 const requestedLessonId = new URLSearchParams(window.location.search).get("lesson");
 const LESSON_ID = LESSONS[requestedLessonId] ? requestedLessonId : "zjzh-1-1";
 const LESSON = LESSONS[LESSON_ID];
-const DATA_ROOT = `../../data/lessons/${LESSON_ID}`;
+const RUNTIME_DATA_ROOT = window.HANZI_COMPANION_CONFIG?.runtimeDataRoot || "../../data";
+const DATA_ROOT = `${RUNTIME_DATA_ROOT}/lessons/${LESSON_ID}`;
 const STROKE_DATA_ROOT =
   "https://hsk-1311686407.cos.ap-guangzhou.myqcloud.com/hanzi-companion/stroke-data/v2.0.1/characters";
 
@@ -299,7 +312,7 @@ async function checkResponse(response) {
 
 async function optionalJson(url, fallback) {
   const response = await fetch(url);
-  if (response.status === 404) return fallback;
+  if (response.status === 403 || response.status === 404) return fallback;
   return checkResponse(response);
 }
 
@@ -323,37 +336,21 @@ async function loadData() {
   let practiceData;
   let practiceTranslations;
 
-  if (
-    LESSON_ID === "zjzh-1-1" &&
-    window.DIGITAL_BOOK_DATA?.practiceData &&
-    window.DIGITAL_BOOK_DATA?.practiceTranslations
-  ) {
-    ({
+  [
       audioData,
       metadata,
       textData,
       pages,
       practiceData,
       practiceTranslations,
-    } =
-      window.DIGITAL_BOOK_DATA);
-  } else {
-    [
-      audioData,
-      metadata,
-      textData,
-      pages,
-      practiceData,
-      practiceTranslations,
-    ] = await Promise.all([
+  ] = await Promise.all([
       fetch(`${DATA_ROOT}/vocabulary-audio.json`).then(checkResponse),
       fetch(`${DATA_ROOT}/vocabulary-metadata.json`).then(checkResponse),
       fetch(`${DATA_ROOT}/text-audio.json`).then(checkResponse),
       fetch(`${DATA_ROOT}/book-pages.json`).then(checkResponse),
       fetch(`${DATA_ROOT}/lesson-practice.json`).then(checkResponse),
       optionalJson(`${DATA_ROOT}/practice-intro-translations.json`, { lessonId: LESSON_ID, groups: {} }),
-    ]);
-  }
+  ]);
 
   updateLessonIdentity(pages);
   const paragraphPinyin = await optionalJson(`${DATA_ROOT}/text-pinyin.json`, { cues: {} });
@@ -3680,4 +3677,8 @@ async function loadClassSettings() {
   }
 }
 
-start();
+if (LESSON.renderer === "pronunciation" && window.PronunciationRenderer) {
+  window.PronunciationRenderer.start({ lessonId: LESSON_ID, dataRoot: DATA_ROOT });
+} else {
+  start();
+}
