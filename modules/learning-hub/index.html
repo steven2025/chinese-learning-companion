@@ -56,24 +56,24 @@
         </header>
 
         <section class="continue-panel" aria-labelledby="continueTitle">
-          <div class="course-cover" aria-hidden="true"><span>发展汉语</span><strong>中级<br>综合Ⅰ</strong></div>
+          <div class="course-cover" aria-hidden="true"><span>发展汉语</span><strong id="courseCoverTitle">中级<br>综合Ⅰ</strong></div>
           <div class="continue-copy">
             <span>上次学习</span>
             <h2 id="continueTitle">第1课 · 你咋不早说</h2>
-            <p>发展汉语 · 中级综合1</p>
+            <p id="continueMeta">发展汉语 · 中级综合1</p>
             <div class="progress-line"><i style="width: 42%"></i></div>
             <small>已完成 42% · 第42 / 99个学习单元</small>
           </div>
-          <a class="primary-button" href="../digital-book/">继续学习 <span>›</span></a>
+          <a class="primary-button" id="continueLink" href="../digital-book/?lesson=zjzh-1-1">继续学习 <span>›</span></a>
         </section>
 
         <div class="dashboard-grid">
           <section class="dashboard-section">
             <header><div><span>本周安排</span><h2>学习任务</h2></div><button type="button" data-view="courses">全部课程</button></header>
             <div class="task-list">
-              <a href="../digital-book/"><span class="task-number">01</span><span><strong>词汇与课文学习</strong><small>中级综合1 · 第1课</small></span><b>继续</b></a>
-              <a href="../digital-book/"><span class="task-number coral">02</span><span><strong>完成课后练习</strong><small>第41—48题</small></span><b>开始</b></a>
-              <a href="../character-hit/"><span class="task-number gold">03</span><span><strong>开心“打”字</strong><small>组汉字 · 辨拼音 · 认词义</small></span><b>挑战</b></a>
+              <a id="primaryTaskLink" href="../digital-book/?lesson=zjzh-1-1"><span class="task-number">01</span><span><strong>词汇与课文学习</strong><small id="primaryTaskMeta">中级综合1 · 第1课</small></span><b>继续</b></a>
+              <a id="secondaryTaskLink" href="../digital-book/?lesson=zjzh-1-1#practice"><span class="task-number coral">02</span><span><strong id="secondaryTaskTitle">完成课后练习</strong><small id="secondaryTaskMeta">第41—48题</small></span><b>开始</b></a>
+              <a id="gameTaskLink" href="../character-hit/?lesson=zjzh-1-1"><span class="task-number gold">03</span><span><strong>开心“打”字</strong><small>组汉字 · 辨拼音 · 认词义</small></span><b>挑战</b></a>
             </div>
           </section>
 
@@ -347,7 +347,7 @@
   <script src="../../config.js?v=20260818-2"></script>
   <script src="../shared/learning-api-client.js?v=20260811-7"></script>
   <script src="practice-analytics.js?v=20260811-8"></script>
-  <script src="app.js?v=20260811-6" defer></script>
+  <script src="app.js?v=20260818-8" defer></script>
   <script src="writing-zone.js?v=20260811-3" defer></script>
 </body>
 </html>

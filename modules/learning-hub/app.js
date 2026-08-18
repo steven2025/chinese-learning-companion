@@ -54,8 +54,24 @@ const catalog = [
 ];
 
 const books = catalog.flatMap((level) => level.books.map(([id, label]) => ({ id, label, level: level.id })));
-const lessonTitles = ["你咋不早说", "和时间赛跑", "租房那些事", "第4课", "第5课", "第6课", "第7课", "第8课", "第9课", "第10课", "第11课", "第12课", "第13课", "第14课"];
-const availableLessonCount = 3;
+const learningBooks = Object.freeze({
+  "beginner-comprehensive-1": {
+    lessonPrefix: "cjzh-1",
+    lessons: ["你好", "你是哪国人？"],
+    available: 2,
+    countLabel: "已开放2课",
+    contentLabel: "语音、课文、汉字",
+    cover: "初级<br>综合Ⅰ",
+  },
+  "intermediate-comprehensive-1": {
+    lessonPrefix: "zjzh-1",
+    lessons: ["你咋不早说", "和时间赛跑", "租房那些事", "第4课", "第5课", "第6课", "第7课", "第8课", "第9课", "第10课", "第11课", "第12课", "第13课", "第14课"],
+    available: 3,
+    countLabel: "共14课 · 已开放3课",
+    contentLabel: "词汇、课文、练习",
+    cover: "中级<br>综合Ⅰ",
+  },
+});
 
 function readStored(key, fallback) {
   try {
@@ -65,12 +81,14 @@ function readStored(key, fallback) {
   }
 }
 
+const storedBookId = readStored("learningHubSelectedBook", "intermediate-comprehensive-1");
+
 const state = {
   view: "home",
   role: "guest",
   userName: "",
-  selectedBookId: "intermediate-comprehensive-1",
-  openLevel: "intermediate",
+  selectedBookId: learningBooks[storedBookId] ? storedBookId : "intermediate-comprehensive-1",
+  openLevel: learningBooks[storedBookId] ? bookById(storedBookId).level : "intermediate",
   search: "",
   enrollments: readStored("learningHubStudentEnrollments", []),
   teacherContext: { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" },
@@ -100,6 +118,16 @@ const elements = {
   lessonTitle: document.querySelector("#lessonDirectoryTitle"),
   lessonCount: document.querySelector("#lessonCount"),
   lessonList: document.querySelector("#lessonList"),
+  courseCoverTitle: document.querySelector("#courseCoverTitle"),
+  continueTitle: document.querySelector("#continueTitle"),
+  continueMeta: document.querySelector("#continueMeta"),
+  continueLink: document.querySelector("#continueLink"),
+  primaryTaskLink: document.querySelector("#primaryTaskLink"),
+  primaryTaskMeta: document.querySelector("#primaryTaskMeta"),
+  secondaryTaskLink: document.querySelector("#secondaryTaskLink"),
+  secondaryTaskTitle: document.querySelector("#secondaryTaskTitle"),
+  secondaryTaskMeta: document.querySelector("#secondaryTaskMeta"),
+  gameTaskLink: document.querySelector("#gameTaskLink"),
   studentLoginForm: document.querySelector("#studentLoginForm"),
   teacherLoginForm: document.querySelector("#teacherLoginForm"),
   adminLoginForm: document.querySelector("#adminLoginForm"),
@@ -171,11 +199,15 @@ window.addEventListener("appinstalled", () => {
 });
 
 function bookById(id) {
-  return books.find((book) => book.id === id) || books[0];
+  if (id === "elementary-comprehensive-1") id = "beginner-comprehensive-1";
+  return books.find((book) => book.id === id) || books.find((book) => book.id === "intermediate-comprehensive-1");
 }
 
 function bookOptionMarkup(selected = "") {
-  return catalog.map((level) => `<optgroup label="${level.label}">${level.books.map(([id, label]) => `<option value="${id}"${id === selected ? " selected" : ""}${id !== "intermediate-comprehensive-1" ? " disabled" : ""}>发展汉语·${label}${id !== "intermediate-comprehensive-1" ? "（未开放）" : ""}</option>`).join("")}</optgroup>`).join("");
+  return catalog.map((level) => `<optgroup label="${level.label}">${level.books.map(([id, label]) => {
+    const available = Boolean(learningBooks[id]);
+    return `<option value="${id}"${id === selected ? " selected" : ""}${available ? "" : " disabled"}>发展汉语·${label}${available ? "" : "（未开放）"}</option>`;
+  }).join("")}</optgroup>`).join("");
 }
 
 function populateFormOptions() {
@@ -209,42 +241,64 @@ function renderCatalog() {
   const visibleBooks = level.books.filter(([, label]) => !query || `发展汉语 ${label}`.toLowerCase().includes(query));
   document.querySelectorAll("[data-course-level]").forEach((button) => button.classList.toggle("active", button.dataset.courseLevel === level.id));
   elements.levelCatalog.innerHTML = visibleBooks.length
-    ? `<div class="course-book-grid">${visibleBooks.map(([id, label]) => `<button class="book-choice${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${id === "intermediate-comprehensive-1" ? `第1-${availableLessonCount}课可学习` : "内容准备中"}</small></button>`).join("")}</div>`
+    ? `<div class="course-book-grid">${visibleBooks.map(([id, label]) => {
+      const learningBook = learningBooks[id];
+      return `<button class="book-choice${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${learningBook ? `第1-${learningBook.available}课可学习` : "内容准备中"}</small></button>`;
+    }).join("")}</div>`
     : '<p class="empty-state">没有找到符合条件的教材。</p>';
   renderCourseDialogLessons();
 }
 
 function renderCourseDialogLessons() {
   const book = bookById(state.selectedBookId);
-  if (book.id !== "intermediate-comprehensive-1") {
+  const learningBook = learningBooks[book.id];
+  if (!learningBook) {
     elements.courseDialogLessons.innerHTML = `<header><span>已选择</span><strong>《发展汉语·${book.label}》</strong></header><p>该教材已建立入口，内容准备中。</p>`;
     return;
   }
-  elements.courseDialogLessons.innerHTML = `<header><span>选择课次 / Lesson</span><strong>《发展汉语·${book.label}》</strong></header><div class="dialog-lesson-grid">${lessonTitles.map((title, index) => {
+  elements.courseDialogLessons.innerHTML = `<header><span>选择课次 / Lesson</span><strong>《发展汉语·${book.label}》</strong></header><div class="dialog-lesson-grid">${learningBook.lessons.map((title, index) => {
     const lessonNumber = index + 1;
-    return index < availableLessonCount
-      ? `<a href="../digital-book/?lesson=zjzh-1-${lessonNumber}"><b>${String(lessonNumber).padStart(2, "0")}</b><span>${title}</span></a>`
+    return index < learningBook.available
+      ? `<a href="../digital-book/?lesson=${learningBook.lessonPrefix}-${lessonNumber}"><b>${String(lessonNumber).padStart(2, "0")}</b><span>${title}</span></a>`
       : `<button type="button" data-unavailable-lesson="${lessonNumber}"><b>${String(lessonNumber).padStart(2, "0")}</b><span>${title}</span></button>`;
   }).join("")}</div>`;
 }
 
 function renderLessons() {
   const book = bookById(state.selectedBookId);
+  const learningBook = learningBooks[book.id];
   elements.lessonTitle.textContent = book.label;
   elements.currentBookLabel.textContent = book.label;
-  if (book.id !== "intermediate-comprehensive-1") {
+  if (!learningBook) {
     elements.lessonCount.textContent = "内容准备中";
     elements.lessonList.innerHTML = `<p class="empty-approval">《发展汉语·${book.label}》已建立入口，课程内容尚未接入。</p>`;
     elements.currentLessonLabel.textContent = "内容准备中";
     return;
   }
-  elements.lessonCount.textContent = "共14课";
-  elements.currentLessonLabel.textContent = "第1课 · 你咋不早说";
-  elements.lessonList.innerHTML = lessonTitles.map((title, index) => {
-    const available = index < availableLessonCount;
+  const firstLessonUrl = `../digital-book/?lesson=${learningBook.lessonPrefix}-1`;
+  elements.lessonCount.textContent = learningBook.countLabel;
+  elements.currentLessonLabel.textContent = `第1课 · ${learningBook.lessons[0]}`;
+  elements.courseCoverTitle.innerHTML = learningBook.cover;
+  elements.continueTitle.textContent = `第1课 · ${learningBook.lessons[0]}`;
+  elements.continueMeta.textContent = `发展汉语 · ${book.label.replace(/[（）]/g, "")}`;
+  elements.continueLink.href = firstLessonUrl;
+  elements.primaryTaskLink.href = firstLessonUrl;
+  elements.primaryTaskMeta.textContent = `${book.label.replace(/[（）]/g, "")} · 第1课`;
+  elements.gameTaskLink.href = `../character-hit/?lesson=${learningBook.lessonPrefix}-1`;
+  if (book.id === "beginner-comprehensive-1") {
+    elements.secondaryTaskLink.href = firstLessonUrl;
+    elements.secondaryTaskTitle.textContent = "完成语音练习";
+    elements.secondaryTaskMeta.textContent = "听辨音、四声与跟读";
+  } else {
+    elements.secondaryTaskLink.href = `${firstLessonUrl}#practice`;
+    elements.secondaryTaskTitle.textContent = "完成课后练习";
+    elements.secondaryTaskMeta.textContent = "第41—48题";
+  }
+  elements.lessonList.innerHTML = learningBook.lessons.map((title, index) => {
+    const available = index < learningBook.available;
     const lessonNumber = index + 1;
-    const inner = `<span>${String(index + 1).padStart(2, "0")}</span><span><strong>${title}</strong><small>${available ? "词汇、课文、练习" : "内容准备中"}</small></span><b>${available ? "进入 ›" : "未开放"}</b>`;
-    return available ? `<a class="lesson-item available" href="../digital-book/?lesson=zjzh-1-${lessonNumber}">${inner}</a>` : `<button class="lesson-item" type="button" data-unavailable-lesson="${lessonNumber}">${inner}</button>`;
+    const inner = `<span>${String(index + 1).padStart(2, "0")}</span><span><strong>${title}</strong><small>${available ? learningBook.contentLabel : "内容准备中"}</small></span><b>${available ? "进入 ›" : "未开放"}</b>`;
+    return available ? `<a class="lesson-item available" href="../digital-book/?lesson=${learningBook.lessonPrefix}-${lessonNumber}">${inner}</a>` : `<button class="lesson-item" type="button" data-unavailable-lesson="${lessonNumber}">${inner}</button>`;
   }).join("");
 }
 
@@ -252,6 +306,7 @@ function selectBook(id) {
   const book = bookById(id);
   state.selectedBookId = book.id;
   state.openLevel = book.level;
+  localStorage.setItem("learningHubSelectedBook", JSON.stringify(book.id));
   renderCatalog();
   renderLessons();
 }
@@ -313,11 +368,13 @@ function restoreStoredIdentity() {
       book: profile.bookId || "intermediate-comprehensive-1",
     };
     applyIdentity("student", state.studentProfile.chineseName);
+    if (profile.bookId && learningBooks[bookById(profile.bookId).id]) selectBook(profile.bookId);
     return;
   }
   if (profile.role === "teacher") {
     state.teacherContext = { teacher: profile.teacher || profile.name, term: profile.term || terms[0], book: profile.bookId || "intermediate-comprehensive-1" };
     applyIdentity("teacher", profile.teacher || profile.name);
+    if (profile.bookId && learningBooks[bookById(profile.bookId).id]) selectBook(profile.bookId);
     return;
   }
   if (profile.role === "admin") {
