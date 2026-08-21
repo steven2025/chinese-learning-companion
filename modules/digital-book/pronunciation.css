@@ -559,6 +559,8 @@
 .practice-support { width: min(920px, 100%); margin: 0 auto 16px; border: 1px solid #a9cec7; border-radius: 12px; background: #f4fbf9; overflow: hidden; }
 .practice-support summary { padding: 11px 15px; color: #086f68; font-weight: 850; cursor: pointer; }
 .practice-support summary .bilingual-button-label { display: inline-flex; align-items: baseline; gap: 6px; }
+.practice-language-title { display: inline-flex; align-items: baseline; gap: 8px; }
+.practice-language-title small { color: #527773; font-size: 11px; font-weight: 700; }
 .practice-support-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding: 0 13px 13px; }
 .practice-support-grid section { padding: 10px 12px; border-radius: 9px; background: #fff; }
 .practice-support-grid b small { color: #718684; }
@@ -566,6 +568,9 @@
 .practice-support-grid ul { padding-left: 20px; }
 .practice-support-note { grid-column: 1 / -1; margin: 0; color: #718684; font-size: 12px; }
 .practice-support-note small { display: block; }
+.practice-language-ready, .practice-language-fallback { grid-column: 1 / -1; margin: 0; padding: 7px 10px; border-radius: 8px; font-size: 12px; font-weight: 750; }
+.practice-language-ready { color: #08776f; background: #dcf3ee; }
+.practice-language-fallback { color: #9f3e2e; background: #fff0eb; }
 .practice-frame { color: #9f3e2e; font-weight: 800; }
 .practice-answer-modes { display: flex; justify-content: center; gap: 8px; margin: 0 auto 15px; }
 .practice-answer-modes button { min-width: 126px; padding: 8px 13px; border: 1px solid #a9c4c0; border-radius: 10px; background: #fff; color: #34504f; cursor: pointer; }

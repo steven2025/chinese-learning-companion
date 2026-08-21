@@ -33,6 +33,7 @@
     model: null,
     contentModel: null,
     practiceModel: null,
+    practiceTranslations: null,
     cues: new Map(),
     textCues: new Map(),
     units: [],
@@ -704,13 +705,17 @@
   }
 
   function renderPracticeSupport(item) {
-    const support = item.support || {};
+    const translated = state.practiceTranslations?.items?.[item.id]?.[state.locale] || null;
+    const support = translated ? { ...(item.support || {}), ...translated } : (item.support || {});
     const keywords = support.keywords || [];
-    return `<details class="practice-support"><summary>🌐 ${bilingual("母语帮助","Language help")}</summary><div class="practice-support-grid">
-      <section><b>① 任务说明 <small>Task</small></b><p>${escapeHtml(localize(support.instruction || item.instruction || item.title))}</p></section>
-      ${keywords.length ? `<section><b>② 关键词 <small>Key words</small></b><ul>${keywords.map((word) => `<li><strong>${escapeHtml(word.hanzi)}</strong> ${escapeHtml(word.pinyin || "")} · ${escapeHtml(localize(word.meaning))}</li>`).join("")}</ul></section>` : ""}
-      ${support.tip ? `<section><b>③ 语法与文化提示 <small>Grammar & culture</small></b><p>${escapeHtml(localize(support.tip))}</p></section>` : ""}
-      ${support.frame ? `<section><b>④ 作答框架 <small>Sentence frame</small></b><p class="practice-frame">${escapeHtml(localize(support.frame))}</p></section>` : ""}
+    const labels = state.practiceTranslations?.labels?.[state.locale] || state.practiceTranslations?.labels?.en || { help: "Language help", task: "Task", keywords: "Key words", tip: "Grammar & culture", frame: "Sentence frame" };
+    const fallback = state.locale !== "en" && !translated;
+    return `<details class="practice-support"><summary>🌐 <span class="practice-language-title"><strong>${escapeHtml(labels.help)}</strong><small>${escapeHtml(languageNames[state.locale] || "English")}</small></span></summary><div class="practice-support-grid">
+      ${fallback ? `<p class="practice-language-fallback">该语言数据暂缺，当前显示英文。 / Translation unavailable; showing English.</p>` : `<p class="practice-language-ready">✓ ${escapeHtml(languageNames[state.locale] || "English")}</p>`}
+      <section><b>① ${escapeHtml(labels.task)}</b><p>${escapeHtml(localize(support.instruction || item.instruction || item.title))}</p></section>
+      ${keywords.length ? `<section><b>② ${escapeHtml(labels.keywords)}</b><ul>${keywords.map((word) => `<li><strong>${escapeHtml(word.hanzi)}</strong> ${escapeHtml(word.pinyin || "")} · ${escapeHtml(localize(word.meaning))}</li>`).join("")}</ul></section>` : ""}
+      ${support.tip ? `<section><b>③ ${escapeHtml(labels.tip)}</b><p>${escapeHtml(localize(support.tip))}</p></section>` : ""}
+      ${support.frame ? `<section><b>④ ${escapeHtml(labels.frame)}</b><p class="practice-frame">${escapeHtml(localize(support.frame))}</p></section>` : ""}
       <p class="practice-support-note">完整答案和解析只在提交后显示，避免直接透露答案。<small>Full answers appear only after submission.</small></p></div></details>`;
   }
 
@@ -1700,10 +1705,11 @@
       const comparisonUrl = `${runtimeRoot}/pronunciation/native-language-comparisons.json`;
       const dataVersion = new URLSearchParams(window.location.search).get("v") || "current";
       const lessonDataUrl = (name) => `${dataRoot}/${name}?v=${encodeURIComponent(dataVersion)}`;
-      const [pagesResponse, pronunciationResponse, contentResponse, practiceResponse, comparisonResponse] = await Promise.all([
+      const [pagesResponse, pronunciationResponse, contentResponse, practiceResponse, practiceTranslationsResponse, comparisonResponse] = await Promise.all([
         fetch(lessonDataUrl("book-pages.json")), fetch(lessonDataUrl("pronunciation.json")),
         fetch(lessonDataUrl("lesson-content.json")).catch(() => null),
         fetch(lessonDataUrl("lesson-practice.json")).catch(() => null),
+        fetch(lessonDataUrl("practice-translations.json")).catch(() => null),
         fetch(comparisonUrl).catch(() => null),
       ]);
       if (!pagesResponse.ok || !pronunciationResponse.ok) throw new Error("初级语音课程数据不完整");
@@ -1711,6 +1717,7 @@
       state.model = await pronunciationResponse.json();
       state.contentModel = contentResponse?.ok ? await contentResponse.json() : null;
       state.practiceModel = practiceResponse?.ok ? await practiceResponse.json() : null;
+      state.practiceTranslations = practiceTranslationsResponse?.ok ? await practiceTranslationsResponse.json() : null;
       if (comparisonResponse?.ok) {
         const sharedComparisons = await comparisonResponse.json();
         if (sharedComparisons?.concepts) state.model.comparisonConcepts = sharedComparisons.concepts;
