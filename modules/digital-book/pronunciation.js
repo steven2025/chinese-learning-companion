@@ -32,6 +32,7 @@
   const state = {
     model: null,
     contentModel: null,
+    practiceModel: null,
     cues: new Map(),
     textCues: new Map(),
     units: [],
@@ -42,6 +43,7 @@
     oralAnswerChoices: {},
     assessmentUsage: {},
     characterIndex: 0,
+    practiceIndex: 0,
     groupIndices: {},
     selectedItems: {},
     locale: localStorage.getItem("digitalBookLocale") || "en",
@@ -97,6 +99,22 @@
 
   function characterPart() {
     return state.contentModel?.parts?.find((part) => part.id === "characters") || null;
+  }
+
+  function practiceSections() {
+    return state.practiceModel?.sections || [];
+  }
+
+  function practiceItems() {
+    return practiceSections().flatMap((section) => (section.items || []).map((item) => ({
+      ...item,
+      sectionId: section.id,
+      sectionTitle: section.title,
+    })));
+  }
+
+  function currentPracticeItem() {
+    return practiceItems()[state.practiceIndex] || practiceItems()[0] || null;
   }
 
   function textSections() {
@@ -598,6 +616,144 @@
     </article>`;
   }
 
+  function renderGuidedDialoguePractice(item) {
+    const saved = localStorage.getItem(`beginnerPractice:${state.model.lessonId}:${item.id}`) || "";
+    return `<div class="beginner-practice-dialogue">
+      ${(item.prompts || []).map((line) => `<div class="practice-dialogue-line"><b>${escapeHtml(line.role)}</b><span><strong>${escapeHtml(line.hanzi)}</strong><small>${escapeHtml(line.pinyin)}</small></span></div>`).join("")}
+      <label class="practice-open-field"><span>写下你和同学的对话 <small>Write your dialogue</small></span><textarea rows="4" data-practice-open placeholder="A：……\nB：……">${escapeHtml(saved)}</textarea></label>
+    </div>`;
+  }
+
+  function renderNameSplitPractice(item) {
+    return `<div class="practice-name-grid">
+      ${(item.people || []).map((person) => `<article class="practice-name-card" data-name-person="${escapeHtml(person.id)}">
+        <header><strong>${escapeHtml(person.name)}</strong><small>${escapeHtml(person.pinyin)}</small></header>
+        <label><span>姓 <small>Surname</small></span><input data-name-surname autocomplete="off"></label>
+        <label><span>名字 <small>Given name</small></span><input data-name-given autocomplete="off"></label>
+      </article>`).join("")}
+    </div>`;
+  }
+
+  function renderPinyinTonePractice(item) {
+    return `<p class="practice-instruction">${escapeHtml(localize(item.instruction, "zh-CN"))}<small>${escapeHtml(localize(item.instruction, "en"))}</small></p>
+      <div class="practice-pinyin-grid">
+        ${(item.items || []).map((entry) => `<article class="practice-pinyin-card" data-pinyin-item="${escapeHtml(entry.id)}">
+          <strong>${escapeHtml(entry.hanzi)}</strong>
+          <label><span>拼音</span><input data-pinyin-syllable inputmode="text" autocomplete="off" placeholder="例如 qing"></label>
+          <label><span>声调</span><select data-pinyin-tone><option value="">选择</option><option value="0">轻声</option><option value="1">1声</option><option value="2">2声</option><option value="3">3声</option><option value="4">4声</option></select></label>
+          <p class="practice-item-feedback" aria-live="polite"></p>
+        </article>`).join("")}
+      </div>`;
+  }
+
+  function renderDialogueFillPractice(item) {
+    return `<div class="practice-dialogue-list">
+      ${(item.dialogues || []).map((dialogue, dialogueIndex) => `<article class="practice-fill-dialogue" data-dialogue-id="${escapeHtml(dialogue.id)}">
+        <h3>对话 ${dialogueIndex + 1} <small>Dialogue ${dialogueIndex + 1}</small></h3>
+        <div class="practice-dialogue-copy">${dialogue.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div>
+        <div class="practice-blank-list">${dialogue.blanks.map((blank, index) => `<label data-dialogue-blank="${escapeHtml(blank.id)}"><span>第 ${index + 1} 空</span><input autocomplete="off"></label>`).join("")}</div>
+      </article>`).join("")}
+    </div>`;
+  }
+
+  function renderOpenResponsePractice(item) {
+    const saved = localStorage.getItem(`beginnerPractice:${state.model.lessonId}:${item.id}`) || "";
+    return `<div class="practice-open-response"><p>${escapeHtml(localize(item.prompt, "zh-CN"))}</p><small>${escapeHtml(localize(item.prompt, "en"))}</small><textarea rows="6" data-practice-open placeholder="例如：他姓成，叫成龙。">${escapeHtml(saved)}</textarea></div>`;
+  }
+
+  function renderPracticeBody(item) {
+    if (item.type === "guidedDialogue") return renderGuidedDialoguePractice(item);
+    if (item.type === "nameSplit") return renderNameSplitPractice(item);
+    if (item.type === "pinyinTone") return renderPinyinTonePractice(item);
+    if (item.type === "dialogueFill") return renderDialogueFillPractice(item);
+    return renderOpenResponsePractice(item);
+  }
+
+  function renderPracticePart() {
+    const items = practiceItems();
+    const item = currentPracticeItem();
+    if (!item) return `<p class="load-error">本课练习数据尚未准备好。</p>`;
+    return `<article class="beginner-practice-stage">
+      <header class="beginner-practice-heading"><span>${escapeHtml(localize(item.sectionTitle, "zh-CN"))}<small>${escapeHtml(localize(item.sectionTitle, "en"))}</small></span><h2>${escapeHtml(localize(item.title, "zh-CN"))}</h2><p>${escapeHtml(localize(item.title, "en"))}</p></header>
+      <div class="beginner-practice-body">${renderPracticeBody(item)}</div>
+      <footer class="beginner-practice-actions"><button type="button" class="pron-action primary" data-practice-submit>✓ ${bilingual(item.type === "openResponse" || item.type === "guidedDialogue" ? "保存练习" : "确认答案", item.type === "openResponse" || item.type === "guidedDialogue" ? "Save" : "Check answers")}</button><p id="practiceResult" aria-live="polite"></p></footer>
+      <nav class="beginner-item-strip practice-item-strip" aria-label="选择练习">${items.map((entry, index) => `<button type="button" class="${index === state.practiceIndex ? "active" : ""}" data-practice-item="${index}"><strong>${String(index + 1).padStart(2, "0")}</strong><small>${escapeHtml(localize(entry.title, "zh-CN"))}</small></button>`).join("")}</nav>
+    </article>`;
+  }
+
+  function normalizePracticeAnswer(value) {
+    return String(value || "").trim().toLowerCase().replace(/[\s，。！？、,.!?]/g, "");
+  }
+
+  function submitPracticeAnswer() {
+    const item = currentPracticeItem();
+    const result = document.querySelector("#practiceResult");
+    if (!item || !result) return;
+    if (item.type === "guidedDialogue" || item.type === "openResponse") {
+      const value = elements.unitContent.querySelector("[data-practice-open]")?.value.trim() || "";
+      if (!value) { result.textContent = "请先完成内容。 / Please complete the activity first."; result.className = "is-error"; return; }
+      localStorage.setItem(`beginnerPractice:${state.model.lessonId}:${item.id}`, value);
+      result.textContent = "已保存本次练习。 / Saved.";
+      result.className = "is-correct";
+      return;
+    }
+    let correct = 0;
+    let total = 0;
+    if (item.type === "nameSplit") {
+      (item.people || []).forEach((person) => {
+        const card = elements.unitContent.querySelector(`[data-name-person="${person.id}"]`);
+        const surnameOk = normalizePracticeAnswer(card?.querySelector("[data-name-surname]")?.value) === normalizePracticeAnswer(person.surname);
+        const givenValue = normalizePracticeAnswer(card?.querySelector("[data-name-given]")?.value);
+        const givenOk = [person.givenName, person.name].some((answer) => normalizePracticeAnswer(answer) === givenValue);
+        card?.classList.toggle("is-correct", surnameOk && givenOk);
+        card?.classList.toggle("is-wrong", !(surnameOk && givenOk));
+        correct += Number(surnameOk) + Number(givenOk);
+        total += 2;
+      });
+    } else if (item.type === "pinyinTone") {
+      (item.items || []).forEach((entry) => {
+        const card = elements.unitContent.querySelector(`[data-pinyin-item="${entry.id}"]`);
+        const syllableOk = normalizePracticeAnswer(card?.querySelector("[data-pinyin-syllable]")?.value) === normalizePracticeAnswer(entry.answer.syllable);
+        const toneOk = Number(card?.querySelector("[data-pinyin-tone]")?.value) === Number(entry.answer.tone);
+        const ok = syllableOk && toneOk;
+        card?.classList.toggle("is-correct", ok);
+        card?.classList.toggle("is-wrong", !ok);
+        const feedback = card?.querySelector(".practice-item-feedback");
+        if (feedback) feedback.textContent = ok ? `正确：${entry.answer.display}` : `再想一想。提示答案：${entry.answer.display}`;
+        correct += Number(ok);
+        total += 1;
+      });
+    } else if (item.type === "dialogueFill") {
+      (item.dialogues || []).forEach((dialogue) => dialogue.blanks.forEach((blank) => {
+        const field = elements.unitContent.querySelector(`[data-dialogue-blank="${blank.id}"]`);
+        const value = normalizePracticeAnswer(field?.querySelector("input")?.value);
+        const ok = blank.answers.some((answer) => normalizePracticeAnswer(answer) === value);
+        field?.classList.toggle("is-correct", ok);
+        field?.classList.toggle("is-wrong", !ok);
+        correct += Number(ok);
+        total += 1;
+      }));
+    }
+    result.textContent = `完成 ${correct} / ${total}。${correct === total ? " 全部正确！" : " 请根据标记修改后再试。"} / ${correct} of ${total} correct.`;
+    result.className = correct === total ? "is-correct" : "is-error";
+  }
+
+  function renderPracticeWorkspace() {
+    const items = practiceItems();
+    const item = currentPracticeItem();
+    elements.unitKicker.textContent = `${localize(item?.sectionTitle, "zh-CN")} · 课后练习`;
+    elements.unitTitle.textContent = localize(item?.title, "zh-CN");
+    elements.unitProgress.textContent = `第 ${state.practiceIndex + 1} / ${items.length} 个练习`;
+    elements.footerProgress.textContent = `${state.practiceIndex + 1} / ${items.length}`;
+    elements.unitSelect.innerHTML = items.map((entry, index) => `<option value="${index}">${String(index + 1).padStart(2, "0")} ${escapeHtml(localize(entry.title, "zh-CN"))}</option>`).join("");
+    elements.unitSelect.value = String(state.practiceIndex);
+    elements.previous.disabled = state.practiceIndex === 0;
+    elements.next.disabled = state.practiceIndex === items.length - 1;
+    elements.unitContent.innerHTML = renderPracticePart();
+    elements.audioDock.hidden = true;
+    state.audioSegment = null;
+  }
+
   function renderPartNavigationState() {
     document.querySelectorAll(".section-tabs [data-pron-part]").forEach((button) => {
       button.classList.toggle("active", button.dataset.pronPart === state.activePart);
@@ -631,6 +787,11 @@
 
   function render() {
     renderPartNavigationState();
+    if (state.activePart === "practice") {
+      document.querySelectorAll("[data-assist-mode]").forEach((button) => button.classList.toggle("active", button.dataset.assistMode === state.assistMode));
+      renderPracticeWorkspace();
+      return;
+    }
     if (state.activePart !== "phonetics") {
       document.querySelectorAll("[data-assist-mode]").forEach((button) => button.classList.toggle("active", button.dataset.assistMode === state.assistMode));
       renderContentPart();
@@ -663,6 +824,7 @@
   }
 
   function currentPlayableCue() {
+    if (state.activePart === "practice") return null;
     if (state.activePart === "texts") {
       const item = currentTextItem();
       return item?.cueId ? cueFor(item.cueId) : null;
@@ -1262,6 +1424,7 @@
       dismissPinyinAssessment();
       if (state.activePart === "phonetics") state.unitIndex = Number(elements.unitSelect.value);
       else if (state.activePart === "texts") state.textItemIndex = Number(elements.unitSelect.value);
+      else if (state.activePart === "practice") state.practiceIndex = Number(elements.unitSelect.value);
       else state.characterIndex = Number(elements.unitSelect.value);
       stopAudio();
       state.audioSegment = null;
@@ -1269,15 +1432,18 @@
       resetLearningScroll();
     });
     elements.previous.addEventListener("click", () => {
-      const key = state.activePart === "phonetics" ? "unitIndex" : state.activePart === "texts" ? "textItemIndex" : "characterIndex";
+      const key = state.activePart === "phonetics" ? "unitIndex" : state.activePart === "texts" ? "textItemIndex" : state.activePart === "practice" ? "practiceIndex" : "characterIndex";
       if (state[key] > 0) { dismissPinyinAssessment(); state[key] -= 1; stopAudio(); state.audioSegment = null; render(); resetLearningScroll(); }
     });
     elements.next.addEventListener("click", () => {
-      const key = state.activePart === "phonetics" ? "unitIndex" : state.activePart === "texts" ? "textItemIndex" : "characterIndex";
-      const length = state.activePart === "phonetics" ? state.units.length : state.activePart === "texts" ? textItems().length : (characterPart()?.items?.length || 0);
+      const key = state.activePart === "phonetics" ? "unitIndex" : state.activePart === "texts" ? "textItemIndex" : state.activePart === "practice" ? "practiceIndex" : "characterIndex";
+      const length = state.activePart === "phonetics" ? state.units.length : state.activePart === "texts" ? textItems().length : state.activePart === "practice" ? practiceItems().length : (characterPart()?.items?.length || 0);
       if (state[key] < length - 1) { dismissPinyinAssessment(); state[key] += 1; stopAudio(); state.audioSegment = null; render(); resetLearningScroll(); }
     });
     elements.unitContent.addEventListener("click", (event) => {
+      const practiceItem = event.target.closest("[data-practice-item]")?.dataset.practiceItem;
+      if (practiceItem !== undefined) { state.practiceIndex = Number(practiceItem); render(); resetLearningScroll(); return; }
+      if (event.target.closest("[data-practice-submit]")) { submitPracticeAnswer(); return; }
       const textGroup = event.target.closest("[data-text-group]")?.dataset.textGroup;
       if (textGroup) {
         const group = textSection()?.groups?.find((entry) => entry.id === textGroup);
@@ -1352,7 +1518,7 @@
     elements.continuous.addEventListener("click", () => {
       const ids = state.activePart === "phonetics" ? selectableItems().map((item) => item.cueId).filter(Boolean)
         : state.activePart === "texts" ? (textGroupForItem(currentTextItem())?.itemIds || []).map((id) => textItems().find((item) => item.id === id)?.cueId).filter(Boolean)
-          : (characterPart()?.items || []).map((item) => item.cueId).filter(Boolean);
+          : state.activePart === "practice" ? [] : (characterPart()?.items || []).map((item) => item.cueId).filter(Boolean);
       playQueue(ids);
     });
     elements.loop.addEventListener("click", () => { state.loop = !state.loop; updateAudioLabels(); });
@@ -1416,8 +1582,8 @@
     });
     window.addEventListener("keydown", (event) => {
       if (["INPUT", "SELECT", "TEXTAREA"].includes(event.target.tagName)) return;
-      const key = state.activePart === "phonetics" ? "unitIndex" : state.activePart === "texts" ? "textItemIndex" : "characterIndex";
-      const length = state.activePart === "phonetics" ? state.units.length : state.activePart === "texts" ? textItems().length : (characterPart()?.items?.length || 0);
+      const key = state.activePart === "phonetics" ? "unitIndex" : state.activePart === "texts" ? "textItemIndex" : state.activePart === "practice" ? "practiceIndex" : "characterIndex";
+      const length = state.activePart === "phonetics" ? state.units.length : state.activePart === "texts" ? textItems().length : state.activePart === "practice" ? practiceItems().length : (characterPart()?.items?.length || 0);
       if (event.key === "ArrowLeft" && state[key] > 0) { state[key] -= 1; stopAudio(); state.audioSegment = null; render(); }
       if (event.key === "ArrowRight" && state[key] < length - 1) { state[key] += 1; stopAudio(); state.audioSegment = null; render(); }
     });
@@ -1428,10 +1594,15 @@
     document.querySelector(".brand-link small").textContent = `初级综合1 · 第${state.model.lessonNumber}课`;
     const hasTexts = Boolean(textPart());
     const hasCharacters = Boolean(characterPart());
+    const hasPractice = Boolean(practiceItems().length);
+    const textPartTitle = textPart()?.title || {};
+    const textPartLabel = localize(textPartTitle, "zh-CN") || "学习课文";
+    const textPartLabelEn = localize(textPartTitle, "en") || "Texts";
     document.querySelector(".section-tabs").innerHTML = `
       <button type="button" class="active" data-pron-part="phonetics">${bilingual("学习语音", "Phonetics")}</button>
-      <button type="button" data-pron-part="texts"${hasTexts ? "" : " disabled"}>${bilingual("学习课文", hasTexts ? "Texts" : "Coming soon")}</button>
-      <button type="button" data-pron-part="characters"${hasCharacters ? "" : " disabled"}>${bilingual("学写汉字", hasCharacters ? "Character writing" : "Coming soon")}</button>`;
+      <button type="button" data-pron-part="texts"${hasTexts ? "" : " disabled"}>${bilingual(textPartLabel, hasTexts ? textPartLabelEn : "Coming soon")}</button>
+      <button type="button" data-pron-part="characters"${hasCharacters ? "" : " disabled"}>${bilingual("学写汉字", hasCharacters ? "Character writing" : "Coming soon")}</button>
+      <button type="button" data-pron-part="practice"${hasPractice ? "" : " disabled"}>${bilingual("课后练习", hasPractice ? "Exercises" : "Coming soon")}</button>`;
     elements.languageSelect.innerHTML = Object.entries(languageNames).map(([code, name]) => `<option value="${code}">${escapeHtml(name)}</option>`).join("");
     if (!languageNames[state.locale]) state.locale = "en";
     elements.languageSelect.value = state.locale;
@@ -1461,15 +1632,17 @@
       const comparisonUrl = `${runtimeRoot}/pronunciation/native-language-comparisons.json`;
       const dataVersion = new URLSearchParams(window.location.search).get("v") || "current";
       const lessonDataUrl = (name) => `${dataRoot}/${name}?v=${encodeURIComponent(dataVersion)}`;
-      const [pagesResponse, pronunciationResponse, contentResponse, comparisonResponse] = await Promise.all([
+      const [pagesResponse, pronunciationResponse, contentResponse, practiceResponse, comparisonResponse] = await Promise.all([
         fetch(lessonDataUrl("book-pages.json")), fetch(lessonDataUrl("pronunciation.json")),
         fetch(lessonDataUrl("lesson-content.json")).catch(() => null),
+        fetch(lessonDataUrl("lesson-practice.json")).catch(() => null),
         fetch(comparisonUrl).catch(() => null),
       ]);
       if (!pagesResponse.ok || !pronunciationResponse.ok) throw new Error("初级语音课程数据不完整");
       const pages = await pagesResponse.json();
       state.model = await pronunciationResponse.json();
       state.contentModel = contentResponse?.ok ? await contentResponse.json() : null;
+      state.practiceModel = practiceResponse?.ok ? await practiceResponse.json() : null;
       if (comparisonResponse?.ok) {
         const sharedComparisons = await comparisonResponse.json();
         if (sharedComparisons?.concepts) state.model.comparisonConcepts = sharedComparisons.concepts;

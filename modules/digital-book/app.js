@@ -11,6 +11,12 @@ const LESSONS = Object.freeze({
     paragraphRanges: [],
     renderer: "pronunciation",
   }),
+  "cjzh-1-3": Object.freeze({
+    number: 3,
+    topic: "你叫什么名字？",
+    paragraphRanges: [],
+    renderer: "pronunciation",
+  }),
   "zjzh-1-1": Object.freeze({
     number: 1,
     topic: "你咋不早说",

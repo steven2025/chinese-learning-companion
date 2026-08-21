@@ -402,6 +402,14 @@
 .beginner-oral-strip button { width: 58px; min-width: 58px; }
 .beginner-oral-strip button small { overflow: visible; font-size: 9px; }
 @media (max-width: 760px) {
+  .beginner-practice-stage { padding-inline: 10px; }
+  .beginner-practice-heading { display: block; }
+  .beginner-practice-heading h2 { margin-top: 7px; font-size: 23px; }
+  .beginner-practice-body { min-height: 300px; }
+  .practice-name-grid, .practice-pinyin-grid, .practice-dialogue-list { grid-template-columns: 1fr; }
+  .practice-blank-list { grid-template-columns: 1fr; }
+  .beginner-practice-actions { align-items: stretch; flex-direction: column; }
+  .beginner-practice-actions .pron-action { width: 100%; }
   .beginner-oral-stage { grid-template-columns: 1fr; }
   .beginner-oral-stage > .beginner-section-tabs,
   .beginner-oral-stage > .beginner-oral-strip,
@@ -503,7 +511,54 @@
   .tone-marking-stage .pron-answer-feedback { grid-column: 1 / -1; margin: 3px 0 0; }
 }
 
+.beginner-practice-stage { width: min(1120px, 100%); margin: 0 auto; padding: 12px 18px 20px; color: #173436; }
+.beginner-practice-heading { display: grid; grid-template-columns: minmax(170px, .32fr) 1fr; align-items: end; gap: 2px 22px; padding: 4px 2px 13px; border-bottom: 1px solid var(--pron-line); }
+.beginner-practice-heading > span { grid-row: 1 / 3; align-self: center; color: #a53d2c; font-weight: 800; }
+.beginner-practice-heading span small, .beginner-practice-heading p { display: block; margin: 3px 0 0; color: #718684; font-size: 12px; font-weight: 600; }
+.beginner-practice-heading h2 { margin: 0; font: 800 27px/1.2 "Noto Sans SC", sans-serif; }
+.beginner-practice-body { min-height: 360px; padding: 18px 0 12px; }
+.beginner-practice-actions { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 10px 0 14px; border-top: 1px solid var(--pron-line); }
+.beginner-practice-actions .pron-action { width: auto; min-width: 170px; }
+.beginner-practice-actions p { margin: 0; font-size: 15px; font-weight: 750; }
+.beginner-practice-actions .is-correct, .practice-item-feedback { color: #08776f; }
+.beginner-practice-actions .is-error { color: #b44634; }
+.practice-dialogue-line { display: grid; grid-template-columns: 42px 1fr; align-items: start; gap: 12px; width: min(760px, 100%); margin: 0 auto 9px; padding: 12px 16px; border: 1px solid #cbdad7; border-radius: 10px; background: #fff; }
+.practice-dialogue-line > b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #dff3ef; color: #08776f; }
+.practice-dialogue-line strong, .practice-dialogue-line small { display: block; }
+.practice-dialogue-line strong { font-size: 19px; }
+.practice-dialogue-line small { margin-top: 3px; color: #718684; font-size: 13px; }
+.practice-open-field, .practice-open-response { display: block; width: min(760px, 100%); margin: 16px auto 0; }
+.practice-open-field > span { display: block; margin-bottom: 7px; font-weight: 750; }
+.practice-open-field small, .practice-open-response > small { color: #718684; }
+.practice-open-field textarea, .practice-open-response textarea { width: 100%; margin-top: 8px; padding: 13px 15px; border: 1px solid #b7cbc7; border-radius: 10px; background: #fff; color: #173436; font: 600 16px/1.7 inherit; resize: vertical; }
+.practice-name-grid { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 10px; }
+.practice-name-card, .practice-pinyin-card, .practice-fill-dialogue { padding: 14px; border: 1px solid #cbdad7; border-radius: 12px; background: #fff; transition: border-color .2s, box-shadow .2s; }
+.practice-name-card.is-correct, .practice-pinyin-card.is-correct, [data-dialogue-blank].is-correct { border-color: #3b9d8f; box-shadow: inset 0 -3px #3b9d8f; }
+.practice-name-card.is-wrong, .practice-pinyin-card.is-wrong, [data-dialogue-blank].is-wrong { border-color: #d77d69; box-shadow: inset 0 -3px #d77d69; }
+.practice-name-card header strong, .practice-name-card header small { display: block; }
+.practice-name-card header strong { font: 800 28px/1.1 "STKaiti", "KaiTi", serif; }
+.practice-name-card header small { margin-top: 4px; color: #718684; }
+.practice-name-card label, .practice-pinyin-card label, .practice-blank-list label { display: grid; gap: 5px; margin-top: 10px; font-size: 13px; font-weight: 750; }
+.practice-name-card input, .practice-pinyin-card input, .practice-pinyin-card select, .practice-blank-list input { min-width: 0; height: 38px; padding: 0 10px; border: 1px solid #b7cbc7; border-radius: 7px; background: #fbfdfc; color: #173436; font-size: 15px; }
+.practice-instruction { margin: 0 0 14px; text-align: center; font-weight: 750; }
+.practice-instruction small { display: block; margin-top: 4px; color: #718684; font-size: 12px; }
+.practice-pinyin-grid { display: grid; grid-template-columns: repeat(4, minmax(165px, 1fr)); gap: 9px; }
+.practice-pinyin-card { display: grid; grid-template-columns: 58px 1fr; gap: 4px 10px; align-items: center; }
+.practice-pinyin-card > strong { grid-row: 1 / 3; font: 800 43px/1 "STKaiti", "KaiTi", serif; text-align: center; }
+.practice-pinyin-card label { margin-top: 0; grid-template-columns: 42px 1fr; align-items: center; }
+.practice-pinyin-card .practice-item-feedback { grid-column: 1 / -1; min-height: 18px; margin: 4px 0 0; font-size: 12px; }
+.practice-dialogue-list { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 14px; }
+.practice-fill-dialogue h3 { margin: 0 0 10px; color: #a53d2c; }
+.practice-fill-dialogue h3 small { color: #718684; font-size: 12px; }
+.practice-dialogue-copy { padding: 10px 12px; border-radius: 8px; background: #f1f7f5; }
+.practice-dialogue-copy p { margin: 5px 0; font-size: 16px; font-weight: 650; }
+.practice-blank-list { display: grid; grid-template-columns: repeat(2, minmax(110px, 1fr)); gap: 8px; }
+.practice-blank-list label { padding: 8px; border: 1px solid transparent; border-radius: 8px; }
+.practice-open-response > p { margin: 0; font-size: 20px; font-weight: 750; }
+.practice-item-strip { margin-top: 4px; }
+
 @media (max-width: 1050px) {
+  .practice-name-grid, .practice-pinyin-grid { grid-template-columns: repeat(3, minmax(160px, 1fr)); }
   .pron-pair-grid { grid-template-columns: repeat(2, minmax(190px, 1fr)); }
   .pron-focus-content h2 { font-size: 64px; }
   .pron-chart-grid { grid-template-columns: repeat(6, minmax(70px, 1fr)); }
