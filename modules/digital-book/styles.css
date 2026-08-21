@@ -52,7 +52,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 
 .section-tabs, .assist-switch {
   display: grid;
-  grid-template-columns: repeat(3, auto);
+  grid-template-columns: repeat(4, minmax(0, auto));
   padding: 3px;
   border: 1px solid rgba(255, 255, 255, .2);
   border-radius: 7px;
@@ -781,7 +781,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 @media (max-width: 760px) {
   .book-toolbar { position: static; min-height: 0; grid-template-columns: 1fr; gap: 9px; padding: 9px 12px 12px; }
   .brand-link { justify-content: center; }
-  .section-tabs { width: 100%; grid-template-columns: repeat(3, 1fr); }
+  .section-tabs { width: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .toolbar-settings { width: 100%; grid-column: auto; }
   .assist-switch { flex: 1; grid-template-columns: repeat(3, 1fr); }
   .assist-switch button { padding-inline: 6px; font-size: 10px; }
@@ -864,7 +864,7 @@ button:disabled { filter: grayscale(.18); }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5px 14px;
+  padding: 5px 11px;
   color: #fff;
   border: 1px solid rgba(255,255,255,.28);
   box-shadow: inset 0 1px rgba(255,255,255,.28), 0 4px 0 rgba(0,0,0,.25);
@@ -872,6 +872,7 @@ button:disabled { filter: grayscale(.18); }
 .section-tabs button:nth-child(1), .assist-switch button:nth-child(2) { background: #147d75; }
 .section-tabs button:nth-child(2), .assist-switch button:nth-child(1) { background: #c75840; }
 .section-tabs button:nth-child(3), .assist-switch button:nth-child(3) { background: #9b6c19; }
+.section-tabs button:nth-child(4) { background: #6756a8; }
 .section-tabs button.active, .assist-switch button.active {
   color: #172a2c;
   border-color: #fff;
@@ -1029,7 +1030,7 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
 @media (max-width: 760px) {
   .book-toolbar { grid-template-columns: 1fr; }
   .brand-link { justify-content: center; }
-  .section-tabs { width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .section-tabs { width: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .section-tabs button, .assist-switch button { min-height: 48px; padding: 5px 7px; }
   .toolbar-settings { display: grid; grid-template-columns: minmax(0, 1fr) 120px; }
   .language-select { width: 120px; min-width: 120px; }

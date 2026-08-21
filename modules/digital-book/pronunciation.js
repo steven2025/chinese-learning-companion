@@ -44,6 +44,7 @@
     assessmentUsage: {},
     characterIndex: 0,
     practiceIndex: 0,
+    practiceModes: {},
     groupIndices: {},
     selectedItems: {},
     locale: localStorage.getItem("digitalBookLocale") || "en",
@@ -618,6 +619,14 @@
 
   function renderGuidedDialoguePractice(item) {
     const saved = localStorage.getItem(`beginnerPractice:${state.model.lessonId}:${item.id}`) || "";
+    if (state.model.lessonId === "cjzh-1-3") {
+      const mode = state.practiceModes[item.id] || "cards";
+      const cards = item.answerCards || ["我姓王。", "我叫王小明。", "你呢？", "认识你很高兴。"];
+      return `${renderPracticeSupport(item)}${renderPracticeModes(item, mode)}<div class="beginner-practice-dialogue">
+        ${(item.prompts || []).map((line) => `<div class="practice-dialogue-line"><b>${escapeHtml(line.role)}</b><span><strong>${escapeHtml(line.hanzi)}</strong><small>${escapeHtml(line.pinyin)}</small></span></div>`).join("")}
+        ${mode === "cards" ? `<div class="practice-card-answer"><div class="practice-word-bank">${cards.map((card) => `<button type="button" data-practice-card="${escapeHtml(card)}">${escapeHtml(card)}</button>`).join("")}</div><textarea rows="3" data-practice-open readonly placeholder="点击上面的句子卡片组成对话">${escapeHtml(saved)}</textarea><button type="button" class="practice-clear" data-practice-clear>清空 / Clear</button></div>` : mode === "voice" ? renderPracticeVoice(item, (item.prompts || []).map((line) => line.hanzi).join(" ")) : `<label class="practice-open-field"><span>写下你和同学的对话 <small>Write your dialogue</small></span><textarea rows="4" data-practice-open placeholder="A：……\nB：……">${escapeHtml(saved)}</textarea></label>`}
+      </div>`;
+    }
     return `<div class="beginner-practice-dialogue">
       ${(item.prompts || []).map((line) => `<div class="practice-dialogue-line"><b>${escapeHtml(line.role)}</b><span><strong>${escapeHtml(line.hanzi)}</strong><small>${escapeHtml(line.pinyin)}</small></span></div>`).join("")}
       <label class="practice-open-field"><span>写下你和同学的对话 <small>Write your dialogue</small></span><textarea rows="4" data-practice-open placeholder="A：……\nB：……">${escapeHtml(saved)}</textarea></label>
@@ -625,6 +634,14 @@
   }
 
   function renderNameSplitPractice(item) {
+    if (state.model.lessonId === "cjzh-1-3") {
+      const surnames = [...new Set((item.people || []).map((person) => person.surname))];
+      const givenNames = [...new Set((item.people || []).map((person) => person.givenName))];
+      return `${renderPracticeSupport(item)}<p class="practice-instruction">点击选择“姓”和“名字”，不用输入汉字。<small>Select the surname and given name. No Chinese typing is required.</small></p><div class="practice-name-grid">
+        ${(item.people || []).map((person) => `<article class="practice-name-card" data-name-person="${escapeHtml(person.id)}"><header><strong>${escapeHtml(person.name)}</strong><small>${escapeHtml(person.pinyin)}</small></header>
+          <label><span>姓 <small>Surname</small></span><select data-name-surname><option value="">请选择</option>${surnames.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("")}</select></label>
+          <label><span>名字 <small>Given name</small></span><select data-name-given><option value="">请选择</option>${givenNames.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("")}</select></label></article>`).join("")}</div>`;
+    }
     return `<div class="practice-name-grid">
       ${(item.people || []).map((person) => `<article class="practice-name-card" data-name-person="${escapeHtml(person.id)}">
         <header><strong>${escapeHtml(person.name)}</strong><small>${escapeHtml(person.pinyin)}</small></header>
@@ -635,6 +652,13 @@
   }
 
   function renderPinyinTonePractice(item) {
+    if (state.model.lessonId === "cjzh-1-3") {
+      const syllables = [...new Set((item.items || []).map((entry) => entry.answer.syllable))];
+      return `${renderPracticeSupport(item)}<p class="practice-instruction">先选择拼音，再点击声调。<small>Select the syllable, then tap its tone.</small></p><div class="practice-pinyin-grid">
+        ${(item.items || []).map((entry) => `<article class="practice-pinyin-card" data-pinyin-item="${escapeHtml(entry.id)}"><strong>${escapeHtml(entry.hanzi)}</strong>
+          <label><span>拼音</span><select data-pinyin-syllable><option value="">选择</option>${syllables.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("")}</select></label>
+          <div class="practice-tone-buttons" aria-label="选择声调">${[0,1,2,3,4].map((tone) => `<button type="button" data-tone-choice="${tone}">${tone === 0 ? "轻" : tone}</button>`).join("")}</div><p class="practice-item-feedback" aria-live="polite"></p></article>`).join("")}</div>`;
+    }
     return `<p class="practice-instruction">${escapeHtml(localize(item.instruction, "zh-CN"))}<small>${escapeHtml(localize(item.instruction, "en"))}</small></p>
       <div class="practice-pinyin-grid">
         ${(item.items || []).map((entry) => `<article class="practice-pinyin-card" data-pinyin-item="${escapeHtml(entry.id)}">
@@ -647,6 +671,11 @@
   }
 
   function renderDialogueFillPractice(item) {
+    if (state.model.lessonId === "cjzh-1-3") {
+      const choices = [...new Set((item.dialogues || []).flatMap((dialogue) => dialogue.blanks.flatMap((blank) => blank.answers)))];
+      return `${renderPracticeSupport(item)}<p class="practice-instruction">从词句卡中选择答案；需要时可切换为自己输入。<small>Choose an answer card. You can switch to typing when ready.</small></p><div class="practice-dialogue-list">
+        ${(item.dialogues || []).map((dialogue, dialogueIndex) => `<article class="practice-fill-dialogue"><h3>对话 ${dialogueIndex + 1} <small>Dialogue ${dialogueIndex + 1}</small></h3><div class="practice-dialogue-copy">${dialogue.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div><div class="practice-blank-list">${dialogue.blanks.map((blank, index) => `<label data-dialogue-blank="${escapeHtml(blank.id)}"><span>第 ${index + 1} 空</span><select><option value="">请选择</option>${choices.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("")}</select></label>`).join("")}</div></article>`).join("")}</div>`;
+    }
     return `<div class="practice-dialogue-list">
       ${(item.dialogues || []).map((dialogue, dialogueIndex) => `<article class="practice-fill-dialogue" data-dialogue-id="${escapeHtml(dialogue.id)}">
         <h3>对话 ${dialogueIndex + 1} <small>Dialogue ${dialogueIndex + 1}</small></h3>
@@ -658,7 +687,31 @@
 
   function renderOpenResponsePractice(item) {
     const saved = localStorage.getItem(`beginnerPractice:${state.model.lessonId}:${item.id}`) || "";
+    if (state.model.lessonId === "cjzh-1-3") {
+      const mode = state.practiceModes[item.id] || "cards";
+      const cards = item.answerCards || ["他姓", "她姓", "叫", "我知道", "认识", "很高兴。"];
+      return `${renderPracticeSupport(item)}${renderPracticeModes(item, mode)}<div class="practice-open-response"><p>${escapeHtml(localize(item.prompt, "zh-CN"))}</p><small>${escapeHtml(localize(item.prompt, "en"))}</small>${mode === "cards" ? `<div class="practice-word-bank">${cards.map((card) => `<button type="button" data-practice-card="${escapeHtml(card)}">${escapeHtml(card)}</button>`).join("")}</div><textarea rows="4" data-practice-open readonly placeholder="点击词卡组成句子">${escapeHtml(saved)}</textarea><button type="button" class="practice-clear" data-practice-clear>清空 / Clear</button>` : mode === "voice" ? renderPracticeVoice(item, localize(item.prompt, "zh-CN")) : `<textarea rows="6" data-practice-open placeholder="例如：他姓成，叫成龙。">${escapeHtml(saved)}</textarea>`}</div>`;
+    }
     return `<div class="practice-open-response"><p>${escapeHtml(localize(item.prompt, "zh-CN"))}</p><small>${escapeHtml(localize(item.prompt, "en"))}</small><textarea rows="6" data-practice-open placeholder="例如：他姓成，叫成龙。">${escapeHtml(saved)}</textarea></div>`;
+  }
+
+  function renderPracticeModes(item, mode) {
+    return `<nav class="practice-answer-modes" aria-label="选择作答方式">${[["cards","词卡作答","Word cards"],["voice","语音作答","Speak"],["type","键盘输入","Type"]].map(([id,zh,en]) => `<button type="button" class="${mode === id ? "active" : ""}" data-practice-mode="${id}" data-practice-mode-item="${escapeHtml(item.id)}">${bilingual(zh,en)}</button>`).join("")}</nav>`;
+  }
+
+  function renderPracticeVoice(item, text) {
+    return `<div class="practice-voice-answer"><div class="practice-voice-orb">●</div><p>先想一想，再用中文说出来。<small>Think first, then answer in Chinese.</small></p><button type="button" class="pron-action record" data-practice-speak="${escapeHtml(item.id)}" data-practice-speak-text="${escapeHtml(text)}">● ${bilingual("开始录音","Record")}</button></div>`;
+  }
+
+  function renderPracticeSupport(item) {
+    const support = item.support || {};
+    const keywords = support.keywords || [];
+    return `<details class="practice-support"><summary>🌐 ${bilingual("母语帮助","Language help")}</summary><div class="practice-support-grid">
+      <section><b>① 任务说明 <small>Task</small></b><p>${escapeHtml(localize(support.instruction || item.instruction || item.title))}</p></section>
+      ${keywords.length ? `<section><b>② 关键词 <small>Key words</small></b><ul>${keywords.map((word) => `<li><strong>${escapeHtml(word.hanzi)}</strong> ${escapeHtml(word.pinyin || "")} · ${escapeHtml(localize(word.meaning))}</li>`).join("")}</ul></section>` : ""}
+      ${support.tip ? `<section><b>③ 语法与文化提示 <small>Grammar & culture</small></b><p>${escapeHtml(localize(support.tip))}</p></section>` : ""}
+      ${support.frame ? `<section><b>④ 作答框架 <small>Sentence frame</small></b><p class="practice-frame">${escapeHtml(localize(support.frame))}</p></section>` : ""}
+      <p class="practice-support-note">完整答案和解析只在提交后显示，避免直接透露答案。<small>Full answers appear only after submission.</small></p></div></details>`;
   }
 
   function renderPracticeBody(item) {
@@ -690,7 +743,7 @@
     const result = document.querySelector("#practiceResult");
     if (!item || !result) return;
     if (item.type === "guidedDialogue" || item.type === "openResponse") {
-      const value = elements.unitContent.querySelector("[data-practice-open]")?.value.trim() || "";
+      const value = elements.unitContent.querySelector("[data-practice-open]")?.value.trim() || localStorage.getItem(`beginnerPractice:${state.model.lessonId}:${item.id}`) || "";
       if (!value) { result.textContent = "请先完成内容。 / Please complete the activity first."; result.className = "is-error"; return; }
       localStorage.setItem(`beginnerPractice:${state.model.lessonId}:${item.id}`, value);
       result.textContent = "已保存本次练习。 / Saved.";
@@ -714,7 +767,8 @@
       (item.items || []).forEach((entry) => {
         const card = elements.unitContent.querySelector(`[data-pinyin-item="${entry.id}"]`);
         const syllableOk = normalizePracticeAnswer(card?.querySelector("[data-pinyin-syllable]")?.value) === normalizePracticeAnswer(entry.answer.syllable);
-        const toneOk = Number(card?.querySelector("[data-pinyin-tone]")?.value) === Number(entry.answer.tone);
+        const selectedTone = card?.querySelector("[data-tone-choice].active")?.dataset.toneChoice ?? card?.querySelector("[data-pinyin-tone]")?.value;
+        const toneOk = selectedTone !== undefined && selectedTone !== "" && Number(selectedTone) === Number(entry.answer.tone);
         const ok = syllableOk && toneOk;
         card?.classList.toggle("is-correct", ok);
         card?.classList.toggle("is-wrong", !ok);
@@ -726,7 +780,7 @@
     } else if (item.type === "dialogueFill") {
       (item.dialogues || []).forEach((dialogue) => dialogue.blanks.forEach((blank) => {
         const field = elements.unitContent.querySelector(`[data-dialogue-blank="${blank.id}"]`);
-        const value = normalizePracticeAnswer(field?.querySelector("input")?.value);
+        const value = normalizePracticeAnswer(field?.querySelector("input, select")?.value);
         const ok = blank.answers.some((answer) => normalizePracticeAnswer(answer) === value);
         field?.classList.toggle("is-correct", ok);
         field?.classList.toggle("is-wrong", !ok);
@@ -1443,6 +1497,20 @@
     elements.unitContent.addEventListener("click", (event) => {
       const practiceItem = event.target.closest("[data-practice-item]")?.dataset.practiceItem;
       if (practiceItem !== undefined) { state.practiceIndex = Number(practiceItem); render(); resetLearningScroll(); return; }
+      const practiceMode = event.target.closest("[data-practice-mode]");
+      if (practiceMode) { state.practiceModes[practiceMode.dataset.practiceModeItem] = practiceMode.dataset.practiceMode; render(); return; }
+      const toneChoice = event.target.closest("[data-tone-choice]");
+      if (toneChoice) { toneChoice.closest(".practice-tone-buttons")?.querySelectorAll("button").forEach((button) => button.classList.toggle("active", button === toneChoice)); return; }
+      const answerCard = event.target.closest("[data-practice-card]");
+      if (answerCard) { const field = elements.unitContent.querySelector("[data-practice-open]"); if (field) field.value = `${field.value}${field.value && !/[\s\n]$/.test(field.value) ? " " : ""}${answerCard.dataset.practiceCard}`; return; }
+      if (event.target.closest("[data-practice-clear]")) { const field = elements.unitContent.querySelector("[data-practice-open]"); if (field) field.value = ""; return; }
+      const practiceSpeak = event.target.closest("[data-practice-speak]");
+      if (practiceSpeak) {
+        const item = currentPracticeItem();
+        localStorage.setItem(`beginnerPractice:${state.model.lessonId}:${item.id}`, "[voice answer]");
+        openPinyinAssessment({ id: item.id, display: practiceSpeak.dataset.practiceSpeakText, referenceText: practiceSpeak.dataset.practiceSpeakText, referencePinyin: "", cueId: "", mode: "sentence", unitType: "beginner-practice-answer", title: "课后练习语音作答", contextLabel: "我的回答" });
+        return;
+      }
       if (event.target.closest("[data-practice-submit]")) { submitPracticeAnswer(); return; }
       const textGroup = event.target.closest("[data-text-group]")?.dataset.textGroup;
       if (textGroup) {
