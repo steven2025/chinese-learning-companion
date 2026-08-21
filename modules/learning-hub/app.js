@@ -57,10 +57,10 @@ const books = catalog.flatMap((level) => level.books.map(([id, label]) => ({ id,
 const learningBooks = Object.freeze({
   "beginner-comprehensive-1": {
     lessonPrefix: "cjzh-1",
-    lessons: ["你好", "你是哪国人？"],
-    available: 2,
-    countLabel: "已开放2课",
-    contentLabel: "语音、课文、汉字",
+    lessons: ["你好", "你是哪国人？", "你叫什么名字？"],
+    available: 3,
+    countLabel: "已开放3课",
+    contentLabel: "语音、生词、课文、汉字",
     cover: "初级<br>综合Ⅰ",
   },
   "intermediate-comprehensive-1": {
@@ -100,7 +100,7 @@ const viewLabels = { home: "首页", courses: "我的课程", writing: "写作�
 
 if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("../../sw.js?v=31", { scope: "../../" }).catch(() => {});
+    navigator.serviceWorker.register("../../sw.js?v=34", { scope: "../../" }).catch(() => {});
   });
 }
 const elements = {
