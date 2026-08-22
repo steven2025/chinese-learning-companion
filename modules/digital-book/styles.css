@@ -1348,3 +1348,81 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
   .paragraph-reader-launcher { align-items: stretch; flex-direction: column; gap: 14px; }
   .paragraph-reader-launcher .command-button { width: 100%; }
 }
+.interactive-practice-unit {
+  display: grid;
+  gap: 1rem;
+}
+
+.beginner-support {
+  padding: 1rem;
+  border: 1px solid rgba(30, 111, 92, 0.18);
+  border-radius: 18px;
+  background: rgba(234, 249, 244, 0.72);
+}
+
+.beginner-support p { margin: 0.35rem 0; }
+.native-help { color: #6b4f9b; }
+.interactive-body { display: grid; gap: 0.9rem; }
+.interactive-card, .interactive-row {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(31, 45, 61, 0.12);
+  border-radius: 16px;
+  background: #fff;
+}
+.interactive-card p { margin: 0; }
+.interactive-card small, .interactive-row small { display: block; color: #718096; }
+.interactive-field, .interactive-open-answer {
+  min-width: 0;
+  padding: 0.7rem 0.8rem;
+  border: 2px solid #d7e2e0;
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+}
+.interactive-field.is-correct { border-color: #2f9e72; background: #effcf6; }
+.interactive-field.is-wrong { border-color: #dd6b62; background: #fff4f2; }
+.practice-chip-row { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.practice-chip-row span, .given-answer {
+  padding: 0.42rem 0.68rem;
+  border-radius: 999px;
+  background: #eef5ff;
+}
+.match-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  align-items: center;
+}
+.model-answer { display: flex; gap: 0.7rem; padding: 0.8rem; border-radius: 14px; background: #fff8e8; }
+.aligned-hanzi-pinyin { display: inline-flex; flex-wrap: wrap; align-items: flex-end; gap: 0.08em; font-size: 1.08em; line-height: 2.2; }
+.aligned-hanzi-pinyin ruby { ruby-position: over; }
+.aligned-hanzi-pinyin rt { color: #5f6f7a; font-size: 0.48em; font-weight: 500; }
+.digit-card-board { display: grid; grid-template-columns: repeat(5, minmax(48px, 1fr)); gap: 0.65rem; }
+.digit-card-board > span, .mini-digit-card { display: grid; place-items: center; min-height: 68px; border: 2px solid #315f69; border-radius: 14px; color: #173f48; background: #f5fcfb; font-size: 2rem; box-shadow: 0 5px 0 rgba(49,95,105,.16); }
+.mini-digit-card { display: inline-grid; min-width: 44px; min-height: 50px; margin-right: 0.35rem; font-size: 1.4rem; }
+.guided-dialogue-lines { display: grid; gap: .55rem; padding: 1rem; border-radius: 16px; background: #f8fbff; }
+.guided-dialogue-lines p { margin: 0; }
+.dialogue-builder-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .7rem; }
+.dialogue-builder-grid label { display: grid; gap: .45rem; }
+.picture-question { text-align: center; font-size: 1.15rem; }
+.profession-card-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .85rem; }
+.profession-card { position: relative; display: grid; gap: .55rem; padding: .65rem; border: 1px solid rgba(31,45,61,.14); border-radius: 16px; background: #fff; }
+.profession-card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; }
+.profession-card > span { position: absolute; top: .9rem; left: .9rem; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: #fff; background: rgba(23,63,72,.88); font-weight: 800; }
+.number-reading-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .7rem; }
+.number-reading-grid article { display: grid; justify-items: center; gap: .25rem; padding: .85rem; border-radius: 15px; background: #f7fbff; }
+.number-reading-grid strong { font-size: 1.8rem; color: #173f48; }
+.number-reading-grid small { color: #6a7480; }
+.hanzi-completion-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
+.hanzi-completion-grid label { display: grid; grid-template-columns: auto auto minmax(70px,1fr) auto; align-items: center; gap: .45rem; padding: .8rem; border-radius: 14px; background: #fff; font-size: 1.25rem; }
+.hanzi-completion-grid small { grid-column: 2 / -1; color: #6a7480; font-size: .8rem; }
+@media (max-width: 700px) {
+  .match-grid { grid-template-columns: 1fr; }
+  .match-grid > strong { display: none; }
+  .interactive-field { width: 100%; }
+  .dialogue-builder-grid, .profession-card-grid { grid-template-columns: 1fr; }
+  .number-reading-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .hanzi-completion-grid { grid-template-columns: 1fr; }
+}

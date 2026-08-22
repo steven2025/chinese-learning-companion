@@ -17,6 +17,18 @@ const LESSONS = Object.freeze({
     paragraphRanges: [],
     renderer: "pronunciation",
   }),
+  "cjzh-1-4": Object.freeze({
+    number: 4,
+    topic: "你学习法语吗？",
+    paragraphRanges: [[0, 5], [6, 17], [18, 23], [24, 25]],
+    renderer: "pronunciation",
+  }),
+  "cjzh-1-5": Object.freeze({
+    number: 5,
+    topic: "你家有几口人？",
+    paragraphRanges: [[0, 6], [7, 14], [15, 23], [24, 25]],
+    renderer: "pronunciation",
+  }),
   "zjzh-1-1": Object.freeze({
     number: 1,
     topic: "你咋不早说",
@@ -31,6 +43,11 @@ const LESSONS = Object.freeze({
     number: 3,
     topic: "租房那些事",
     paragraphRanges: [[0, 4], [5, 12], [13, 18], [19, 28], [29, 31], [32, 40], [41, 49], [50, 54], [55, 63], [64, 69]],
+  }),
+  "zjzh-1-4": Object.freeze({
+    number: 4,
+    topic: "老舍小时候的故事",
+    paragraphRanges: [[0, 4], [5, 12], [13, 21], [22, 39], [40, 47], [48, 60], [61, 67], [68, 71]],
   }),
 });
 const requestedLessonId = new URLSearchParams(window.location.search).get("lesson");
@@ -111,6 +128,7 @@ const state = {
   paragraphReaderPreviousStyle: "",
   paragraphDisplay: readStoredJson("digitalBookParagraphDisplay", { pinyin: false, translation: false }),
   practiceItems: [],
+  practiceTranslations: { items: {}, labels: {} },
   units: { vocabulary: [], text: [], practice: [] },
   statuses: readStoredJson(storageKeys.wordStatuses, {}),
   trackedWordViews: new Set(),
@@ -341,6 +359,7 @@ async function loadData() {
   let pages;
   let practiceData;
   let practiceTranslations;
+  let contentTranslations;
 
   [
       audioData,
@@ -349,13 +368,15 @@ async function loadData() {
       pages,
       practiceData,
       practiceTranslations,
+      contentTranslations,
   ] = await Promise.all([
       fetch(`${DATA_ROOT}/vocabulary-audio.json`).then(checkResponse),
       fetch(`${DATA_ROOT}/vocabulary-metadata.json`).then(checkResponse),
       fetch(`${DATA_ROOT}/text-audio.json`).then(checkResponse),
       fetch(`${DATA_ROOT}/book-pages.json`).then(checkResponse),
       fetch(`${DATA_ROOT}/lesson-practice.json`).then(checkResponse),
-      optionalJson(`${DATA_ROOT}/practice-intro-translations.json`, { lessonId: LESSON_ID, groups: {} }),
+      optionalJson(`${DATA_ROOT}/practice-translations.json`, { lessonId: LESSON_ID, groups: {}, items: {}, labels: {} }),
+      optionalJson(`${DATA_ROOT}/content-translations.json`, { vocabulary: {}, texts: {} }),
   ]);
 
   updateLessonIdentity(pages);
@@ -366,14 +387,23 @@ async function loadData() {
     throw new Error("单词表与音频时间线数量不一致");
   }
 
-  state.words = metadata.entries.map((entry, index) => ({
-    ...entry,
-    cue: wordCues[index],
+  state.words = metadata.entries.map((entry, index) => {
+    const cueId = entry.id.replace(/^word-/, "vocab-");
+    const cue = wordCues.find((candidate) => candidate.id === cueId || candidate.text === entry.hanzi) || wordCues[index];
+    return {
+      ...entry,
+      translations: { ...(entry.translations || {}), ...(contentTranslations.vocabulary?.[entry.id] || {}) },
+      cue,
+    };
+  });
+  state.textCues = textData.cues.filter((cue) => cue.role === "sentence").map((cue) => ({
+    ...cue,
+    texts: { ...(cue.texts || {}), ...(contentTranslations.texts?.[cue.id] || {}) },
   }));
-  state.textCues = textData.cues.filter((cue) => cue.role === "sentence");
   state.paragraphPinyin = paragraphPinyin.cues || {};
   state.textParagraphs = buildTextParagraphs(state.textCues);
   state.practiceItems = flattenPractice(practiceData);
+  state.practiceTranslations = practiceTranslations;
   state.units = {
     vocabulary: [
       {
@@ -484,9 +514,9 @@ function buildPracticeUnits(practiceData, translations) {
     units.push({
       unitType: "sectionTitle",
       sectionId: section.id,
-      sectionTitle: section.title,
+      sectionTitle: localizedText(section.title),
       sectionKind: section.kind || "questions",
-      title: `${toChineseSectionNumber(sectionIndex + 1)}、${section.title}`,
+      title: `${toChineseSectionNumber(sectionIndex + 1)}、${localizedText(section.title)}`,
       instruction: concisePracticeSectionInstruction(section),
     });
 
@@ -566,7 +596,7 @@ function buildPracticeUnits(practiceData, translations) {
         unitType: "practiceItem",
         questionNumber: resolvedNumber,
         sectionId: section.id,
-        sectionTitle: section.title,
+        sectionTitle: localizedText(section.title),
         groupId: "",
         groupTitle: "",
         choices: item.choices || section.choices || [],
@@ -602,6 +632,11 @@ function toChineseSectionNumber(value) {
   if (number === 10) return "十";
   if (number < 20) return `十${digits[number % 10]}`;
   return `${digits[Math.floor(number / 10)]}十${number % 10 ? digits[number % 10] : ""}`;
+}
+
+function localizedText(value, fallback = "") {
+  if (typeof value === "string") return value;
+  return value?.[state.locale] || value?.["zh-CN"] || value?.en || fallback;
 }
 
 function initializeLanguageOptions() {
@@ -647,7 +682,7 @@ function unitLabel(item, index) {
   if (item.unitType === "paragraphReading") {
     return "跟读段落";
   }
-  return `第${item.questionNumber}题 ${truncate(item.prompt, 24)}`;
+  return `第${item.questionNumber}题 ${truncate(localizedText(item.title) || item.prompt || item.id, 24)}`;
 }
 
 function render() {
@@ -678,7 +713,7 @@ function render() {
           ? "词语学习"
           : state.section === "text"
             ? "走进课文"
-            : item.groupTitle || item.sectionTitle;
+            : localizedText(item.title) || item.groupTitle || item.sectionTitle;
   elements.unitKicker.textContent =
     state.section === "practice"
       ? item.sectionTitle
@@ -806,7 +841,7 @@ function renderWordUnit(word, index) {
           <span class="unit-order">词语 ${String(index + 1).padStart(2, "0")}</span>
           <h2 class="word-hanzi">${escapeHtml(word.hanzi)}</h2>
           <p class="word-pinyin">${escapeHtml(word.pinyin)}</p>
-          <span class="part-of-speech">${escapeHtml(partOfSpeechLabels[word.partOfSpeech] || word.partOfSpeech)}</span>
+          <span class="part-of-speech">${escapeHtml(typeof word.partOfSpeech === "object" ? localizedText(word.partOfSpeech) : (partOfSpeechLabels[word.partOfSpeech] || word.partOfSpeech))}</span>
           ${showTranslation ? `<p class="primary-translation">${escapeHtml(translationFor(word.translations))}</p>` : ""}
         </div>
         ${renderAssistButtonGroup(assistTabs.slice(2), "word-side-tools word-side-right")}
@@ -977,6 +1012,10 @@ function toggleParagraphDisplay(option) {
 }
 
 function renderPracticeUnit(item, index) {
+  if (["substitutionDialogue", "threeWayMatch", "wordBankFill", "sentenceTransform", "questionAnswerTransform", "dialogueFill", "guidedDialogue", "digitCards", "guidedFamilyDialogue", "pictureOccupation", "numberReading", "questionFromAnswer", "hanziWordComplete"].includes(item.type)) {
+    renderInteractivePracticeUnit(item);
+    return;
+  }
   if (item.type === "readingCloze") {
     renderReadingCloze(item);
     return;
@@ -1017,6 +1056,98 @@ function renderPracticeUnit(item, index) {
         }
       </div>
     </div>`;
+}
+
+function practiceHelpFor(item) {
+  return state.practiceTranslations.items?.[item.id]?.[state.locale] || null;
+}
+
+function interactiveField(item, key, answers, options = []) {
+  const stored = state.answers[`${item.id}:${key}`] || "";
+  const answerList = (Array.isArray(answers) ? answers : [answers]).filter(Boolean);
+  const attributes = `class="interactive-field" data-interactive-key="${escapeAttribute(key)}" data-answers="${escapeAttribute(answerList.join("||"))}"`;
+  if (options.length) {
+    return `<select ${attributes}><option value="">请选择</option>${options.map((option) => `<option value="${escapeAttribute(option)}"${stored === option ? " selected" : ""}>${escapeHtml(option)}</option>`).join("")}</select>`;
+  }
+  return `<input ${attributes} value="${escapeAttribute(stored)}" autocomplete="off" placeholder="在这里作答">`;
+}
+
+function renderCharacterPinyin(hanzi, syllables = []) {
+  let syllableIndex = 0;
+  return [...String(hanzi || "")].map((character) => {
+    if (!/[\u3400-\u9fff]/.test(character)) return escapeHtml(character);
+    const pinyin = syllables[syllableIndex++] || "";
+    return `<ruby><span>${escapeHtml(character)}</span>${pinyin ? `<rt>${escapeHtml(pinyin)}</rt>` : ""}</ruby>`;
+  }).join("");
+}
+
+function alignedPrompt(value, syllables, fallbackPinyin = "") {
+  if (Array.isArray(syllables) && syllables.length) return `<span class="aligned-hanzi-pinyin">${renderCharacterPinyin(value, syllables)}</span>`;
+  return `<span>${escapeHtml(value)}</span>${fallbackPinyin ? `<small>${escapeHtml(fallbackPinyin)}</small>` : ""}`;
+}
+
+function renderInteractivePracticeUnit(item) {
+  const help = practiceHelpFor(item);
+  let body = "";
+  if (item.type === "digitCards") {
+    body = `<div class="digit-card-board">${item.digits.map((digit) => `<span>${escapeHtml(digit)}</span>`).join("")}</div><section class="interactive-card model-answer"><strong>示例</strong><span>${item.example.cards.map((digit) => `<b class="mini-digit-card">${escapeHtml(digit)}</b>`).join("")} → ${escapeHtml(item.example.number)} → ${escapeHtml(item.example.hanzi)}</span><small>${escapeHtml(item.example.pinyin)}</small></section><label class="interactive-row"><span>把抽到的两张卡片组成数字并写出汉字读法</span>${interactiveField(item,"number-reading",item.example.hanzi)}</label>`;
+  } else if (item.type === "guidedFamilyDialogue") {
+    body = `<div class="guided-dialogue-lines">${item.lines.map((line) => `<p>${alignedPrompt(line.hanzi,line.syllables,line.pinyin)}</p>`).join("")}</div><div class="dialogue-builder-grid"><label>我家有几口人${interactiveField(item,"family-size",item.familySizes.map(value=>`我家有${value}口人。`),item.familySizes.map(value=>`我家有${value}口人。`))}</label><label>家庭成员${interactiveField(item,"family-member",item.members,item.members)}</label><label>职业${interactiveField(item,"family-job",item.jobs,item.jobs)}</label></div>`;
+  } else if (item.type === "pictureOccupation") {
+    body = `<p class="picture-question">${alignedPrompt(item.question.hanzi,item.question.syllables,item.question.pinyin)}</p><div class="profession-card-grid">${item.cards.map((card,index) => `<article class="profession-card"><img src="${escapeAttribute(`${DATA_ROOT}/${card.image}`)}" alt="职业图片 ${index+1}" loading="lazy"><span>${index+1}</span>${interactiveField(item,card.id,card.answer,item.options)}</article>`).join("")}</div>`;
+  } else if (item.type === "numberReading") {
+    body = `<div class="number-reading-grid">${item.items.map((question) => `<article><strong>${escapeHtml(question.number)}</strong><span>${escapeHtml(question.hanzi)}</span><small>${escapeHtml(question.pinyin)}</small></article>`).join("")}</div>`;
+  } else if (item.type === "questionFromAnswer") {
+    body = item.items.map((question,index) => `<label class="interactive-row"><span>${index+1}. B：${escapeHtml(question.answerLine)}</span><small>${escapeHtml(question.answerPinyin)}</small><span>A：</span>${interactiveField(item,question.id,[question.answer,...(question.acceptedAnswers||[])])}</label>`).join("");
+  } else if (item.type === "hanziWordComplete") {
+    body = `<div class="hanzi-completion-grid">${item.items.map((question,index) => `<label><b>${index+1}.</b><span>${escapeHtml(question.before)}</span>${interactiveField(item,question.id,question.answer)}<span>${escapeHtml(question.after)}</span><small>${escapeHtml(question.pinyin)}</small></label>`).join("")}</div>`;
+  } else if (item.type === "substitutionDialogue") {
+    body = item.patterns.map((pattern, index) => `<section class="interactive-card"><strong>练习 ${index + 1}</strong>${pattern.example.map((line) => `<p><b>${escapeHtml(line.role)}：</b>${escapeHtml(line.hanzi)}${line.pinyin ? `<small>${escapeHtml(line.pinyin)}</small>` : ""}</p>`).join("")}<div class="practice-chip-row">${Object.values(item.cardPools || {}).flat().slice(0, 12).map((card) => `<span>${escapeHtml(card)}</span>`).join("")}</div></section>`).join("");
+  } else if (item.type === "threeWayMatch") {
+    const pools = Object.fromEntries(item.columns.map((column) => [column, item.rows.map((row) => row[column])]));
+    body = `<div class="match-grid"><strong>国家</strong><strong>国籍</strong><strong>语言</strong>${item.rows.map((row) => item.columns.map((column) => row.given?.includes(column) ? `<span class="given-answer">${escapeHtml(row[column])}</span>` : interactiveField(item, `${row.id}:${column}`, row[column], pools[column])).join("")).join("")}</div>`;
+  } else if (item.type === "wordBankFill") {
+    body = `<div class="practice-chip-row">${item.wordBank.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div>${item.items.map((question, index) => `<label class="interactive-row"><span>${index + 1}. ${alignedPrompt(question.prompt,question.syllables,question.pinyin)}</span>${interactiveField(item, question.id, question.answer, item.wordBank)}</label>`).join("")}`;
+  } else if (item.type === "sentenceTransform") {
+    body = `<div class="model-answer"><strong>例</strong><span>${escapeHtml(item.example.source)} → ${escapeHtml(item.example.answer)}</span></div>${item.items.map((question, index) => `<label class="interactive-row"><span>${index + 1}. ${escapeHtml(question.source)}</span>${interactiveField(item, question.id, [question.answer, ...(question.acceptedAnswers || [])])}</label>`).join("")}`;
+  } else if (item.type === "questionAnswerTransform") {
+    body = item.items.map((question, index) => `<section class="interactive-card"><strong>${index + 1}. ${escapeHtml(question.source)}</strong><label>问句${interactiveField(item, `${question.id}:question`, question.question)}</label><label>肯定回答${interactiveField(item, `${question.id}:positive`, question.positive)}</label><label>否定回答${interactiveField(item, `${question.id}:negative`, question.negative)}</label></section>`).join("");
+  } else if (item.type === "dialogueFill") {
+    body = item.dialogues.map((dialogue, index) => `<section class="interactive-card"><strong>对话 ${index + 1}</strong>${dialogue.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}${dialogue.blanks.map((blank) => `<label>${escapeHtml(blank.id)}${interactiveField(item, blank.id, blank.answers)}</label>`).join("")}</section>`).join("");
+  } else {
+    body = item.scenarios.map((scenario) => `<section class="interactive-card"><strong>${escapeHtml(scenario.prompt)}</strong>${scenario.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</section>`).join("") + `<label class="interactive-row"><span>我的对话</span><textarea class="interactive-open-answer" data-interactive-key="open-response" placeholder="可以先用词卡组织句子，也可以输入自己的回答">${escapeHtml(state.answers[`${item.id}:open-response`] || "")}</textarea></label>`;
+  }
+  elements.unitContent.innerHTML = `<div class="practice-unit interactive-practice-unit">
+    <span class="practice-target">第 ${item.questionNumber} 题 · ${escapeHtml(item.sectionTitle)}</span>
+    <h2 class="practice-prompt">${escapeHtml(localizedText(item.title, item.id))}</h2>
+    <div class="beginner-support"><strong>任务</strong><p>${escapeHtml(localizedText(item.support?.instruction))}</p>${help ? `<p class="native-help">${escapeHtml(help.instruction)}</p>` : ""}<details><summary>提示</summary><p>${escapeHtml(localizedText(item.support?.tip))}</p>${help ? `<p class="native-help">${escapeHtml(help.tip)}</p>` : ""}${item.support?.frame ? `<p>${escapeHtml(localizedText(item.support.frame))}</p>` : ""}</details></div>
+    <div class="interactive-body">${body}</div>
+    <div class="answer-actions"><button class="quiet-button" type="button" data-command="reset-interactive">重新尝试</button><button class="command-button" type="button" data-command="check-interactive">检查答案</button></div>
+    <div id="interactiveFeedback" class="answer-feedback" hidden></div>
+  </div>`;
+}
+
+function checkInteractivePractice() {
+  const fields = [...elements.unitContent.querySelectorAll(".interactive-field")];
+  let correct = 0;
+  fields.forEach((field) => {
+    const answers = String(field.dataset.answers || "").split("||").filter(Boolean);
+    const ok = answers.some((answer) => normalizeAnswer(field.value) === normalizeAnswer(answer));
+    field.classList.toggle("is-correct", ok);
+    field.classList.toggle("is-wrong", !ok);
+    if (ok) correct += 1;
+  });
+  const feedback = elements.unitContent.querySelector("#interactiveFeedback");
+  if (!feedback) return;
+  feedback.hidden = false;
+  feedback.textContent = fields.length ? `完成 ${correct} / ${fields.length}。答错的项目可以打开提示后再试。` : "本活动没有唯一答案，请完成对话后朗读或录音。";
+}
+
+function resetInteractivePractice() {
+  const item = currentItem();
+  Object.keys(state.answers).filter((key) => key.startsWith(`${item.id}:`)).forEach((key) => delete state.answers[key]);
+  localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+  render();
 }
 
 function renderReadingCloze(item) {
@@ -3299,7 +3430,11 @@ async function assessPracticeKeyboard() {
 }
 
 function handleCommand(command) {
-  if (command === "play") {
+  if (command === "check-interactive") {
+    checkInteractivePractice();
+  } else if (command === "reset-interactive") {
+    resetInteractivePractice();
+  } else if (command === "play") {
     if (!elements.audio.paused && state.audioMode === "single") stopAudio();
     else void playCurrent("single");
   } else if (command === "record") {
@@ -3434,6 +3569,12 @@ function bindEvents() {
     if (command) handleCommand(command);
   });
   elements.unitContent.addEventListener("input", (event) => {
+    const interactiveKey = event.target.dataset.interactiveKey;
+    if (interactiveKey) {
+      state.answers[`${currentItem().id}:${interactiveKey}`] = event.target.value;
+      localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+      return;
+    }
     if (event.target.id === "practiceContentAnswer") {
       state.answers[currentItem().id] = event.target.value;
       localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
@@ -3441,6 +3582,12 @@ function bindEvents() {
     }
     if (event.target.id !== "practiceAnswer") return;
     state.answers[currentItem().id] = event.target.value;
+    localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+  });
+  elements.unitContent.addEventListener("change", (event) => {
+    const interactiveKey = event.target.dataset.interactiveKey;
+    if (!interactiveKey) return;
+    state.answers[`${currentItem().id}:${interactiveKey}`] = event.target.value;
     localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
   });
   elements.assistTabs.addEventListener("click", (event) => {

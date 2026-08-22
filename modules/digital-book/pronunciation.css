@@ -443,6 +443,15 @@
 .beginner-note h3 { margin: 0 0 6px; font-size: 15px; }
 .beginner-note h3 small { color: #718684; }
 .beginner-note p { margin: 0; font-size: 17px; line-height: 1.75; }
+.beginner-note-list { display: grid; gap: 22px; }
+.beginner-note-list > .beginner-note + .beginner-note { padding-top: 22px; border-top: 2px solid #c9d8d5; }
+.beginner-note-table-wrap { margin-top: 12px; overflow-x: auto; }
+.beginner-note-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 14px; }
+.beginner-note-table th, .beginner-note-table td { padding: 9px 10px; border: 1px solid #bfd0cd; text-align: center; }
+.beginner-note-table th { background: #e5f2ef; color: #285956; }
+.beginner-note-examples p { display: grid; gap: 2px; margin-top: 8px; }
+.beginner-note-examples p:first-of-type { margin-top: 0; }
+.beginner-note-examples small { color: #607774; font-size: 13px; }
 .character-assessment-consent { display: flex; gap: 8px; align-items: center; margin-top: 12px; padding: 10px 12px; border: 1px solid #bfd0cd; background: #f7faf9; font-size: 13px; font-weight: 750; }
 .character-assessment-consent input { width: 18px; height: 18px; accent-color: #087d76; }
 .character-assessment { margin-top: 12px; padding: 12px 15px; border-left: 4px solid #087d76; background: #f2f8f6; }
@@ -589,12 +598,44 @@
 .practice-tone-buttons { grid-column: 1 / -1; display: flex; justify-content: center; gap: 5px; margin-top: 7px; }
 .practice-tone-buttons button { width: 36px; height: 34px; border: 1px solid #abc7c2; border-radius: 8px; background: #fff; color: #34504f; font-weight: 800; cursor: pointer; }
 .practice-tone-buttons button.active { color: #fff; border-color: #08776f; background: #08776f; box-shadow: 0 3px 0 #07544f; }
+.pron-readword-pinyin { margin: 8px 0 0; color: #087d76; font-size: 32px; font-weight: 750; }
+.pron-spoken-pinyin { margin: 9px 0 0; padding: 7px 12px; border-radius: 9px; background: #fff1dc; color: #9b5d0d; font-weight: 800; }
+.pron-spoken-pinyin small { display: block; font-size: 11px; }
+.pron-listening-choice { padding: 18px; color: #173436; }
+.pron-listening-choice > header { display: grid; grid-template-columns: 1fr auto; gap: 5px 18px; align-items: center; width: min(1080px,100%); margin: 0 auto 16px; }
+.pron-listening-choice > header span, .pron-listening-choice > header p { color: #647b79; }
+.pron-listening-choice > header span small { display: block; }
+.pron-listening-choice > header h2, .pron-listening-choice > header p { margin: 0; }
+.pron-listening-choice > header strong { grid-column: 2; grid-row: 1 / 4; padding: 10px 14px; border-radius: 999px; background: #dff3ef; color: #08776f; font-size: 18px; }
+.pron-listening-choice-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; width: min(1080px,100%); margin: 0 auto; }
+.pron-listening-question { display: grid; grid-template-columns: 42px 86px 1fr 92px; align-items: center; gap: 9px; padding: 11px; border: 1px solid #c8d9d6; border-radius: 12px; background: #fff; }
+.pron-listening-question.is-correct { border-color: #3b9d8f; box-shadow: inset 0 -3px #3b9d8f; }
+.pron-listening-question.is-revealed { border-color: #d6a05a; box-shadow: inset 0 -3px #d6a05a; }
+.pron-listening-number { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #edf5f3; color: #5b7471; font-weight: 850; }
+.pron-listen-button, .pron-check-button { min-height: 40px; border: 1px solid #9fc4be; border-radius: 9px; background: #eef9f7; color: #086f68; font-weight: 800; cursor: pointer; }
+.pron-listen-button small, .pron-check-button small { display: block; font-size: 9px; }
+.pron-listening-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+.pron-listening-options button { min-height: 42px; border: 1px solid #b8cbc8; border-radius: 9px; background: #fff; color: #243f40; font-size: 20px; font-weight: 800; cursor: pointer; }
+.pron-listening-options button span { margin-right: 6px; color: #78908d; }
+.pron-listening-options button.selected { border-color: #0b8179; background: #e1f5f1; }
+.pron-listening-options button.correct { color: #fff; border-color: #18877d; background: #18877d; }
+.pron-listening-feedback { grid-column: 2 / -1; margin: 0; font-size: 13px; font-weight: 800; }
+.pron-listening-feedback.correct { color: #08776f; }
+.pron-listening-feedback.wrong { color: #b14b38; }
+.pron-example-hanzi { margin: 4px 0; color: #243f40; font: 800 30px/1.1 "STKaiti","KaiTi",serif; }
+.pron-example-actions { display: flex; justify-content: center; gap: 7px; margin-top: 10px; }
+.pron-example-actions button { padding: 7px 10px; border: 1px solid #9fc4be; border-radius: 8px; background: #fff; color: #086f68; font-weight: 800; cursor: pointer; }
+.pron-example-actions button small { display: block; font-size: 9px; }
 
 @media (max-width: 760px) {
   .practice-support-grid { grid-template-columns: 1fr; }
   .practice-support-note { grid-column: auto; }
   .practice-answer-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .practice-answer-modes button { min-width: 0; padding-inline: 5px; }
+  .pron-listening-choice-grid { grid-template-columns: 1fr; }
+  .pron-listening-question { grid-template-columns: 38px 78px 1fr; }
+  .pron-check-button { grid-column: 2 / -1; }
+  .pron-listening-feedback { grid-column: 1 / -1; }
 }
 
 @media (max-width: 1050px) {
@@ -649,4 +690,33 @@
   .pron-tone-marking h2 { font-size: 50px; }
   .pron-tone-options { flex-wrap: wrap; }
   .pron-chart-grid { grid-template-columns: repeat(3, minmax(62px, 1fr)); }
+}
+.aligned-hanzi-pinyin { display: inline-flex; flex-wrap: wrap; align-items: flex-end; gap: .08em; font-size: 1.08em; line-height: 2.25; }
+.aligned-hanzi-pinyin ruby { ruby-position: over; }
+.aligned-hanzi-pinyin rt { color: #5f6f7a; font-size: .48em; font-weight: 500; }
+.digit-card-board { display: grid; grid-template-columns: repeat(5,minmax(48px,1fr)); gap: .65rem; }
+.digit-card-board > span { display: grid; place-items: center; min-height: 68px; border: 2px solid #315f69; border-radius: 14px; color: #173f48; background: #f5fcfb; font-size: 2rem; box-shadow: 0 5px 0 rgba(49,95,105,.16); }
+.practice-number-example { display: grid; grid-template-columns: auto 1fr; gap: .5rem .8rem; align-items: center; padding: 1rem; border-radius: 16px; background: #fff8e8; }
+.practice-number-example small { grid-column: 2; color: #68747d; }
+.practice-number-example b { display: inline-grid; place-items: center; min-width: 42px; min-height: 48px; margin-right: .35rem; border: 1px solid #315f69; border-radius: 10px; background: #fff; }
+.guided-dialogue-lines { display: grid; gap: .55rem; padding: 1rem; border-radius: 16px; background: #f8fbff; }
+.guided-dialogue-lines p { margin: 0; }
+.practice-family-builder { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .7rem; }
+.practice-family-builder label { display: grid; gap: .45rem; }
+.picture-question { text-align: center; font-size: 1.15rem; }
+.profession-card-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .85rem; }
+.profession-card { position: relative; display: grid; gap: .55rem; padding: .65rem; border: 1px solid rgba(31,45,61,.14); border-radius: 16px; background: #fff; }
+.profession-card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; }
+.profession-card > span { position: absolute; top: .9rem; left: .9rem; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: #fff; background: rgba(23,63,72,.88); font-weight: 800; }
+.number-reading-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .7rem; }
+.number-reading-grid article { display: grid; justify-items: center; gap: .25rem; padding: .85rem; border-radius: 15px; background: #f7fbff; }
+.number-reading-grid strong { font-size: 1.8rem; color: #173f48; }
+.number-reading-grid small { color: #6a7480; }
+.hanzi-completion-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
+.hanzi-completion-grid label { display: grid; grid-template-columns: auto auto minmax(70px,1fr) auto; align-items: center; gap: .45rem; padding: .8rem; border-radius: 14px; background: #fff; font-size: 1.25rem; }
+.hanzi-completion-grid small { grid-column: 2 / -1; color: #6a7480; font-size: .8rem; }
+@media (max-width: 700px) {
+  .practice-family-builder, .profession-card-grid { grid-template-columns: 1fr; }
+  .number-reading-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .hanzi-completion-grid { grid-template-columns: 1fr; }
 }

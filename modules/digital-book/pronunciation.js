@@ -34,6 +34,7 @@
     contentModel: null,
     practiceModel: null,
     practiceTranslations: null,
+    dataRoot: "",
     cues: new Map(),
     textCues: new Map(),
     units: [],
@@ -56,6 +57,7 @@
     loop: false,
     challenge: null,
     toneAnswers: {},
+    syllableAnswers: {},
     comparisonId: "",
     pinyinRecording: {
       active: false, stream: null, context: null, source: null, processor: null, mute: null,
@@ -136,6 +138,43 @@
     return textSections().find((section) => section.items?.some((entry) => entry.id === item?.id)) || textSections()[0] || null;
   }
 
+  function buildSplitContentModel(metadata, vocabularyAudio, textAudio, translations, notes) {
+    if (!metadata?.entries || !vocabularyAudio?.cues || !textAudio?.cues) return null;
+    const vocabularyItems = metadata.entries.map((entry) => ({
+      ...entry,
+      cueId: entry.id.replace(/^word-/, "vocab-"),
+      meanings: { ...(entry.translations || {}), ...(translations?.vocabulary?.[entry.id] || {}) },
+    }));
+    const sections = [{
+      id: "lesson-words", type: "vocabulary",
+      title: { "zh-CN": "生词与短语", en: "Words and expressions" },
+      groups: [{ id: "all-words", title: { "zh-CN": "本课生词", en: "Lesson vocabulary" }, itemIds: vocabularyItems.map((item) => item.id) }],
+      items: vocabularyItems,
+      audio: vocabularyAudio.audio,
+    }];
+    let current = null;
+    textAudio.cues.forEach((cue) => {
+      if (cue.role === "sectionTitle") {
+        current = { id: cue.id, type: "text", title: { ...(cue.texts || {}), ...(translations?.texts?.[cue.id] || {}) }, audio: textAudio.audio, items: [] };
+        sections.push(current);
+      } else if (cue.role === "sentence") {
+        if (!current) {
+          current = { id: "lesson-text", type: "text", title: { "zh-CN": "课文", en: "Text" }, audio: textAudio.audio, items: [] };
+          sections.push(current);
+        }
+        current.items.push({
+          id: cue.id,
+          hanzi: cue.texts?.["zh-CN"] || cue.text,
+          pinyin: cue.pinyin || "",
+          cueId: cue.id,
+          noteIds: cue.noteIds || (cue.noteId ? [cue.noteId] : []),
+          meanings: { ...(cue.texts || {}), ...(translations?.texts?.[cue.id] || {}) },
+        });
+      }
+    });
+    return { schemaVersion: 1, lessonId: metadata.lessonId, cues: [...vocabularyAudio.cues, ...textAudio.cues], parts: [{ id: "texts", part: "PART 2–3", title: { "zh-CN": "生词与课文", en: "Vocabulary and texts" }, sections, notes: notes?.notes || [] }] };
+  }
+
   function currentCharacter() {
     const items = characterPart()?.items || [];
     return items[state.characterIndex] || items[0] || null;
@@ -210,6 +249,33 @@
         mode: "sentence",
         unitType: isSentence ? "text-sentence-pronunciation" : "vocabulary-pronunciation",
         title: isSentence ? "课文句子跟读测评" : "生词与短语跟读测评",
+      };
+    }
+    if (unit.type === "readWords" && item) {
+      return {
+        id: `${unit.id}-${item.id}`,
+        display: item.hanzi || item.display,
+        referencePinyin: item.spokenPinyin || item.display,
+        referenceText: item.hanzi || item.display,
+        cueId: item.cueId,
+        mode: "sentence",
+        unitType: "vocabulary-pronunciation",
+        title: "词语朗读智聆测评",
+        contextLabel: "朗读词语",
+      };
+    }
+    if (unit.type === "syllableReading" && item?.category === "initial") {
+      return {
+        id: `${unit.id}-${item.id}`,
+        display: item.display,
+        referencePinyin: item.display,
+        referenceText: item.display,
+        cueId: item.cueId,
+        mode: "pinyin",
+        unitType: "pinyin-initial",
+        title: "声母跟读测评",
+        contextLabel: "当前声母",
+        analysis: { display: item.display, initial: item.display, final: "", tone: 0, toneShown: false },
       };
     }
     const analysis = analysisForItem(item, unit);
@@ -375,11 +441,11 @@
     return `<section class="pron-focus-stage${tone ? " has-tone" : ""}">
       <header>
         <span>${unit.type === "soundChart" ? "发音项目" : "当前学习音"}<small>${unit.type === "soundChart" ? "Sound item" : "Current sound"}</small></span>
-        ${feature ? `<b>${featureLabels[feature][0]} <small>${featureLabels[feature][1]}</small></b>` : ""}
+        ${feature && featureLabels[feature] ? `<b>${featureLabels[feature][0]} <small>${featureLabels[feature][1]}</small></b>` : ""}
       </header>
       <div class="pron-focus-main">
         <div class="pron-focus-content">
-          <h2>${escapeHtml(analysis?.display || "")}</h2>
+          ${unit.type === "readWords" && selected?.hanzi ? `<h2>${escapeHtml(selected.hanzi)}</h2><p class="pron-readword-pinyin">${escapeHtml(selected.display)}</p>${selected.spokenPinyin && selected.spokenPinyin !== selected.display ? `<p class="pron-spoken-pinyin">实际读音：${escapeHtml(selected.spokenPinyin)} <small>Spoken form</small></p>` : ""}` : `<h2>${escapeHtml(analysis?.display || "")}</h2>`}
           ${renderDecomposition(analysis)}
           ${!tone && analysis?.final ? `<p class="pron-tone-note">本练习暂不标声调 <small>Tones are not marked in this exercise.</small></p>` : ""}
         </div>
@@ -423,6 +489,7 @@
   }
 
   function renderExercise(unit) {
+    if (unit.type === "syllableChoice") return renderSyllableChoice(unit);
     const group = currentGroup(unit);
     const selected = selectedItem(unit, group);
     return `${renderChapterNavigation(unit)}${renderGroupNavigation(unit, group)}
@@ -434,6 +501,23 @@
         ${unit.type === "toneMarking" ? renderToneMarking(unit, group, selected) : renderFocusStage(unit, group, selected)}
         ${renderChallenge(unit, group, selected)}
       </div>`;
+  }
+
+  function renderSyllableChoice(unit) {
+    const answered = unit.items.filter((item) => state.syllableAnswers[item.id]?.correct).length;
+    return `${renderChapterNavigation(unit)}<article class="pron-listening-choice">
+      <header><span>听音选择 <small>Listening choice</small></span><h2>${escapeHtml(localize(unit.title, "zh-CN"))}</h2><p>先播放音频，再勾选听到的音节并确认。答错后可以重听和再答。</p><strong>${answered} / ${unit.items.length}</strong></header>
+      <div class="pron-listening-choice-grid">${unit.items.map((item, index) => {
+        const result = state.syllableAnswers[item.id] || { attempts: 0, choice: "" };
+        return `<section class="pron-listening-question ${result.correct ? "is-correct" : result.revealed ? "is-revealed" : ""}" data-syllable-question="${item.id}">
+          <div class="pron-listening-number">${String(index + 1).padStart(2,"0")}</div>
+          <button type="button" class="pron-listen-button" data-pron-play="${item.cueId}">▶ <span>播放</span><small>Play</small></button>
+          <div class="pron-listening-options">${item.options.map((option) => `<button type="button" class="${result.choice === option ? "selected" : ""}${result.correct && option === item.answer ? " correct" : ""}${result.revealed && option === item.answer ? " correct" : ""}" data-syllable-option="${escapeHtml(option)}" data-syllable-id="${item.id}"><span aria-hidden="true">${result.choice === option ? "✓" : "○"}</span>${escapeHtml(option)}</button>`).join("")}</div>
+          <button type="button" class="pron-check-button" data-syllable-check="${item.id}"${result.correct ? " disabled" : ""}>确认 <small>Check</small></button>
+          ${result.message ? `<p class="pron-listening-feedback ${result.correct ? "correct" : "wrong"}">${escapeHtml(result.message)}</p>` : ""}
+        </section>`;
+      }).join("")}</div>
+    </article>`;
   }
 
   function comparisonButtons(unit) {
@@ -452,7 +536,7 @@
       <header><span>语音知识 <small>Phonetic Notes</small></span><h2>${escapeHtml(localize(unit.title, "zh-CN"))}</h2><p>${escapeHtml(localize(unit.title, "en"))}</p></header>
       ${comparisonButtons(unit)}
       ${unit.paragraphs ? `<div class="pron-knowledge-copy">${unit.paragraphs.map((paragraph) => `<section><p class="zh">${escapeHtml(paragraph.texts["zh-CN"] || "")}</p>${state.assistMode !== "immersion" ? `<p class="translation">${escapeHtml(localize(paragraph.texts))}</p>` : ""}${paragraph.cueId ? `<button type="button" data-pron-play="${paragraph.cueId}" aria-label="播放本段">▶</button>` : ""}</section>`).join("")}</div>` : ""}
-      ${examples.length ? `<div class="pron-example-grid">${examples.map((example) => `<section><h3>${escapeHtml(example.display)}</h3>${renderDecomposition(example)}${renderToneCurve(example.tone, true)}</section>`).join("")}</div>` : ""}
+      ${examples.length ? `<div class="pron-example-grid">${examples.map((example) => `<section><h3>${escapeHtml(example.display)}</h3>${example.hanzi && example.hanzi !== example.display ? `<p class="pron-example-hanzi">${escapeHtml(example.hanzi)}</p>` : ""}${renderDecomposition(example)}${renderToneCurve(example.tone, true)}<div class="pron-example-actions">${example.cueId ? `<button type="button" data-pron-play="${example.cueId}">▶ 播放 <small>Play</small></button>` : ""}<button type="button" data-knowledge-repeat="${escapeHtml(example.id)}">● 跟读测评 <small>Repeat</small></button></div></section>`).join("")}</div>` : ""}
       ${unit.items ? `<section class="pron-chart-section"><div class="pron-chart-grid">${unit.items.map((item) => `<button type="button" class="${itemKey(item) === itemKey(selected || {}) ? "active" : ""}" data-pron-select="${escapeHtml(itemKey(item))}"><strong>${escapeHtml(item.display)}</strong><span>选择 <small>Select</small></span></button>`).join("")}</div>${selected ? renderFocusStage(unit, null, selected) : ""}</section>` : ""}
     </article>`;
   }
@@ -549,7 +633,10 @@
     const group = textGroupForItem(item);
     state.textGroupId = group?.id || state.textGroupId;
     const meaning = state.assistMode === "immersion" ? "" : localize(item.meanings);
-    const note = part.notes?.find((entry) => entry.id === item.noteId);
+    const noteIds = item.noteIds?.length ? item.noteIds : (item.noteId ? [item.noteId] : []);
+    const notes = noteIds.map((id) => part.notes?.find((entry) => entry.id === id)).filter(Boolean);
+    const note = notes[0];
+    const noteButton = notes.length ? `<button type="button" class="pron-action note" data-content-notes="${escapeAttribute(notes.map((entry) => entry.id).join(","))}">i ${bilingual(notes.length > 1 ? `综合注释 ${notes.length}` : "综合注释", notes.length > 1 ? `${notes.length} Notes` : "Note")}</button>` : "";
     if (section.type === "oralPractice") return renderOralPractice(part, section, items, item, meaning, note);
     if (section.type === "text") {
       return `<article class="beginner-text-stage beginner-sentence-stage">
@@ -563,7 +650,7 @@
           <div class="beginner-text-actions">
             <button type="button" class="pron-action primary" data-content-play="${escapeHtml(item.cueId || "")}">▶ ${bilingual("播放", "Play")}</button>
             <button type="button" class="pron-action record" data-text-repeat>● ${bilingual("跟读", "Repeat")}</button>
-            ${note ? `<button type="button" class="pron-action note" data-content-note="${escapeHtml(note.id)}">i ${bilingual("综合注释", "Note")}</button>` : ""}
+            ${noteButton}
           </div>
         </div>
         <nav class="beginner-item-strip beginner-sentence-strip" aria-label="选择课文句子">
@@ -585,7 +672,7 @@
         <div class="beginner-text-actions">
           <button type="button" class="pron-action primary" data-content-play="${escapeHtml(item.cueId || "")}">▶ ${bilingual("播放", "Play")}</button>
           <button type="button" class="pron-action record" data-text-repeat>● ${bilingual("跟读", "Repeat")}</button>
-          ${note ? `<button type="button" class="pron-action note" data-content-note="${escapeHtml(note.id)}">i ${bilingual("综合注释", "Note")}</button>` : ""}
+          ${noteButton}
         </div>
       </div>
       <nav class="beginner-item-strip" aria-label="选择生词">
@@ -620,6 +707,9 @@
 
   function renderGuidedDialoguePractice(item) {
     const saved = localStorage.getItem(`beginnerPractice:${state.model.lessonId}:${item.id}`) || "";
+    if (item.scenarios?.length) {
+      return `${renderPracticeSupport(item)}<div class="practice-dialogue-list">${item.scenarios.map((scenario) => `<article class="practice-fill-dialogue"><h3>${escapeHtml(scenario.prompt)}</h3>${scenario.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</article>`).join("")}</div><label class="practice-open-field"><span>我的对话 <small>My dialogue</small></span><textarea rows="5" data-practice-open placeholder="A：……\nB：……">${escapeHtml(saved)}</textarea></label>`;
+    }
     if (state.model.lessonId === "cjzh-1-3") {
       const mode = state.practiceModes[item.id] || "cards";
       const cards = item.answerCards || ["我姓王。", "我叫王小明。", "你呢？", "认识你很高兴。"];
@@ -719,7 +809,67 @@
       <p class="practice-support-note">完整答案和解析只在提交后显示，避免直接透露答案。<small>Full answers appear only after submission.</small></p></div></details>`;
   }
 
+  function practiceAnswerField(key, answers, choices = []) {
+    const expected = (Array.isArray(answers) ? answers : [answers]).filter(Boolean);
+    const attrs = `data-generic-key="${escapeHtml(key)}" data-generic-answers="${escapeHtml(expected.join("||"))}"`;
+    if (choices.length) return `<select ${attrs}><option value="">请选择</option>${choices.map((choice) => `<option value="${escapeHtml(choice)}">${escapeHtml(choice)}</option>`).join("")}</select>`;
+    return `<input ${attrs} autocomplete="off" placeholder="在这里作答">`;
+  }
+
+  function renderCharacterPinyin(hanzi, syllables = []) {
+    let syllableIndex = 0;
+    return [...String(hanzi || "")].map((character) => {
+      if (!/[\u3400-\u9fff]/.test(character)) return escapeHtml(character);
+      const pinyin = syllables[syllableIndex++] || "";
+      return `<ruby><span>${escapeHtml(character)}</span>${pinyin ? `<rt>${escapeHtml(pinyin)}</rt>` : ""}</ruby>`;
+    }).join("");
+  }
+
+  function alignedPracticeText(value, syllables, fallbackPinyin = "") {
+    if (Array.isArray(syllables) && syllables.length) return `<span class="aligned-hanzi-pinyin">${renderCharacterPinyin(value, syllables)}</span>`;
+    return `<span>${escapeHtml(value)}</span>${fallbackPinyin ? `<small>${escapeHtml(fallbackPinyin)}</small>` : ""}`;
+  }
+
+  function renderStructuredPractice(item) {
+    if (item.type === "digitCards") {
+      return `${renderPracticeSupport(item)}<div class="digit-card-board">${item.digits.map((digit) => `<span>${escapeHtml(digit)}</span>`).join("")}</div><div class="practice-number-example"><strong>示例</strong><span>${item.example.cards.map((digit) => `<b>${escapeHtml(digit)}</b>`).join("")} → ${escapeHtml(item.example.number)} → ${escapeHtml(item.example.hanzi)}</span><small>${escapeHtml(item.example.pinyin)}</small></div><label class="practice-open-field"><span>写出示例数字的汉字读法</span>${practiceAnswerField("number-reading",item.example.hanzi)}</label>`;
+    }
+    if (item.type === "guidedFamilyDialogue") {
+      return `${renderPracticeSupport(item)}<div class="guided-dialogue-lines">${item.lines.map((line) => `<p>${alignedPracticeText(line.hanzi,line.syllables,line.pinyin)}</p>`).join("")}</div><div class="practice-family-builder"><label>家庭人数${practiceAnswerField("family-size",item.familySizes.map(value=>`我家有${value}口人。`),item.familySizes.map(value=>`我家有${value}口人。`))}</label><label>家庭成员${practiceAnswerField("family-member",item.members,item.members)}</label><label>职业${practiceAnswerField("family-job",item.jobs,item.jobs)}</label></div>`;
+    }
+    if (item.type === "pictureOccupation") {
+      return `${renderPracticeSupport(item)}<p class="picture-question">${alignedPracticeText(item.question.hanzi,item.question.syllables,item.question.pinyin)}</p><div class="profession-card-grid">${item.cards.map((card,index) => `<article class="profession-card"><img src="${escapeHtml(`${state.dataRoot}/${card.image}`)}" alt="职业图片 ${index+1}" loading="lazy"><span>${index+1}</span>${practiceAnswerField(card.id,card.answer,item.options)}</article>`).join("")}</div>`;
+    }
+    if (item.type === "numberReading") {
+      return `${renderPracticeSupport(item)}<div class="number-reading-grid">${item.items.map((entry) => `<article><strong>${escapeHtml(entry.number)}</strong><span>${escapeHtml(entry.hanzi)}</span><small>${escapeHtml(entry.pinyin)}</small></article>`).join("")}</div>`;
+    }
+    if (item.type === "questionFromAnswer") {
+      return `${renderPracticeSupport(item)}<div class="practice-blank-list">${item.items.map((entry,index) => `<label><span>${index+1}. B：${escapeHtml(entry.answerLine)}<small>${escapeHtml(entry.answerPinyin)}</small></span><span>A：</span>${practiceAnswerField(entry.id,[entry.answer,...(entry.acceptedAnswers||[])])}</label>`).join("")}</div>`;
+    }
+    if (item.type === "hanziWordComplete") {
+      return `${renderPracticeSupport(item)}<div class="hanzi-completion-grid">${item.items.map((entry,index) => `<label><b>${index+1}.</b><span>${escapeHtml(entry.before)}</span>${practiceAnswerField(entry.id,entry.answer)}<span>${escapeHtml(entry.after)}</span><small>${escapeHtml(entry.pinyin)}</small></label>`).join("")}</div>`;
+    }
+    if (item.type === "substitutionDialogue") {
+      return `${renderPracticeSupport(item)}<div class="practice-dialogue-list">${item.patterns.map((pattern, index) => `<article class="practice-fill-dialogue"><h3>练习 ${index + 1}</h3>${pattern.example.map((line) => `<p><b>${escapeHtml(line.role)}：</b>${escapeHtml(line.hanzi)}<small>${escapeHtml(line.pinyin || "")}</small></p>`).join("")}</article>`).join("")}</div><label class="practice-open-field"><span>选择词语后写下或说出一组新对话</span><textarea rows="4" data-practice-open placeholder="A：……\nB：……"></textarea></label>`;
+    }
+    if (item.type === "threeWayMatch") {
+      const pools = Object.fromEntries(item.columns.map((column) => [column, item.rows.map((row) => row[column])]));
+      return `${renderPracticeSupport(item)}<div class="practice-name-grid">${item.rows.map((row) => `<article class="practice-name-card"><header><strong>${escapeHtml(row.given.map((key) => row[key]).join(" · "))}</strong></header>${item.columns.filter((column) => !row.given.includes(column)).map((column) => `<label><span>${escapeHtml({country:"国家",nationality:"国籍",language:"语言"}[column])}</span>${practiceAnswerField(`${row.id}:${column}`, row[column], pools[column])}</label>`).join("")}</article>`).join("")}</div>`;
+    }
+    if (item.type === "wordBankFill") {
+      return `${renderPracticeSupport(item)}<div class="practice-word-bank">${item.wordBank.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div><div class="practice-blank-list">${item.items.map((entry, index) => `<label><span>${index + 1}. ${alignedPracticeText(entry.prompt,entry.syllables,entry.pinyin)}</span>${practiceAnswerField(entry.id, entry.answer, item.wordBank)}</label>`).join("")}</div>`;
+    }
+    if (item.type === "sentenceTransform") {
+      return `${renderPracticeSupport(item)}<p class="practice-instruction">例：${escapeHtml(item.example.source)} → ${escapeHtml(item.example.answer)}</p><div class="practice-blank-list">${item.items.map((entry, index) => `<label><span>${index + 1}. ${escapeHtml(entry.source)}</span>${practiceAnswerField(entry.id, [entry.answer, ...(entry.acceptedAnswers || [])])}</label>`).join("")}</div>`;
+    }
+    if (item.type === "questionAnswerTransform") {
+      return `${renderPracticeSupport(item)}<div class="practice-dialogue-list">${item.items.map((entry, index) => `<article class="practice-fill-dialogue"><h3>${index + 1}. ${escapeHtml(entry.source)}</h3><label>问句${practiceAnswerField(`${entry.id}:question`, entry.question)}</label><label>肯定回答${practiceAnswerField(`${entry.id}:positive`, entry.positive)}</label><label>否定回答${practiceAnswerField(`${entry.id}:negative`, entry.negative)}</label></article>`).join("")}</div>`;
+    }
+    return "";
+  }
+
   function renderPracticeBody(item) {
+    if (["substitutionDialogue", "threeWayMatch", "wordBankFill", "sentenceTransform", "questionAnswerTransform", "digitCards", "guidedFamilyDialogue", "pictureOccupation", "numberReading", "questionFromAnswer", "hanziWordComplete"].includes(item.type)) return renderStructuredPractice(item);
     if (item.type === "guidedDialogue") return renderGuidedDialoguePractice(item);
     if (item.type === "nameSplit") return renderNameSplitPractice(item);
     if (item.type === "pinyinTone") return renderPinyinTonePractice(item);
@@ -734,7 +884,7 @@
     return `<article class="beginner-practice-stage">
       <header class="beginner-practice-heading"><span>${escapeHtml(localize(item.sectionTitle, "zh-CN"))}<small>${escapeHtml(localize(item.sectionTitle, "en"))}</small></span><h2>${escapeHtml(localize(item.title, "zh-CN"))}</h2><p>${escapeHtml(localize(item.title, "en"))}</p></header>
       <div class="beginner-practice-body">${renderPracticeBody(item)}</div>
-      <footer class="beginner-practice-actions"><button type="button" class="pron-action primary" data-practice-submit>✓ ${bilingual(item.type === "openResponse" || item.type === "guidedDialogue" ? "保存练习" : "确认答案", item.type === "openResponse" || item.type === "guidedDialogue" ? "Save" : "Check answers")}</button><p id="practiceResult" aria-live="polite"></p></footer>
+      <footer class="beginner-practice-actions"><button type="button" class="pron-action primary" data-practice-submit>✓ ${bilingual(["openResponse", "guidedDialogue", "substitutionDialogue"].includes(item.type) ? "保存练习" : "确认答案", ["openResponse", "guidedDialogue", "substitutionDialogue"].includes(item.type) ? "Save" : "Check answers")}</button><p id="practiceResult" aria-live="polite"></p></footer>
       <nav class="beginner-item-strip practice-item-strip" aria-label="选择练习">${items.map((entry, index) => `<button type="button" class="${index === state.practiceIndex ? "active" : ""}" data-practice-item="${index}"><strong>${String(index + 1).padStart(2, "0")}</strong><small>${escapeHtml(localize(entry.title, "zh-CN"))}</small></button>`).join("")}</nav>
     </article>`;
   }
@@ -747,7 +897,12 @@
     const item = currentPracticeItem();
     const result = document.querySelector("#practiceResult");
     if (!item || !result) return;
-    if (item.type === "guidedDialogue" || item.type === "openResponse") {
+    if (item.type === "numberReading") {
+      result.textContent = "已完成朗读练习。请对照逐项拼音再读一遍。 / Reading practice completed.";
+      result.className = "is-correct";
+      return;
+    }
+    if (item.type === "guidedDialogue" || item.type === "openResponse" || item.type === "substitutionDialogue") {
       const value = elements.unitContent.querySelector("[data-practice-open]")?.value.trim() || localStorage.getItem(`beginnerPractice:${state.model.lessonId}:${item.id}`) || "";
       if (!value) { result.textContent = "请先完成内容。 / Please complete the activity first."; result.className = "is-error"; return; }
       localStorage.setItem(`beginnerPractice:${state.model.lessonId}:${item.id}`, value);
@@ -757,7 +912,16 @@
     }
     let correct = 0;
     let total = 0;
-    if (item.type === "nameSplit") {
+    if (["threeWayMatch", "wordBankFill", "sentenceTransform", "questionAnswerTransform", "digitCards", "guidedFamilyDialogue", "pictureOccupation", "questionFromAnswer", "hanziWordComplete"].includes(item.type)) {
+      elements.unitContent.querySelectorAll("[data-generic-answers]").forEach((field) => {
+        const answers = String(field.dataset.genericAnswers || "").split("||").filter(Boolean);
+        const ok = answers.some((answer) => normalizePracticeAnswer(answer) === normalizePracticeAnswer(field.value));
+        field.classList.toggle("is-correct", ok);
+        field.classList.toggle("is-wrong", !ok);
+        correct += Number(ok);
+        total += 1;
+      });
+    } else if (item.type === "nameSplit") {
       (item.people || []).forEach((person) => {
         const card = elements.unitContent.querySelector(`[data-name-person="${person.id}"]`);
         const surnameOk = normalizePracticeAnswer(card?.querySelector("[data-name-surname]")?.value) === normalizePracticeAnswer(person.surname);
@@ -1300,19 +1464,33 @@
     }
   }
 
-  function openContentNote(noteId) {
-    const note = textPart()?.notes?.find((entry) => entry.id === noteId);
-    if (!note) return;
-    elements.assistContext.textContent = `课文注释 · ${languageNames[state.locale] || "English"}`;
-    elements.assistTitle.textContent = localize(note.title, "zh-CN");
-    elements.assistTabs.innerHTML = "";
-    elements.assistContent.innerHTML = `<article class="beginner-note">
+  function renderContentNoteTable(table) {
+    const columns = table.columns || [];
+    return `<div class="beginner-note-table-wrap"><table class="beginner-note-table"><thead><tr>${columns.map((column) => `<th>${escapeHtml(localize(column.label))}</th>`).join("")}</tr></thead><tbody>${(table.rows || []).map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(row[column.key] || "")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  }
+
+  function renderContentNoteCard(note) {
+    const nativeContent = state.assistMode !== "immersion" ? localize(note.content) : "";
+    return `<article class="beginner-note">
       <header><span>${escapeHtml(note.target)}</span><div><strong>${escapeHtml(localize(note.title, "zh-CN"))}</strong><small>${escapeHtml(localize(note.title, "en"))}</small></div></header>
       <section><h3>中文解释 <small>Chinese explanation</small></h3><p>${escapeHtml(note.content["zh-CN"])}</p></section>
-      ${state.assistMode !== "immersion" ? `<section class="native"><h3>${escapeHtml(languageNames[state.locale] || "English")}</h3><p>${escapeHtml(localize(note.content))}</p></section>` : ""}
+      ${nativeContent ? `<section class="native"><h3>${escapeHtml(languageNames[state.locale] || "English")}</h3><p>${escapeHtml(nativeContent)}</p></section>` : ""}
+      ${(note.tables || []).map(renderContentNoteTable).join("")}
+      ${note.examples?.length ? `<section class="beginner-note-examples"><h3>例句 <small>Examples</small></h3>${note.examples.map((example) => `<p><strong>${escapeHtml(example.hanzi)}</strong><small>${escapeHtml(example.pinyin || "")}</small></p>`).join("")}</section>` : ""}
     </article>`;
+  }
+
+  function openContentNotes(noteIds) {
+    const notes = noteIds.map((noteId) => textPart()?.notes?.find((entry) => entry.id === noteId)).filter(Boolean);
+    if (!notes.length) return;
+    elements.assistContext.textContent = `课文注释 · ${languageNames[state.locale] || "English"}`;
+    elements.assistTitle.textContent = notes.length > 1 ? `综合注释（${notes.length}）` : localize(notes[0].title, "zh-CN");
+    elements.assistTabs.innerHTML = "";
+    elements.assistContent.innerHTML = `<div class="beginner-note-list">${notes.map(renderContentNoteCard).join("")}</div>`;
     elements.assistZone.hidden = false;
   }
+
+  function openContentNote(noteId) { openContentNotes([noteId]); }
 
   function loadCharacterData(character, onComplete, onError) {
     const bundled = window.DIGITAL_BOOK_STROKE_DATA?.[character];
@@ -1500,6 +1678,32 @@
       if (state[key] < length - 1) { dismissPinyinAssessment(); state[key] += 1; stopAudio(); state.audioSegment = null; render(); resetLearningScroll(); }
     });
     elements.unitContent.addEventListener("click", (event) => {
+      const syllableOption = event.target.closest("[data-syllable-option]");
+      if (syllableOption) {
+        const id = syllableOption.dataset.syllableId;
+        state.syllableAnswers[id] = { ...(state.syllableAnswers[id] || { attempts: 0 }), choice: syllableOption.dataset.syllableOption, message: "" };
+        const question = syllableOption.closest("[data-syllable-question]");
+        question?.querySelectorAll("[data-syllable-option]").forEach((button) => button.classList.toggle("selected", button === syllableOption));
+        return;
+      }
+      const syllableCheck = event.target.closest("[data-syllable-check]")?.dataset.syllableCheck;
+      if (syllableCheck) {
+        const unit = currentUnit();
+        const item = unit.items?.find((entry) => entry.id === syllableCheck);
+        const previous = state.syllableAnswers[syllableCheck] || { attempts: 0, choice: "" };
+        if (!previous.choice) { previous.message = "请先勾选一个音节。 / Choose one syllable first."; state.syllableAnswers[syllableCheck] = previous; render(); return; }
+        const correct = previous.choice === item.answer;
+        const attempts = previous.attempts + 1;
+        state.syllableAnswers[syllableCheck] = { ...previous, attempts, correct, revealed: !correct && attempts >= 2, message: correct ? `正确：${item.answer}` : attempts >= 2 ? `正确答案：${item.answer}。请再听一次。` : "还不对，请重听后再试一次。" };
+        render();
+        return;
+      }
+      const knowledgeRepeat = event.target.closest("[data-knowledge-repeat]")?.dataset.knowledgeRepeat;
+      if (knowledgeRepeat) {
+        const example = currentUnit()?.examples?.find((entry) => entry.id === knowledgeRepeat);
+        if (example) openPinyinAssessment({ id: example.id, display: example.hanzi || example.display, referencePinyin: example.spokenPinyin || example.pinyin || example.display, referenceText: example.hanzi || example.display, cueId: example.cueId || "", mode: "sentence", unitType: "pinyin-rule-example", title: "语音知识例词跟读测评", contextLabel: "规则例词" });
+        return;
+      }
       const practiceItem = event.target.closest("[data-practice-item]")?.dataset.practiceItem;
       if (practiceItem !== undefined) { state.practiceIndex = Number(practiceItem); render(); resetLearningScroll(); return; }
       const practiceMode = event.target.closest("[data-practice-mode]");
@@ -1540,6 +1744,8 @@
       if (characterItem !== undefined) { state.characterIndex = Number(characterItem); stopAudio(); state.audioSegment = null; render(); resetLearningScroll(); return; }
       const contentCue = event.target.closest("[data-content-play]")?.dataset.contentPlay;
       if (contentCue) return void playCue(contentCue);
+      const noteIds = event.target.closest("[data-content-notes]")?.dataset.contentNotes;
+      if (noteIds) { openContentNotes(noteIds.split(",").filter(Boolean)); return; }
       const noteId = event.target.closest("[data-content-note]")?.dataset.contentNote;
       if (noteId) { openContentNote(noteId); return; }
       if (event.target.closest("[data-text-repeat]")) { openPinyinAssessment(); return; }
@@ -1684,6 +1890,7 @@
   }
 
   async function start({ lessonId, dataRoot }) {
+    state.dataRoot = dataRoot;
     elements = {
       languageSelect: document.querySelector("#languageSelect"),
       unitTitle: document.querySelector("#unitTitle"), unitKicker: document.querySelector("#unitKicker"),
@@ -1705,17 +1912,43 @@
       const comparisonUrl = `${runtimeRoot}/pronunciation/native-language-comparisons.json`;
       const dataVersion = new URLSearchParams(window.location.search).get("v") || "current";
       const lessonDataUrl = (name) => `${dataRoot}/${name}?v=${encodeURIComponent(dataVersion)}`;
-      const [pagesResponse, pronunciationResponse, contentResponse, practiceResponse, practiceTranslationsResponse, comparisonResponse] = await Promise.all([
+      const [pagesResponse, pronunciationResponse, contentResponse, practiceResponse, practiceTranslationsResponse, comparisonResponse, vocabularyMetadataResponse, vocabularyAudioResponse, textAudioResponse, contentTranslationsResponse, textNotesResponse] = await Promise.all([
         fetch(lessonDataUrl("book-pages.json")), fetch(lessonDataUrl("pronunciation.json")),
         fetch(lessonDataUrl("lesson-content.json")).catch(() => null),
         fetch(lessonDataUrl("lesson-practice.json")).catch(() => null),
         fetch(lessonDataUrl("practice-translations.json")).catch(() => null),
         fetch(comparisonUrl).catch(() => null),
+        fetch(lessonDataUrl("vocabulary-metadata.json")).catch(() => null),
+        fetch(lessonDataUrl("vocabulary-audio.json")).catch(() => null),
+        fetch(lessonDataUrl("text-audio.json")).catch(() => null),
+        fetch(lessonDataUrl("content-translations.json")).catch(() => null),
+        fetch(lessonDataUrl("text-notes.json")).catch(() => null),
       ]);
       if (!pagesResponse.ok || !pronunciationResponse.ok) throw new Error("初级语音课程数据不完整");
       const pages = await pagesResponse.json();
       state.model = await pronunciationResponse.json();
-      state.contentModel = contentResponse?.ok ? await contentResponse.json() : null;
+      const authoredContentModel = contentResponse?.ok ? await contentResponse.json() : null;
+      let splitContentModel = null;
+      if (vocabularyMetadataResponse?.ok && vocabularyAudioResponse?.ok && textAudioResponse?.ok) {
+        const [metadata, vocabularyAudio, textAudio, translations, notes] = await Promise.all([
+          vocabularyMetadataResponse.json(), vocabularyAudioResponse.json(), textAudioResponse.json(),
+          contentTranslationsResponse?.ok ? contentTranslationsResponse.json() : null,
+          textNotesResponse?.ok ? textNotesResponse.json() : null,
+        ]);
+        splitContentModel = buildSplitContentModel(metadata, vocabularyAudio, textAudio, translations, notes);
+      }
+      if (authoredContentModel && splitContentModel) {
+        const authoredParts = authoredContentModel.parts || [];
+        const splitParts = splitContentModel.parts || [];
+        state.contentModel = {
+          ...splitContentModel,
+          ...authoredContentModel,
+          cues: [...(splitContentModel.cues || []), ...(authoredContentModel.cues || [])],
+          parts: [...splitParts.filter((part) => !authoredParts.some((authored) => authored.id === part.id)), ...authoredParts],
+        };
+      } else {
+        state.contentModel = authoredContentModel || splitContentModel;
+      }
       state.practiceModel = practiceResponse?.ok ? await practiceResponse.json() : null;
       state.practiceTranslations = practiceTranslationsResponse?.ok ? await practiceTranslationsResponse.json() : null;
       if (comparisonResponse?.ok) {
@@ -1747,6 +1980,7 @@
       bindEvents();
       render();
     } catch (error) {
+      console.error("PronunciationRenderer start failed", error);
       document.querySelector("#unitContent").innerHTML = `<p class="load-error">语音学习数据加载失败：${escapeHtml(error.message)}</p>`;
     }
   }
