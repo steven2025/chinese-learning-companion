@@ -4,7 +4,12 @@
   const TRACKED_TYPES = new Set(["choice", "fillBlank", "dialogueFill", "wordBankFill", "readingCloze"]);
   const SUBJECTIVE_TYPES = new Set(["rewrite", "openDialogue", "shortAnswer", "personalReflection", "guidedProduction", "guidedWriting", "dialogueCompletion", "cultureComparison", "needsReview"]);
   const DIMENSION_LABELS = Object.freeze({ taskCompletion: "任务完成", targetVocabulary: "目标词汇", contentStructure: "内容结构", chineseExpression: "汉语表达" });
-  const lessonNames = { "zjzh-1-1": "第1课 · 你咋不早说", "zjzh-1-2": "第2课 · 和时间赛跑" };
+  const lessonNames = {
+    "zjzh-1-1": "第1课 · 你咋不早说",
+    "zjzh-1-2": "第2课 · 和时间赛跑",
+    "zjzh-1-3": "第3课 · 租房那些事",
+    "zjzh-1-4": "第4课 · 老舍小时候的故事",
+  };
   const elements = {
     panel: document.querySelector("#teacherPracticePanel"),
     lesson: document.querySelector("#practiceReportLesson"),

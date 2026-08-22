@@ -57,17 +57,17 @@ const books = catalog.flatMap((level) => level.books.map(([id, label]) => ({ id,
 const learningBooks = Object.freeze({
   "beginner-comprehensive-1": {
     lessonPrefix: "cjzh-1",
-    lessons: ["你好", "你是哪国人？", "你叫什么名字？"],
-    available: 3,
-    countLabel: "已开放3课",
-    contentLabel: "语音、生词、课文、汉字",
+    lessons: ["你好", "你是哪国人？", "你叫什么名字？", "你学习法语吗？", "你家有几口人？"],
+    available: 5,
+    countLabel: "已开放5课",
+    contentLabel: "语音、生词、课文、练习、汉字",
     cover: "初级<br>综合Ⅰ",
   },
   "intermediate-comprehensive-1": {
     lessonPrefix: "zjzh-1",
-    lessons: ["你咋不早说", "和时间赛跑", "租房那些事", "第4课", "第5课", "第6课", "第7课", "第8课", "第9课", "第10课", "第11课", "第12课", "第13课", "第14课"],
-    available: 3,
-    countLabel: "共14课 · 已开放3课",
+    lessons: ["你咋不早说", "和时间赛跑", "租房那些事", "老舍小时候的故事", "第5课", "第6课", "第7课", "第8课", "第9课", "第10课", "第11课", "第12课", "第13课", "第14课"],
+    available: 4,
+    countLabel: "共14课 · 已开放4课",
     contentLabel: "词汇、课文、练习",
     cover: "中级<br>综合Ⅰ",
   },
@@ -100,7 +100,7 @@ const viewLabels = { home: "首页", courses: "我的课程", writing: "写作�
 
 if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("../../sw.js?v=34", { scope: "../../" }).catch(() => {});
+    navigator.serviceWorker.register("../../sw.js?v=43", { scope: "../../" }).catch(() => {});
   });
 }
 const elements = {
