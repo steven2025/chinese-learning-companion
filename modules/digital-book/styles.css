@@ -200,6 +200,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   line-height: 1.65;
   text-align: left;
 }
+.practice-prompt.is-compact { font: 700 clamp(18px, 2.2vw, 24px)/1.7 "STKaiti", "KaiTi", serif; }
 .word-bank { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 24px auto 0; }
 .word-bank span { padding: 7px 12px; color: #3c4c4d; border: 1px solid #c6d2ce; border-radius: 4px; background: #f7f9f7; font-size: 14px; }
 .choice-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 900px; margin: 20px auto 0; }
@@ -210,6 +211,12 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .practice-activity-unit { width: min(980px, 100%); margin: 0 auto; text-align: left; }
 .practice-activity-prompt { margin: 0 0 20px; color: #1d3a3f; font: 700 clamp(24px, 3vw, 34px)/1.55 "STKaiti", "KaiTi", serif; text-align: left; }
 .practice-activity-steps { display: grid; gap: 16px; }
+.activity-step-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.activity-step-tab { padding: 8px 16px; color: #3c5b5e; border: 1px solid #c6d2ce; border-radius: 999px; background: #fff; font-size: 14px; font-weight: 800; cursor: pointer; transition: border-color .18s ease, background .18s ease, color .18s ease; }
+.activity-step-tab:hover { border-color: #7fc4bc; background: #f0faf8; }
+.activity-step-tab.is-active { color: #fff; border-color: var(--teal); background: var(--teal); }
+.activity-step-tab.is-filled { border-color: #7fc4bc; }
+.activity-step-tab.is-partial { color: #a9702f; border-color: #e2c795; }
 .activity-step { padding: 18px 20px; border: 1px solid #d8e6e3; border-radius: 14px; background: #fbfdfd; }
 .activity-step-label { display: block; margin-bottom: 9px; color: var(--teal); font-size: 13px; font-weight: 800; letter-spacing: .04em; }
 .activity-step-text { margin: 0 0 11px; color: #304244; font-size: 18px; line-height: 1.75; white-space: pre-line; }
@@ -224,6 +231,25 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .activity-writing-clear { color: #a34a45; }
 .activity-writing-status { color: #2f7d72; font-size: 13px; font-weight: 700; }
 .activity-step-writing-controls { margin-top: 10px; }
+.reference-examples { max-width: 900px; margin: 22px auto 0; border: 1px solid #c6d2ce; border-radius: 14px; background: #f8faf9; overflow: hidden; }
+.reference-example-tabs { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid #d8e2df; background: #f0f6f3; }
+.reference-example-tab { padding: 6px 14px; color: #3c5b5e; border: 1px solid transparent; border-radius: 999px; background: transparent; font-size: 14px; font-weight: 800; cursor: pointer; }
+.reference-example-tab.is-active { color: #fff; border-color: var(--teal); background: var(--teal); }
+.reference-example-body { max-height: 420px; padding: 18px 22px; overflow-y: auto; white-space: pre-line; font: 500 17px/1.85 "STKaiti", "KaiTi", serif; }
+.structured-fill-unit .structured-slot-intro { margin: 0 0 14px; color: #3e5f63; font-size: 15px; }
+.hanzi-chain-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; padding: 18px; border: 1px solid #d8e6e3; border-radius: 14px; background: #fbfdfd; }
+.hanzi-chain-source { min-width: 64px; padding: 10px 16px; color: #fff; border-radius: 12px; background: var(--teal); font-size: 22px; text-align: center; }
+.hanzi-chain-arrow { color: #7f9a96; font-size: 22px; font-weight: 800; }
+.hanzi-chain-row input { width: 130px; padding: 10px 12px; color: var(--ink); border: 1px solid #aebfba; border-radius: 8px; background: #fff; font-size: 18px; text-align: center; }
+.structured-slot-list { display: grid; gap: 12px; max-width: 560px; margin: 0 auto; }
+.structured-slot { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid #d8e6e3; border-radius: 12px; background: #fbfdfd; }
+.structured-slot-label { color: #2f7d72; font-size: 16px; font-weight: 800; }
+.structured-slot input { width: 100%; padding: 10px 14px; color: var(--ink); border: 1px solid #aebfba; border-radius: 8px; background: #fff; font-size: 16px; }
+@media (max-width: 560px) {
+  .hanzi-chain-row { gap: 8px; }
+  .hanzi-chain-row input { width: 100px; }
+  .structured-slot { grid-template-columns: 1fr; gap: 6px; }
+}
 .practice-activity-unit .answer-actions { justify-content: flex-end; }
 .answer-box { max-width: 900px; margin: 28px auto 0; }
 .answer-box textarea { width: 100%; min-height: 120px; padding: 15px; color: var(--ink); border: 1px solid #aebfba; border-radius: 6px; background: #fff; font-size: 18px; line-height: 1.65; resize: vertical; }
@@ -1226,8 +1252,18 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
   min-width: min(760px, calc(100vw - 16px));
   height: min(760px, calc(100dvh - 104px));
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
-.practice-writing-panel-body { height: calc(100% - 66px); overflow: auto; }
+#practiceWritingContent {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.practice-writing-panel-header { flex-shrink: 0; }
+.practice-writing-panel-body { flex: 1 1 auto; min-height: 0; height: auto; overflow: auto; }
 .practice-writing-layout {
   min-height: 520px;
   display: grid;
