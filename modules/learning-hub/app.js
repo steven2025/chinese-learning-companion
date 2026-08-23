@@ -833,7 +833,7 @@ function renderCourseStudentsTable(students) {
     elements.courseStudentTable.innerHTML = '<p class="empty-approval">还没有学生，点击“＋新增学生”或“导入 Excel”。</p>';
     return;
   }
-  elements.courseStudentTable.innerHTML = `<div class="course-student-row head"><span>姓名</span><span>英文名</span><span>学号</span><span>邀请码</span><span>操作</span></div>` + students.map((student) => `<div class="course-student-row"><span><strong>${escapeHtml(student.chineseName || "—")}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="invite-cell"><code>${escapeHtml(student.inviteCode)}</code><button class="quiet-button" type="button" data-copy-invite="${escapeHtml(student.studentId)}">复制</button></span><span class="course-student-actions"><button class="quiet-button" type="button" data-reset-invite="${escapeHtml(student.studentId)}">重置码</button><button class="quiet-button" type="button" data-edit-student="${escapeHtml(student.studentId)}">编辑</button><button class="danger-button" type="button" data-remove-student-course="${escapeHtml(student.studentId)}">移除</button></span></div>`).join("");
+  elements.courseStudentTable.innerHTML = `<div class="course-student-row head"><span>姓名</span><span>英文名</span><span>学号</span><span>邀请码</span><span>操作</span></div>` + students.map((student) => `<div class="course-student-row"><span><strong>${escapeHtml(student.chineseName || "—")}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="invite-cell"><code>${escapeHtml(student.inviteCode)}</code><button class="quiet-button" type="button" data-copy-invite="${escapeHtml(student.studentId)}">复制信息</button></span><span class="course-student-actions"><button class="quiet-button" type="button" data-reset-invite="${escapeHtml(student.studentId)}">重置码</button><button class="quiet-button" type="button" data-edit-student="${escapeHtml(student.studentId)}">编辑</button><button class="danger-button" type="button" data-remove-student-course="${escapeHtml(student.studentId)}">移除</button></span></div>`).join("");
 }
 
 function openAddStudentDialog(entry) {
@@ -962,7 +962,8 @@ async function refreshActiveCourseStudents() {
 function studentInviteText(entry) {
   const course = state.activeTeacherCourse || {};
   const book = bookById(course.bookId);
-  return `Your Id: ${entry.studentId}\nInvitation code: ${entry.inviteCode}\nCourse: ${book.label}\nSign in with your Id and Invitation code.\nhttps://steven2025.github.io/chinese-learning-companion`;
+  const name = [entry.chineseName, entry.englishName].filter(Boolean).join(" / ") || entry.studentId;
+  return `Student: ${name}\nYour Id: ${entry.studentId}\nInvitation code: ${entry.inviteCode}\nCourse: ${book.label}\nSign in with your Id and Invitation code.\nhttps://steven2025.github.io/chinese-learning-companion`;
 }
 
 async function copyTextToClipboard(text) {
@@ -1005,12 +1006,23 @@ function downloadStudentTemplate() {
     return;
   }
   const sheet = window.XLSX.utils.aoa_to_sheet([
-    ["学号 (Student ID)", "中文名 (Chinese name)", "英文名 (English name)", "邀请码 (Invitation code, 留空自动生成)"],
-    ["20260001", "王小明", "Mike", ""],
+    ["学号 (Student ID)", "中文名 (Chinese name)", "英文名 (English name)"],
+    ["20260001", "王小明", ""],
+    ["20260002", "", "Mike"],
   ]);
   const workbook = window.XLSX.utils.book_new();
   window.XLSX.utils.book_append_sheet(workbook, sheet, "学生名单");
-  window.XLSX.writeFile(workbook, "学生导入模板.xlsx");
+  const output = window.XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "学生导入模板.xlsx";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  showToast("模板已生成，请检查下载 / Template ready");
 }
 
 async function importStudentExcel(file) {
