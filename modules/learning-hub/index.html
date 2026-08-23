@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260823-5">
+  <link rel="stylesheet" href="styles.css?v=20260823-6">
   <link rel="stylesheet" href="writing-zone.css?v=20260811-3">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
@@ -166,6 +166,13 @@
           <label><span>教材</span><select id="teacherBookSelect"></select></label>
           <div><span>任课教师</span><strong id="teacherContextName">—</strong></div>
         </section>
+        <nav class="teacher-tabs" aria-label="教学工作台功能">
+          <button class="active" type="button" data-teacher-tab="courses">课程管理 <small>Courses</small></button>
+          <button type="button" data-teacher-tab="writing">写作设置 <small>Writing</small></button>
+          <button type="button" data-teacher-tab="insights">班级学情 <small>Insights</small></button>
+          <button type="button" data-teacher-tab="inbox">作文收件箱 <small>Inbox</small></button>
+        </nav>
+        <section class="teacher-tab-panel" data-teacher-panel="courses">
         <section class="teacher-course-panel" id="teacherCoursePanel">
           <header class="teacher-course-head">
             <div><span>课程管理</span><h2>我的课程 <small>My courses</small></h2><p>按“学期 + 教材”建立课程，再在课程中添加学生并发放邀请码。</p></div>
@@ -180,23 +187,27 @@
             </header>
             <div class="course-student-toolbar">
               <button class="quiet-button" type="button" data-action="open-add-student">＋ 新增学生</button>
-              <button class="quiet-button" type="button" data-action="download-student-template">下载 Excel 模板</button>
+              <a class="quiet-button" href="templates/student-import-template.xlsx" download="学生导入模板.xlsx" data-action="download-student-template">下载 Excel 模板</a>
               <label class="file-import-label"><span>导入 Excel</span><input type="file" id="studentExcelInput" accept=".xlsx,.xls,.csv" hidden></label>
             </div>
             <p class="course-import-result" id="courseImportResult" role="status" hidden></p>
             <div class="course-student-table" id="courseStudentTable"></div>
           </section>
         </section>
+        <section class="approval-panel">
+          <header><div><span>课程成员</span><h2>本班学生</h2></div><strong id="classStudentCount">0人</strong></header>
+          <div id="classStudentList"></div>
+        </section>
+        </section>
+        <section class="teacher-tab-panel" data-teacher-panel="writing" hidden>
         <section class="writing-policy-panel" aria-labelledby="writingPolicyTitle">
           <div><span>47、48题</span><h2 id="writingPolicyTitle">写作作答方式 <small>Writing input mode</small></h2><p>此设置对当前学期、教材和班级生效。</p></div>
           <label><span>学生可使用</span><select id="writingInputModeSelect"><option value="both">键盘输入和手写作答</option><option value="handwriting-only">仅手写作答</option><option value="keyboard-only">仅键盘输入</option></select></label>
           <button class="primary-button" id="saveWritingPolicyButton" type="button">保存设置 <small>Save</small></button>
           <p id="writingPolicyStatus" role="status"></p>
         </section>
-        <section class="approval-panel">
-          <header><div><span>课程成员</span><h2>本班学生</h2></div><strong id="classStudentCount">0人</strong></header>
-          <div id="classStudentList"></div>
         </section>
+        <section class="teacher-tab-panel" data-teacher-panel="insights" hidden>
         <section class="teacher-practice-panel" id="teacherPracticePanel" aria-labelledby="teacherPracticeTitle">
           <header>
             <div><span>课程学情</span><h2 id="teacherPracticeTitle">班级学习简报 <small>Learning insights</small></h2><p>快速定位全班的词汇、课文和练习薄弱点。</p></div>
@@ -210,10 +221,13 @@
           <p class="practice-report-status" id="practiceReportStatus" role="status">选择课次后查看班级学习情况。</p>
           <div id="practiceReportContent"></div>
         </section>
+        </section>
+        <section class="teacher-tab-panel" data-teacher-panel="inbox" hidden>
         <section class="teacher-writing-summary">
           <div><span>写作专区</span><h2>作文收件箱</h2><p>查看学生手写作文、AI评价和待批阅记录。</p></div>
           <strong id="teacherWritingPending">0篇待批阅</strong>
           <button class="quiet-button" type="button" data-view="writing">打开收件箱</button>
+        </section>
         </section>
         <div class="management-list"><button>课文学习进度 <span>下一阶段</span></button><button>布置课程与作业 <span>待接入</span></button><a href="../digital-book/">以学生视图预览第1课 <span>打开 ›</span></a></div>
       </section>
@@ -294,10 +308,10 @@
       </form>
 
       <form class="auth-panel" id="adminLoginForm" data-auth-panel="admin-login" hidden>
-        <label><span>管理员姓名</span><input name="administrator" value="鄢清华" readonly></label>
-        <label><span>管理员邀请码</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
+        <label><span>管理员姓名</span><input name="administrator" required autocomplete="username" placeholder="请输入管理员姓名"></label>
+        <label><span>管理员邀请码</span><input name="inviteCode" required autocomplete="one-time-code" placeholder="请输入管理员邀请码"></label>
         <button class="primary-button" type="submit">进入系统管理</button>
-        <p>当前管理员为鄢清华，测试邀请码为 123456。</p>
+        <p>管理员账号与邀请码由系统初始化，仅管理员本人持有，请勿泄露。</p>
       </form>
     </div>
   </dialog>
@@ -433,7 +447,7 @@
   <script src="../shared/learning-api-client.js?v=20260823-4"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260823-1"></script>
-  <script src="app.js?v=20260823-7" defer></script>
+  <script src="app.js?v=20260823-10" defer></script>
   <script src="writing-zone.js?v=20260823-1" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>

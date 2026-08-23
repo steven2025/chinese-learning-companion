@@ -1,8 +1,8 @@
 const terms = ["2026 Fall", "2027 Spring", "2027 Fall", "2028 Spring", "2028 Fall"];
 const defaultTeacher = "";
-const administrator = "鄢清华";
+const administrator = "";
 const TEST_STUDENT_ACCOUNT = "test";
-const TEST_INVITE_CODE = "123456";
+const TEST_INVITE_CODE = "yry20111025";
 const REVIEW_DATA_FILES = ["lesson-content.json", "lesson-practice.json", "pronunciation.json", "practice-translations.json", "text-notes.json", "vocabulary-metadata.json"];
 const REVIEW_LANGUAGE_CODES = new Set(["zh", "pinyin", "en", "es", "fr", "id", "ja", "ko", "lo", "ms", "my", "ru", "th", "vi"]);
 const languageShortLabels = {
@@ -441,7 +441,7 @@ function restoreStoredIdentity() {
     return;
   }
   if (profile.role === "admin") {
-    applyIdentity("admin", profile.name || administrator);
+    applyIdentity("admin", profile.name || "管理员");
     return;
   }
   applyIdentity("guest", "");
@@ -688,10 +688,15 @@ async function resolveAuthenticationContext(form, role, account, inviteCode) {
 
 async function handleAdminLogin(form) {
   const data = new FormData(form);
+  const name = data.get("administrator").trim();
   const inviteCode = data.get("inviteCode").trim();
+  if (!name) {
+    showToast("请输入管理员姓名");
+    return;
+  }
   if (window.LearningApi?.isConfigured()) {
     try {
-      await window.LearningApi.createSession({ role: "admin", inviteCode, name: administrator, bookId: "system" });
+      await window.LearningApi.createSession({ role: "admin", inviteCode, name, bookId: "system" });
     } catch (error) {
       showToast(error.message || "管理员邀请码登录失败");
       return;
@@ -701,7 +706,7 @@ async function handleAdminLogin(form) {
     return;
   }
   state.studentProfile = null;
-  applyIdentity("admin", administrator);
+  applyIdentity("admin", name);
   elements.roleDialog.close();
   setView("admin");
   showToast("已进入管理员界面原型");
@@ -1000,10 +1005,29 @@ async function copyAllInvites() {
   showToast(`已复制 ${students.length} 条邀请信息 / ${students.length} copied`);
 }
 
-function downloadStudentTemplate() {
-  if (!window.XLSX) {
-    showToast("Excel 组件未加载");
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+async function downloadStudentTemplate() {
+  try {
+    const response = await fetch("templates/student-import-template.xlsx", { cache: "no-cache" });
+    if (!response.ok) throw new Error("模板文件未找到");
+    downloadBlob(await response.blob(), "学生导入模板.xlsx");
+    showToast("模板已下载 / Template downloaded");
     return;
+  } catch (error) {
+    if (!window.XLSX) {
+      showToast("模板文件缺失，且 Excel 组件未加载");
+      return;
+    }
   }
   const sheet = window.XLSX.utils.aoa_to_sheet([
     ["学号 (Student ID)", "中文名 (Chinese name)", "英文名 (English name)"],
@@ -1013,28 +1037,28 @@ function downloadStudentTemplate() {
   const workbook = window.XLSX.utils.book_new();
   window.XLSX.utils.book_append_sheet(workbook, sheet, "学生名单");
   const output = window.XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const blob = new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "学生导入模板.xlsx";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  downloadBlob(new Blob([output], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), "学生导入模板.xlsx");
   showToast("模板已生成，请检查下载 / Template ready");
 }
 
+function parseCsvRows(text) {
+  return String(text || "").replace(/\r/g, "").split("\n").filter((line) => line.trim().length > 0).map((line) => line.split(",").map((cell) => String(cell || "").trim().replace(/^"|"$/g, "")));
+}
+
 async function importStudentExcel(file) {
-  if (!window.XLSX) {
-    showToast("Excel 组件未加载");
-    return;
-  }
   const course = state.activeTeacherCourse;
   if (!course) throw new Error("请先选择课程");
-  const buffer = await file.arrayBuffer();
-  const workbook = window.XLSX.read(buffer, { type: "array" });
-  const rows = window.XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+  let rows;
+  if (window.XLSX) {
+    const buffer = await file.arrayBuffer();
+    const workbook = window.XLSX.read(buffer, { type: "array" });
+    rows = window.XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+  } else if (/.csv$/i.test(file.name)) {
+    rows = parseCsvRows(await file.text());
+  } else {
+    showToast("Excel 组件未加载，请改用 CSV 模板导入");
+    return;
+  }
   const students = [];
   for (let index = 1; index < rows.length; index += 1) {
     const [studentId, chineseName, englishName, inviteCode] = rows[index] || [];
@@ -1208,6 +1232,15 @@ async function loadCloudTeacherStudents() {
     elements.classStudentCount.textContent = "读取失败";
     elements.classStudentList.innerHTML = `<p class="empty-approval">${escapeHtml(error.message || "暂时无法读取学生名单")}</p>`;
   }
+}
+
+function showTeacherTab(tab) {
+  document.querySelectorAll("[data-teacher-tab]").forEach((button) => button.classList.toggle("active", button.dataset.teacherTab === tab));
+  document.querySelectorAll("[data-teacher-panel]").forEach((panel) => {
+    const active = panel.dataset.teacherPanel === tab;
+    panel.hidden = !active;
+    panel.classList.toggle("active", active);
+  });
 }
 
 function showAdminTab(tab) {
@@ -1541,7 +1574,7 @@ document.addEventListener("click", (event) => {
   if (openCourseStudentsBtn) { void openCourseStudents(openCourseStudentsBtn.dataset.openCourseStudents); return; }
   if (event.target.closest("[data-action='back-course-list']")) { backCourseList(); return; }
   if (event.target.closest("[data-action='copy-all-invites']")) { void copyAllInvites(); return; }
-  if (event.target.closest("[data-action='download-student-template']")) { downloadStudentTemplate(); return; }
+  if (event.target.closest("[data-action='download-student-template']")) { event.preventDefault(); void downloadStudentTemplate(); return; }
   const copyInvite = event.target.closest("[data-copy-invite]");
   if (copyInvite) { void copyStudentInvite(copyInvite.dataset.copyInvite); return; }
   const resetInvite = event.target.closest("[data-reset-invite]");
@@ -1567,6 +1600,8 @@ document.addEventListener("click", (event) => {
   if (removeStudent) { removeEnrollment(removeStudent.dataset.id); return; }
   if (event.target.closest("[data-confirm-cancel]")) { elements.confirmDialog.close(); pendingRemoveEnrollment = null; return; }
   if (event.target.closest("[data-confirm-ok]")) { confirmPendingRemoveEnrollment(); return; }
+  const teacherTab = event.target.closest("[data-teacher-tab]")?.dataset.teacherTab;
+  if (teacherTab) { showTeacherTab(teacherTab); return; }
   const adminTab = event.target.closest("[data-admin-tab]")?.dataset.adminTab;
   if (adminTab) { showAdminTab(adminTab); return; }
   if (event.target.closest("[data-action='open-add-teacher']")) { elements.addTeacherForm.hidden = false; elements.addTeacherForm.querySelector('[name="teacherName"]')?.focus(); return; }
