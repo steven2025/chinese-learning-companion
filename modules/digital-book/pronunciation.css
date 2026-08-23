@@ -778,3 +778,36 @@
 .hanzi-card-word-hint { margin: 0; font-size: 18px; font-weight: 750; color: #a53d2c; }
 .hanzi-card-word-hint small { display: block; text-align: center; color: #718684; font-size: 13px; }
 @media (max-width: 700px) { .hanzi-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Lesson 5 number game */
+.number-game-rules { max-width: 640px; margin: 0 auto; padding: 20px 22px; border: 1px solid #cbdad7; border-radius: 16px; background: #fff; }
+.number-game-rules h3 { margin: 0 0 12px; color: #a53d2c; }
+.number-game-rules p { margin: 6px 0; font-size: 15px; line-height: 1.6; }
+.number-game-rule-zh { font-weight: 750; }
+.number-game-rule-py { color: #718684; }
+.number-game-rule-en { color: #718684; }
+.number-game-start { margin-top: 16px; text-align: center; }
+.number-game-stage { display: grid; justify-items: center; gap: 14px; padding: 10px 0 6px; }
+.number-game-score { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border: 1px solid #cbdad7; border-radius: 14px; background: #fff; }
+.number-game-ring { width: 64px; height: 64px; }
+.number-game-ring-bg { fill: none; stroke: #e4efec; stroke-width: 6; }
+.number-game-ring-fg { fill: none; stroke: #3b9d8f; stroke-width: 6; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 32px 32px; }
+.number-game-ring-text { fill: #173436; font-size: 15px; font-weight: 800; }
+.number-game-score-text { display: grid; gap: 2px; }
+.number-game-score-text strong { color: #173436; font-size: 15px; }
+.number-game-score-text span { color: #075f59; font-size: 17px; font-weight: 800; }
+.number-game-score-text small { color: #718684; font-size: 12px; }
+.number-game-number { margin: 4px 0 0; color: var(--number-game-color, #e88a84); font: 900 clamp(96px, 20vw, 168px)/1 "Segoe UI", "Arial", sans-serif; letter-spacing: 2px; text-shadow: 0 6px 0 rgb(255 255 255 / .6), 0 10px 22px rgb(23 52 54 / .14); }
+.number-game-number-hint { margin: 0; color: #718684; font-size: 14px; font-weight: 600; }
+.number-game-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.number-game-option { min-width: 200px; padding: 16px 22px; border: 2px solid #b7cbc7; border-radius: 14px; background: #fff; color: #173436; font-size: 24px; font-weight: 800; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+.number-game-option:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgb(23 52 54 / .12); }
+.number-game-option.is-correct { border-color: #3b9d8f; background: #e3f7f3; }
+.number-game-option.is-wrong { border-color: #d77d69; background: #fdeae5; }
+.number-game-option.is-dim { opacity: .45; }
+.number-game-feedback { margin: 0; font-size: 26px; font-weight: 900; }
+.number-game-feedback.is-correct { color: #075f59; }
+.number-game-feedback.is-wrong { color: #b34a34; }
+.number-game-feedback small { display: block; margin-top: 3px; color: #718684; font-size: 14px; font-weight: 600; }
+.number-game-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.number-game-footer-hint { margin: 0; color: #718684; font-size: 13px; }

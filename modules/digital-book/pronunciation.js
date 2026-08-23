@@ -50,6 +50,7 @@
     practiceSubIndex: {},
     practiceAnswers: {},
     practiceCheck: {},
+    numberGame: { started: false, number: 0, options: [], answered: false, picked: -1, correct: 0, total: 0 },
     groupIndices: {},
     selectedItems: {},
     locale: localStorage.getItem("digitalBookLocale") || "en",
@@ -992,6 +993,85 @@
     return "";
   }
 
+  const NUMBER_GAME_DIGIT_PY = ["líng", "yī", "èr", "sān", "sì", "wǔ", "liù", "qī", "bā", "jiǔ"];
+  const NUMBER_GAME_DIGIT_HZ = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+  const NUMBER_GAME_TENS_HZ = { 2: "二十", 3: "三十", 4: "四十", 5: "五十", 6: "六十", 7: "七十", 8: "八十", 9: "九十" };
+  const NUMBER_GAME_COLORS = ["#e88a84", "#f2b65c", "#59b8a8", "#8fa8e8", "#b59be0", "#ef9fb8", "#7fc7d9", "#d9a45c", "#86c98f", "#c58fe0"];
+
+  function twoDigitPinyin(number) {
+    const tens = Math.floor(number / 10);
+    const ones = number % 10;
+    if (tens === 1) return ones === 0 ? "shí" : `shí ${NUMBER_GAME_DIGIT_PY[ones]}`;
+    return ones === 0 ? `${NUMBER_GAME_DIGIT_PY[tens]} shí` : `${NUMBER_GAME_DIGIT_PY[tens]} shí ${NUMBER_GAME_DIGIT_PY[ones]}`;
+  }
+
+  function twoDigitHanzi(number) {
+    const tens = Math.floor(number / 10);
+    const ones = number % 10;
+    if (tens === 1) return ones === 0 ? "十" : `十${NUMBER_GAME_DIGIT_HZ[ones]}`;
+    return ones === 0 ? NUMBER_GAME_TENS_HZ[tens] : `${NUMBER_GAME_TENS_HZ[tens]}${NUMBER_GAME_DIGIT_HZ[ones]}`;
+  }
+
+  function numberGameNewRound() {
+    const tens = 1 + Math.floor(Math.random() * 9);
+    let ones = Math.floor(Math.random() * 10);
+    if (ones === tens) ones = (ones + 1) % 10;
+    const number = tens * 10 + ones;
+    const correct = twoDigitPinyin(number);
+    const wrong = `${NUMBER_GAME_DIGIT_PY[tens]} ${NUMBER_GAME_DIGIT_PY[ones]}`;
+    state.numberGame.number = number;
+    state.numberGame.options = Math.random() < 0.5 ? [correct, wrong] : [wrong, correct];
+    state.numberGame.answered = false;
+    state.numberGame.picked = -1;
+  }
+
+  function numberGamePick(index) {
+    const game = state.numberGame;
+    if (!game.answered) {
+      game.answered = true;
+      game.picked = index;
+      game.correct += Number(game.options[index] === twoDigitPinyin(game.number));
+      game.total += 1;
+    }
+    render();
+  }
+
+  function numberGameAccuracyRing() {
+    const game = state.numberGame;
+    const percent = game.total ? Math.round(game.correct / game.total * 100) : 0;
+    const radius = 26;
+    const circumference = 2 * Math.PI * radius;
+    const filled = percent / 100 * circumference;
+    return `<svg class="number-game-ring" viewBox="0 0 64 64" role="img" aria-label="正确率 ${percent}%"><circle class="number-game-ring-bg" cx="32" cy="32" r="${radius}"></circle><circle class="number-game-ring-fg" cx="32" cy="32" r="${radius}" stroke-dasharray="${filled.toFixed(1)} ${circumference.toFixed(1)}"></circle><text class="number-game-ring-text" x="32" y="37" text-anchor="middle">${percent}%</text></svg>`;
+  }
+
+  function renderNumberGame(item) {
+    const game = state.numberGame;
+    if (!game.started) {
+      return `${renderPracticeSupport(item)}<div class="number-game-rules"><h3>${escapeHtml("游戏规则 / Yóuxì guīzé / Game rules")}</h3><p class="number-game-rule-zh">${escapeHtml("屏幕中央会显示一个两位数，从两个拼音中选择正确的读音。点选后立即知道对错，可以一直玩，看看你的正确率。")}</p><p class="number-game-rule-py">${escapeHtml("Píngmù zhōngyāng huì xiǎnshì yī gè liǎng wèi shù, qǐng cóng liǎng gè pīnyīn zhōng xuǎnzé zhèngquè de dúyīn. Diǎn xuǎn hòu lìjí zhīdào duì cuò, kěyǐ yīzhí wán, kànkan nǐ de zhèngquè lǜ.")}</p><p class="number-game-rule-en">${escapeHtml("A two-digit number appears in the centre. Choose the pinyin that reads it correctly, get instant feedback, and keep playing — watch your accuracy.")}</p><div class="number-game-start"><button type="button" class="pron-action primary" data-number-game-start>${bilingual("开始游戏", "Start game")}</button></div></div>`;
+    }
+    const correctPinyin = twoDigitPinyin(game.number);
+    const hanzi = twoDigitHanzi(game.number);
+    const color = NUMBER_GAME_COLORS[game.number % 10];
+    const optionState = (index) => {
+      if (!game.answered) return "";
+      if (game.options[index] === correctPinyin) return "is-correct";
+      if (index === game.picked) return "is-wrong";
+      return "is-dim";
+    };
+    const feedback = game.answered ? (game.options[game.picked] === correctPinyin
+      ? `<p class="number-game-feedback is-correct">✓ ${escapeHtml(`${twoDigitHanzi(game.number)} ${correctPinyin}`)} <small>${escapeHtml(`${game.number} · 正确 Duì le Correct`)}</small></p>`
+      : `<p class="number-game-feedback is-wrong">✗ ${escapeHtml(`${twoDigitHanzi(game.number)} ${correctPinyin}`)} <small>${escapeHtml(`${game.number} · 不对 Bú duì Not quite`)}</small></p>`) : "";
+    return `<div class="number-game-stage">
+      <div class="number-game-score">${numberGameAccuracyRing()}<div class="number-game-score-text"><strong>${escapeHtml("正确率 / Zhèngquè lǜ / Correct rate")}</strong><span>${escapeHtml(`${game.correct} / ${game.total} 对`) }<small>${escapeHtml(`Correct · ${game.total} answered`)}</small></span></div></div>
+      <div class="number-game-number" style="--number-game-color:${color}">${escapeHtml(String(game.number))}</div>
+      <p class="number-game-number-hint">${escapeHtml("读一读这个数字 / Dú yī dú zhè gè shùzì / Read this number")}</p>
+      <div class="number-game-options">${game.options.map((option, index) => `<button type="button" class="number-game-option ${optionState(index)}" data-number-game-pick="${index}"><strong>${escapeHtml(option)}</strong></button>`).join("")}</div>
+      ${feedback}
+      <div class="number-game-actions"><button type="button" class="pron-action primary" data-number-game-next>${bilingual(game.answered ? "下一题" : "换一题", game.answered ? "Next" : "Another")}</button><button type="button" class="pron-action ghost" data-number-game-restart>${bilingual("重新开始", "Restart")}</button></div>
+    </div>`;
+  }
+
   function renderStructuredPractice(item) {
     if (item.type === "digitCards") {
       return `${renderPracticeSupport(item)}<div class="digit-card-board">${item.digits.map((digit) => `<span>${escapeHtml(digit)}</span>`).join("")}</div><div class="practice-number-example"><strong>示例</strong><span>${item.example.cards.map((digit) => `<b>${escapeHtml(digit)}</b>`).join("")} → ${escapeHtml(item.example.number)} → ${escapeHtml(item.example.hanzi)}</span><small>${escapeHtml(item.example.pinyin)}</small></div><label class="practice-open-field"><span>写出示例数字的汉字读法</span>${practiceAnswerField("number-reading",item.example.hanzi)}</label>`;
@@ -1037,6 +1117,7 @@
   }
 
   function renderPracticeBody(item) {
+    if (item.type === "numberGame") return renderNumberGame(item);
     if (["substitutionDialogue", "threeWayMatch", "wordBankFill", "sentenceTransform", "questionAnswerTransform", "digitCards", "guidedFamilyDialogue", "pictureOccupation", "numberReading", "questionFromAnswer", "hanziWordComplete"].includes(item.type)) return renderStructuredPractice(item);
     if (item.type === "guidedDialogue") return renderGuidedDialoguePractice(item);
     if (item.type === "nameSplit") return renderNameSplitPractice(item);
@@ -1052,7 +1133,7 @@
     return `<article class="beginner-practice-stage lesson-${escapeHtml(state.model.lessonId)}">
       <header class="beginner-practice-heading"><span>${escapeHtml(localize(item.sectionTitle, "zh-CN"))}<small>${escapeHtml(localize(item.sectionTitle, "en"))}</small></span><h2>${escapeHtml(localize(item.title, "zh-CN"))}</h2><p>${escapeHtml(localize(item.title, "en"))}</p></header>
       <div class="beginner-practice-body">${renderPracticeBody(item)}</div>
-      <footer class="beginner-practice-actions"><button type="button" class="pron-action primary" data-practice-submit>✓ ${bilingual(["openResponse", "guidedDialogue", "substitutionDialogue"].includes(item.type) ? "保存练习" : "确认答案", ["openResponse", "guidedDialogue", "substitutionDialogue"].includes(item.type) ? "Save" : "Check answers")}</button><p id="practiceResult" aria-live="polite"></p></footer>
+      <footer class="beginner-practice-actions">${item.type === "numberGame" ? `<p class="number-game-footer-hint">${bilingual("选择拼音后立即判题，可一直玩下去。", "Pick a pinyin for instant feedback — keep playing.")}</p>` : `<button type="button" class="pron-action primary" data-practice-submit>✓ ${bilingual(["openResponse", "guidedDialogue", "substitutionDialogue"].includes(item.type) ? "保存练习" : "确认答案", ["openResponse", "guidedDialogue", "substitutionDialogue"].includes(item.type) ? "Save" : "Check answers")}</button><p id="practiceResult" aria-live="polite"></p>`}</footer>
       <nav class="beginner-item-strip practice-item-strip" aria-label="选择练习">${items.map((entry, index) => `<button type="button" class="${index === state.practiceIndex ? "active" : ""}" data-practice-item="${index}"><strong>${String(index + 1).padStart(2, "0")}</strong><small>${escapeHtml(localize(entry.title, "zh-CN"))}</small></button>`).join("")}</nav>
     </article>`;
   }
@@ -1942,6 +2023,11 @@
         }
         return;
       }
+      if (event.target.closest("[data-number-game-start]")) { state.numberGame.started = true; numberGameNewRound(); render(); resetLearningScroll(); return; }
+      const numberGamePickBtn = event.target.closest("[data-number-game-pick]");
+      if (numberGamePickBtn) { numberGamePick(Number(numberGamePickBtn.dataset.numberGamePick)); return; }
+      if (event.target.closest("[data-number-game-next]")) { numberGameNewRound(); render(); return; }
+      if (event.target.closest("[data-number-game-restart]")) { state.numberGame.correct = 0; state.numberGame.total = 0; numberGameNewRound(); render(); return; }
       const practiceMode = event.target.closest("[data-practice-mode]");
       if (practiceMode) { state.practiceModes[practiceMode.dataset.practiceModeItem] = practiceMode.dataset.practiceMode; render(); return; }
       const toneChoice = event.target.closest("[data-tone-choice]");
