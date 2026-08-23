@@ -292,6 +292,12 @@
   async function load(force = false) {
     const profile = window.LearningApi?.profile?.();
     if (profile?.role !== "teacher") return;
+    const courseId = window.__activeTeacherCourseId || "";
+    if (!courseId) {
+      elements.status.textContent = "请先在“教学工作台”打开一门课程，再查看班级学情。";
+      elements.content.innerHTML = "";
+      return;
+    }
     const lessonId = elements.lesson.value;
     const loadKey = `${mode}:${practiceKind}:${lessonId}`;
     if (loading) {
@@ -313,13 +319,14 @@
       const response = await fetch(`${dataRoot}/lessons/${lessonId}/${file}`, { cache: "no-cache" });
       if (!response.ok) throw new Error("课程数据读取失败");
       const source = await response.json();
+      const reportInput = { lessonId, courseId };
       const result = mode === "vocabulary"
-        ? await window.LearningApi.vocabularyReport({ lessonId, words: vocabularyCatalog(source) })
+        ? await window.LearningApi.vocabularyReport({ ...reportInput, words: vocabularyCatalog(source) })
         : mode === "text"
-          ? await window.LearningApi.textReport({ lessonId, sentences: textCatalog(source) })
+          ? await window.LearningApi.textReport({ ...reportInput, sentences: textCatalog(source) })
           : practiceKind === "subjective"
-            ? await window.LearningApi.subjectivePracticeReport({ lessonId, items: subjectiveCatalog(source) })
-            : await window.LearningApi.practiceReport({ lessonId, items: practiceCatalog(source) });
+            ? await window.LearningApi.subjectivePracticeReport({ ...reportInput, items: subjectiveCatalog(source) })
+            : await window.LearningApi.practiceReport({ ...reportInput, items: practiceCatalog(source) });
       renderCurrentReport(result.report);
       reportCache.set(loadKey, result.report);
       elements.status.textContent = `${lessonNames[lessonId]} · 更新于 ${new Date(result.report.generatedAt).toLocaleString("zh-CN")}`;

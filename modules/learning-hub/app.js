@@ -820,14 +820,20 @@ async function openCourseStudents(courseId) {
   }
   if (!course) return;
   state.activeTeacherCourse = { ...course, students };
+  window.__activeTeacherCourseId = courseId;
   elements.teacherCourseList.hidden = true;
   elements.courseStudentPanel.hidden = false;
   elements.courseStudentTitle.textContent = `${course.className || "班"} · ${bookById(course.bookId).label}`;
   elements.courseStudentMeta.textContent = `${course.term} · ${course.teacher} 老师 · ${students.length}名学生`;
   renderCourseStudentsTable(students);
+  if (cloud) {
+    void loadCloudClassSettings();
+    window.PracticeAnalytics?.render();
+  }
 }
 
 function backCourseList() {
+  window.__activeTeacherCourseId = "";
   state.activeTeacherCourse = null;
   elements.courseStudentPanel.hidden = true;
   elements.teacherCourseList.hidden = false;
@@ -1191,9 +1197,14 @@ function confirmPendingRemoveEnrollment() {
 }
 
 async function loadCloudClassSettings() {
+  const courseId = state.activeTeacherCourse?.courseId || window.__activeTeacherCourseId || "";
+  if (!courseId) {
+    elements.writingPolicyStatus.textContent = "请先打开一门课程，再读取班级设置。";
+    return;
+  }
   elements.writingPolicyStatus.textContent = "正在读取班级设置…";
   try {
-    const result = await window.LearningApi.classSettings();
+    const result = await window.LearningApi.classSettings({ courseId });
     elements.writingInputMode.value = result.settings?.writingInputMode || "both";
     elements.writingPolicyStatus.textContent = "已读取当前班级设置。";
   } catch (error) {
@@ -1210,7 +1221,7 @@ async function saveCloudClassSettings() {
   elements.saveWritingPolicy.disabled = true;
   elements.writingPolicyStatus.textContent = "正在保存…";
   try {
-    await window.LearningApi.updateClassSettings({ writingInputMode: elements.writingInputMode.value });
+    await window.LearningApi.updateClassSettings({ courseId: state.activeTeacherCourse?.courseId || window.__activeTeacherCourseId || "", writingInputMode: elements.writingInputMode.value });
     elements.writingPolicyStatus.textContent = "已保存，学生下次进入数字书时生效。";
     showToast("班级写作方式已更新 / Writing mode updated");
   } catch (error) {
@@ -1222,7 +1233,7 @@ async function saveCloudClassSettings() {
 
 async function loadCloudTeacherStudents() {
   try {
-    const result = await window.LearningApi.classStudents();
+    const result = await window.LearningApi.classStudents({ courseId: state.activeTeacherCourse?.courseId || window.__activeTeacherCourseId || "" });
     const students = result.students || [];
     elements.classStudentCount.textContent = `${students.length}人`;
     elements.classStudentList.innerHTML = students.length
