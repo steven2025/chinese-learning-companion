@@ -104,6 +104,8 @@ const state = {
   teacherContext: { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" },
   studentProfile: null,
   studentCourses: [],
+  studentProgress: null,
+  studentProgressAt: 0,
   activeTeacherCourse: null,
   localCourses: readStored("learningHubTeacherCoursesLocal", defaultLocalCourses()),
   authenticationOptions: { student: null, teacher: null },
@@ -112,6 +114,7 @@ const state = {
 let pendingRemoveEnrollment = null;
 
 const viewLabels = { home: "首页", courses: "我的课程", writing: "写作专区", games: "趣味游戏", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
+const STUDENT_SESSION_KEY = "chineseLearningStudentSession";
 
 if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
   window.addEventListener("load", () => {
@@ -142,6 +145,7 @@ const elements = {
   profileAvatar: document.querySelector("#profileAvatar"),
   profileName: document.querySelector("#profileName"),
   profileRole: document.querySelector("#profileRole"),
+  logoutButton: document.querySelector("#logoutButton"),
   roleDialog: document.querySelector("#roleDialog"),
   courseDialog: document.querySelector("#courseDialog"),
   courseDialogLessons: document.querySelector("#courseDialogLessons"),
@@ -189,6 +193,13 @@ const elements = {
   courseStudentMeta: document.querySelector("#courseStudentMeta"),
   courseStudentTable: document.querySelector("#courseStudentTable"),
   courseImportResult: document.querySelector("#courseImportResult"),
+  homeProgressBar: document.querySelector("#homeProgressBar"),
+  homeProgressText: document.querySelector("#homeProgressText"),
+  statStudyDays: document.querySelector("#statStudyDays"),
+  statWords: document.querySelector("#statWords"),
+  statExercises: document.querySelector("#statExercises"),
+  progressTableTitle: document.querySelector("#progressTableTitle"),
+  progressRows: document.querySelector("#progressRows"),
   newCourseDialog: document.querySelector("#newCourseDialog"),
   newCourseForm: document.querySelector("#newCourseForm"),
   studentExcelInput: document.querySelector("#studentExcelInput"),
@@ -287,6 +298,8 @@ function setView(view) {
   if (view === "teacher") renderTeacherWorkspace();
   if (view === "admin") renderAdminView();
   if (view === "courses") renderStudentCoursesView();
+  if (view === "progress") void renderProgressView();
+  if (view === "home") { applyHomeStats(); if (state.role === "student") void loadStudentProgress(); }
   if (view === "writing") window.WritingZone?.render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -294,7 +307,7 @@ function setView(view) {
 function renderCatalog() {
   const query = state.search.trim().toLowerCase();
   const level = catalog.find((item) => item.id === state.openLevel) || catalog[1];
-  const visibleBooks = level.books.filter(([, label]) => !query || `发展汉语 ${label}`.toLowerCase().includes(query));
+  const visibleBooks = level.books.filter(([id, label]) => (!query || `发展汉语 ${label}`.toLowerCase().includes(query)) && (state.role === "admin" || courseAccessible(id)));
   document.querySelectorAll("[data-course-level]").forEach((button) => button.classList.toggle("active", button.dataset.courseLevel === level.id));
   elements.levelCatalog.innerHTML = visibleBooks.length
     ? `<div class="course-book-grid">${visibleBooks.map(([id, label]) => {
@@ -303,12 +316,16 @@ function renderCatalog() {
       const open = effectiveBookOpen(id);
       return `<button class="book-choice${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${learningBook ? (open ? `第1-${available}课可学习` : "暂未开放课程") : (open ? "已开放 · 内容准备中" : "未开放")}</small></button>`;
     }).join("")}</div>`
-    : '<p class="empty-state">没有找到符合条件的教材。</p>';
+    : state.role === "guest" ? '<p class="empty-state">请先登录，再选择教材 / Please sign in first</p>' : (allowedBookIds().length ? '<p class="empty-state">没有找到符合条件的教材。</p>' : '<p class="empty-state">您还没有可进入的课程，请联系教师获取邀请码。</p>');
   renderCourseDialogLessons();
 }
 
 function renderCourseDialogLessons() {
   const book = bookById(state.selectedBookId);
+  if (state.role !== "admin" && !courseAccessible(book.id)) {
+    elements.courseDialogLessons.innerHTML = `<header><span>已选择</span><strong>《发展汉语·${book.label}》</strong></header><p>该教材不在您的课程中，无法进入。</p>`;
+    return;
+  }
   const learningBook = learningBooks[book.id];
   if (!learningBook || !effectiveBookOpen(book.id)) {
     elements.courseDialogLessons.innerHTML = `<header><span>已选择</span><strong>《发展汉语·${book.label}》</strong></header><p>${learningBook ? "该教材暂未开放课程。" : "该教材已建立入口，内容准备中。"}</p>`;
@@ -328,6 +345,19 @@ function renderLessons() {
   const learningBook = learningBooks[book.id];
   elements.lessonTitle.textContent = book.label;
   elements.currentBookLabel.textContent = book.label;
+  if (state.role !== "admin" && !courseAccessible(book.id)) {
+    elements.lessonCount.textContent = "未加入课程";
+    elements.currentLessonLabel.textContent = state.role === "guest" ? "请先登录" : "未加入课程";
+    elements.courseCoverTitle.innerHTML = "点点<br>汉语";
+    elements.continueTitle.textContent = state.role === "guest" ? "请先登录" : "未加入课程";
+    elements.continueMeta.textContent = state.role === "guest" ? "登录后继续你的课程学习 / Sign in to continue" : "该教材不在您的课程中";
+    elements.lessonList.innerHTML = `<p class="empty-approval">${state.role === "guest" ? "请先登录，再选择教材进入 / Please sign in first" : "该教材不在您的课程中，无法进入。"}</p>`;
+    elements.continueLink.href = "#";
+    elements.primaryTaskLink.href = "#";
+    elements.secondaryTaskLink.href = "#";
+    elements.gameTaskLink.href = "#";
+    return;
+  }
   if (!learningBook || !effectiveBookOpen(book.id)) {
     elements.lessonCount.textContent = learningBook ? "暂未开放课程" : "内容准备中";
     elements.lessonList.innerHTML = `<p class="empty-approval">《发展汉语·${book.label}》${learningBook ? "暂未开放课程。" : "已建立入口，课程内容尚未接入。"}</p>`;
@@ -361,8 +391,36 @@ function renderLessons() {
   }).join("");
 }
 
+function readStudentSession() {
+  try { return JSON.parse(sessionStorage.getItem(STUDENT_SESSION_KEY) || "null"); } catch { return null; }
+}
+
+function saveStudentSession(account, contexts, signature) {
+  sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify({ account, contexts, signature }));
+}
+
+function allowedBookIds() {
+  if (state.role === "admin") return catalog.flatMap((level) => level.books.map(([id]) => id));
+  if (state.role === "student") return [...new Set((state.studentCourses || []).map((course) => course.bookId).filter(Boolean))];
+  if (state.role === "teacher") return [...new Set((state.teacherCourses || []).map((course) => course.bookId).filter(Boolean))];
+  return [];
+}
+
+function courseAccessible(bookId) {
+  return allowedBookIds().includes(bookId);
+}
+
+function firstAllowedBookId() {
+  const ids = allowedBookIds();
+  return ids.find((id) => learningBooks[id] && effectiveBookOpen(id)) || ids[0] || "";
+}
+
 function selectBook(id) {
   const book = bookById(id);
+  if (state.role !== "admin" && !courseAccessible(book.id)) {
+    showToast(state.role === "guest" ? "请先登录后选择教材 / Please sign in first" : "该教材不在您的课程中");
+    return;
+  }
   state.selectedBookId = book.id;
   state.openLevel = book.level;
   localStorage.setItem("learningHubSelectedBook", JSON.stringify(book.id));
@@ -391,6 +449,25 @@ function openAuth(tab = "student-login") {
   elements.roleDialog.showModal();
 }
 
+function handleLogout() {
+  try {
+    window.LearningApi?.clearSession?.();
+    sessionStorage.removeItem(STUDENT_SESSION_KEY);
+    localStorage.removeItem("learningHubSelectedBook");
+  } catch { /* ignore */ }
+  state.studentProfile = null;
+  state.teacherContext = { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" };
+  state.studentCourses = [];
+  state.teacherCourses = [];
+  state.authenticationOptions = {};
+  if (elements.roleDialog.open) elements.roleDialog.close();
+  applyIdentity("guest", "");
+  renderCatalog();
+  renderLessons();
+  setView("home");
+  showToast("已退出登录 / Signed out");
+}
+
 function applyIdentity(role, name) {
   state.role = role;
   state.userName = name;
@@ -404,6 +481,7 @@ function applyIdentity(role, name) {
   elements.profileAvatar.textContent = profile.mark;
   elements.profileName.textContent = profile.label;
   elements.profileRole.textContent = profile.role;
+  if (elements.logoutButton) elements.logoutButton.hidden = role === "guest";
   document.querySelectorAll('[data-role-nav="teacher"]').forEach((button) => { button.hidden = !["teacher", "admin"].includes(role); });
   document.querySelectorAll('[data-role-nav="admin"]').forEach((button) => { button.hidden = role !== "admin"; });
   window.WritingZone?.identityChanged();
@@ -411,11 +489,9 @@ function applyIdentity(role, name) {
 
 function restoreStoredIdentity() {
   const profile = window.LearningApi?.profile?.();
-  if (!profile?.role) {
-    applyIdentity("guest", "");
-    return;
-  }
-  if (profile.role === "student") {
+  const persisted = readStudentSession();
+  if (profile?.role === "student") {
+    const contexts = (persisted?.contexts || []).filter((context) => context.bookId);
     state.studentProfile = {
       chineseName: profile.name || profile.chineseName || profile.userId,
       englishName: profile.englishName || "",
@@ -426,25 +502,70 @@ function restoreStoredIdentity() {
       term: profile.term || terms[0],
       book: profile.bookId || "intermediate-comprehensive-1",
     };
-    state.studentCourses = profile.courseId
-      ? [{ id: `${profile.courseId}:${profile.bookId}`, courseId: profile.courseId, classId: profile.classId || "", className: profile.className || "班", teacher: profile.teacher || defaultTeacher, term: profile.term || terms[0], bookId: profile.bookId || "intermediate-comprehensive-1" }]
-      : [];
+    state.studentCourses = contexts.length
+      ? contexts
+      : profile.courseId
+        ? [{ id: `${profile.courseId}:${profile.bookId}`, courseId: profile.courseId, classId: profile.classId || "", className: profile.className || "班", teacher: profile.teacher || defaultTeacher, term: profile.term || terms[0], bookId: profile.bookId || "intermediate-comprehensive-1" }]
+        : [];
+    if (persisted) state.authenticationOptions.student = { signature: persisted.signature, account: persisted.account, contexts: persisted.contexts || [] };
     applyIdentity("student", state.studentProfile.chineseName);
     renderStudentCoursesView();
-    if (profile.bookId && learningBooks[bookById(profile.bookId).id]) selectBook(profile.bookId);
+    const firstCourseBookId = firstAllowedBookId();
+    if (firstCourseBookId) selectBook(firstCourseBookId); else { renderCatalog(); renderLessons(); }
+    void loadStudentProgress();
+    if (window.LearningApi?.isConfigured?.() && persisted?.signature) {
+      const [, inviteCode] = String(persisted.signature || "\u0000").split("\u0000");
+      window.LearningApi.authenticationOptions({ role: "student", userId: state.studentProfile.studentId, inviteCode })
+        .then((result) => {
+          const fresh = (result.contexts || []).filter((context) => context.bookId && context.teacher);
+          if (!fresh.length) return;
+          state.studentCourses = fresh;
+          if (state.authenticationOptions.student) state.authenticationOptions.student = { ...state.authenticationOptions.student, contexts: fresh };
+          if (state.view === "courses") renderStudentCoursesView();
+        })
+        .catch(() => {});
+    }
     return;
   }
-  if (profile.role === "teacher") {
+  if (profile?.role === "teacher") {
     state.teacherContext = { teacher: profile.teacher || profile.name, term: profile.term || terms[0], book: profile.bookId || "intermediate-comprehensive-1" };
     applyIdentity("teacher", profile.teacher || profile.name);
-    if (profile.bookId && learningBooks[bookById(profile.bookId).id]) selectBook(profile.bookId);
+    const firstCourseBookId = firstAllowedBookId();
+    if (firstCourseBookId) selectBook(firstCourseBookId); else { renderCatalog(); renderLessons(); }
+    if (window.LearningApi?.isConfigured?.()) void loadTeacherCourses();
     return;
   }
-  if (profile.role === "admin") {
+  if (profile?.role === "admin") {
     applyIdentity("admin", profile.name || "管理员");
+    renderCatalog();
+    renderLessons();
     return;
+  }
+  if (persisted?.contexts?.length) {
+    const contexts = persisted.contexts.filter((context) => context.bookId);
+    if (contexts.length) {
+      state.authenticationOptions.student = { signature: persisted.signature, account: persisted.account, contexts: persisted.contexts || [] };
+      state.studentCourses = contexts;
+      state.studentProfile = {
+        chineseName: persisted.account?.name || persisted.account?.id || "学生",
+        englishName: persisted.account?.englishName || "",
+        studentId: persisted.account?.id || "",
+        teacher: contexts[0].teacher || defaultTeacher,
+        term: contexts[0].term || terms[0],
+        book: contexts[0].bookId || "intermediate-comprehensive-1",
+      };
+      applyIdentity("student", state.studentProfile.chineseName);
+      renderStudentCoursesView();
+      const firstCourseBookId = firstAllowedBookId();
+      if (firstCourseBookId) selectBook(firstCourseBookId); else { renderCatalog(); renderLessons(); }
+      void loadStudentProgress();
+      return;
+    }
   }
   applyIdentity("guest", "");
+  renderCatalog();
+  renderLessons();
+  applyHomeStats();
 }
 
 function saveEnrollments() {
@@ -517,13 +638,14 @@ async function handleStudentLogin(form) {
       return;
     }
   }
-  const contexts = (result.contexts || []).filter((context) => context.bookId && context.teacher);
+  const contexts = (result.contexts || []).filter((context) => context.bookId);
   if (!contexts.length) {
     showToast("该学号尚未加入任何课程 / No course found");
     return;
   }
   state.studentCourses = contexts;
   state.authenticationOptions.student = { signature: `${studentId}\u0000${inviteCode}`, account: result.account, contexts };
+  saveStudentSession(result.account, contexts, `${studentId}\u0000${inviteCode}`);
   state.studentProfile = {
     chineseName: result.account?.name || studentId,
     englishName: result.account?.englishName || "",
@@ -532,10 +654,23 @@ async function handleStudentLogin(form) {
     term: contexts[0].term || terms[0],
     book: contexts[0].bookId || "intermediate-comprehensive-1",
   };
+  if (window.LearningApi?.isConfigured() && contexts.length === 1) {
+    try {
+      const session = await window.LearningApi.createSession({ role: "student", inviteCode, userId: studentId, contextId: contexts[0].id });
+      if (session.profile?.teacher) state.studentProfile.teacher = session.profile.teacher;
+      if (session.profile?.term) state.studentProfile.term = session.profile.term;
+      if (session.profile?.bookId) state.studentProfile.book = session.profile.bookId;
+      state.studentProfile.classId = session.profile?.classId || "";
+      state.studentProfile.className = session.profile?.className || "";
+    } catch { /* 保持基于课程列表的资料，进入课程时再建立会话 */ }
+  }
   applyIdentity("student", state.studentProfile.chineseName);
   elements.roleDialog.close();
   renderStudentCoursesView();
   setView("courses");
+  const firstCourseBookId = firstAllowedBookId();
+  if (firstCourseBookId) selectBook(firstCourseBookId); else { renderCatalog(); renderLessons(); }
+  void loadStudentProgress();
   showToast(`欢迎，${state.studentProfile.chineseName}！请选择课程进入 / Choose a course`);
 }
 
@@ -557,8 +692,105 @@ function renderStudentCoursesView() {
   elements.studentCourseList.innerHTML = state.studentCourses.map((context) => {
     const book = bookById(context.bookId);
     const open = effectiveBookOpen(context.bookId);
-    const label = `${context.teacher} 老师 · ${escapeHtml(context.term)} · ${escapeHtml(context.className || "班")}`;
+    const teacherLabel = context.teacher ? `${context.teacher} 老师` : "任课教师";
+    const label = `${teacherLabel} · ${escapeHtml(context.term)} · ${escapeHtml(context.className || "班")}`;
     return `<button class="student-course-card" type="button" data-enter-course="${escapeHtml(context.id)}"${open ? "" : " disabled"}><span class="student-course-mark">课</span><span><strong>发展汉语·${escapeHtml(book.label)}</strong><small>${label}</small></span><b>进入 ›</b></button>`;
+  }).join("");
+}
+
+function formatActivityTime(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const now = new Date();
+  const sameDay = date.toDateString() === now.toDateString();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+  const time = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  if (sameDay) return `今天 ${time}`;
+  if (isYesterday) return `昨天 ${time}`;
+  return `${date.getMonth() + 1}月${date.getDate()}日 ${time}`;
+}
+
+function applyHomeStats() {
+  const summary = state.studentProgress?.summary;
+  if (state.role === "student") {
+    elements.statStudyDays.textContent = summary?.studyDays || 0;
+    elements.statWords.textContent = summary?.wordsStudied || 0;
+    elements.statExercises.textContent = summary?.exercisesDone || 0;
+    if (summary && (summary.wordsStudied || summary.exercisesDone || summary.textsStudied)) {
+      const score = Math.min(100, summary.wordsStudied * 2 + summary.exercisesDone * 3 + summary.textsStudied * 2);
+      elements.homeProgressBar.style.width = `${score}%`;
+      elements.homeProgressText.textContent = `已学 ${summary.wordsStudied || 0} 个词语 · 完成 ${summary.exercisesDone || 0} 道练习`;
+    } else {
+      elements.homeProgressBar.style.width = "0%";
+      elements.homeProgressText.textContent = summary ? "还没有学习记录，进入课程开始学习吧" : "学习记录加载中，稍后自动更新";
+    }
+  } else {
+    elements.statStudyDays.textContent = "—";
+    elements.statWords.textContent = "—";
+    elements.statExercises.textContent = "—";
+    elements.homeProgressBar.style.width = "0%";
+    elements.homeProgressText.textContent = state.role === "guest" ? "请先登录，查看你的学习记录" : "教师/管理员账号不展示个人学习记录";
+  }
+}
+
+async function loadStudentProgress(force = false) {
+  if (state.role !== "student" || !window.LearningApi?.isConfigured?.()) {
+    state.studentProgress = null;
+    applyHomeStats();
+    return null;
+  }
+  const cached = state.studentProgress;
+  if (!force && cached && Date.now() - (state.studentProgressAt || 0) < 60000) {
+    applyHomeStats();
+    return cached;
+  }
+  try {
+    const result = await window.LearningApi.progressSummary({});
+    state.studentProgress = result;
+    state.studentProgressAt = Date.now();
+  } catch {
+    state.studentProgress = null;
+  }
+  applyHomeStats();
+  return state.studentProgress;
+}
+
+async function renderProgressView() {
+  if (state.role === "guest") {
+    elements.progressTableTitle.textContent = "尚未登录";
+    elements.progressRows.innerHTML = '<p class="empty-approval">请先登录，这里将只显示你自己的学习记录。</p>';
+    return;
+  }
+  if (state.role === "teacher") {
+    elements.progressTableTitle.textContent = "教师身份";
+    elements.progressRows.innerHTML = '<p class="empty-approval">教师账号不展示学生学习记录，请到“教学工作台 · 班级学情”查看班级数据。</p>';
+    return;
+  }
+  if (state.role === "admin") {
+    elements.progressTableTitle.textContent = "管理员身份";
+    elements.progressRows.innerHTML = '<p class="empty-approval">管理员账号不展示个人学习记录。</p>';
+    return;
+  }
+  elements.progressTableTitle.textContent = "我的学习记录";
+  elements.progressRows.innerHTML = '<p class="empty-approval">正在加载学习记录…</p>';
+  const result = await loadStudentProgress(true);
+  if (!result) {
+    elements.progressRows.innerHTML = window.LearningApi?.isConfigured?.()
+      ? '<p class="empty-approval">学习记录暂时无法读取，请稍后重试。</p>'
+      : '<p class="empty-approval">当前为本地演示模式，登录云端账号后这里将显示你的学习记录。</p>';
+    return;
+  }
+  const activities = result.activities || [];
+  if (!activities.length) {
+    elements.progressRows.innerHTML = '<p class="empty-approval">还没有学习记录，进入课程开始学习吧。</p>';
+    return;
+  }
+  elements.progressRows.innerHTML = activities.map((item) => {
+    const kindLabel = item.kind === "vocabulary" ? "词语学习" : item.kind === "text" ? "课文学习" : "练习作答";
+    const status = item.kind === "practice" ? (item.score != null && item.score !== "" ? `${item.score}分` : "已完成") : "已学习";
+    return `<div class="record-row"><time>${escapeHtml(formatActivityTime(item.at))}</time><span><strong>${escapeHtml(item.label || "")}</strong><small>${kindLabel}</small></span><b>${escapeHtml(status)}</b></div>`;
   }).join("");
 }
 
@@ -768,6 +1000,10 @@ async function loadTeacherCourses() {
   }
   state.teacherCourses = courses;
   renderTeacherCourses(courses);
+  if (state.role === "teacher" && !courseAccessible(state.selectedBookId)) {
+    const firstCourseBookId = firstAllowedBookId();
+    if (firstCourseBookId) selectBook(firstCourseBookId); else { renderCatalog(); renderLessons(); }
+  }
 }
 
 function renderTeacherCourses(courses) {
@@ -890,7 +1126,7 @@ async function addCourseStudentByForm(data) {
   const local = state.localCourses.find((item) => item.courseId === course.courseId);
   if (!local) throw new Error("课程不存在");
   if (local.students.some((item) => item.studentId === studentId)) throw new Error("该学号已存在");
-  const code = inviteCode || generateLocalInviteCode();
+  const code = inviteCode || generateLocalStudentInviteCode();
   local.students.push({ studentId, chineseName, englishName, inviteCode: code, active: true, createdAt: new Date().toISOString() });
   saveLocalCourses();
   return { studentId, inviteCode: code };
@@ -938,7 +1174,7 @@ async function resetCourseStudentInvite(courseId, studentId) {
     const local = state.localCourses.find((item) => item.courseId === courseId);
     const target = local?.students.find((item) => item.studentId === studentId);
     if (!target) throw new Error("该学生在课程中不存在");
-    target.inviteCode = generateLocalInviteCode();
+    target.inviteCode = generateLocalStudentInviteCode();
     saveLocalCourses();
     code = target.inviteCode;
   }
@@ -950,6 +1186,12 @@ function generateLocalInviteCode(length = 8) {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
   let code = "";
   for (let index = 0; index < length; index += 1) code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return code;
+}
+
+function generateLocalStudentInviteCode(length = 6) {
+  let code = "";
+  for (let index = 0; index < length; index += 1) code += "123456789"[Math.floor(Math.random() * 9)];
   return code;
 }
 
@@ -1089,7 +1331,7 @@ async function importStudentExcel(file) {
     for (const entry of students) {
       if (!entry.studentId || (!entry.chineseName && !entry.englishName)) { skipped.push({ studentId: entry.studentId || "?", message: "学号或姓名无效" }); continue; }
       if (local.students.some((item) => item.studentId === entry.studentId)) { skipped.push({ studentId: entry.studentId, message: "学号已存在" }); continue; }
-      const code = entry.inviteCode || generateLocalInviteCode();
+      const code = entry.inviteCode || generateLocalStudentInviteCode();
       local.students.push({ studentId: entry.studentId, chineseName: entry.chineseName, englishName: entry.englishName, inviteCode: code, active: true, createdAt: new Date().toISOString() });
       imported.push({ studentId: entry.studentId, inviteCode: code, ok: true });
     }
@@ -1639,6 +1881,7 @@ document.addEventListener("click", (event) => {
 });
 
 elements.profileButton.addEventListener("click", () => openAuth("student-login"));
+if (elements.logoutButton) elements.logoutButton.addEventListener("click", () => { void handleLogout(); });
 elements.installAppButton.addEventListener("click", () => { void requestAppInstall(); });
 elements.roleDialog.addEventListener("click", (event) => { if (event.target === elements.roleDialog) elements.roleDialog.close(); });
 elements.courseDialog.addEventListener("click", (event) => { if (event.target === elements.courseDialog) elements.courseDialog.close(); });

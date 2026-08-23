@@ -37,6 +37,7 @@
     requirementsInput: document.querySelector("#essayRequirementsInput"),
     teacherSelect: document.querySelector("#essayTeacherSelect"),
     localeSelect: document.querySelector("#essayLocaleSelect"),
+    setupHint: document.querySelector("#writingSetupHint"),
     assistDialog: document.querySelector("#writingAssistDialog"),
     assistTitle: document.querySelector("#writingAssistTitle"),
     assistTabs: document.querySelector("#writingAssistTabs"),
@@ -104,7 +105,7 @@
         chineseName: profile.chineseName || profile.name || profile.userId,
         englishName: profile.englishName || "",
         studentId: profile.userId,
-        teacher: profile.teacher || teachers[0],
+        teacher: profile.teacher || "",
       };
     }
     return null;
@@ -150,6 +151,14 @@
     return Boolean(window.LearningApi?.isConfigured?.() && cloudProfile());
   }
 
+  function cloudAuthFailure(error) {
+    return /登录|token|会话|邀请码|401|403/i.test(String(error?.message || ""));
+  }
+
+  function expireCloudSession() {
+    try { window.LearningApi?.clearSession?.(); } catch { /* ignore */ }
+  }
+
   function mergeEssay(incoming) {
     const index = localState.essays.findIndex((essay) => essay.id === incoming.id);
     const prior = index >= 0 ? localState.essays[index] : null;
@@ -179,7 +188,7 @@
 
   function visibleEssays() {
     if (roleIsTeacher()) {
-      const teacherName = state.role === "admin" ? "" : (state.teacherContext.teacher || state.userName);
+      const teacherName = state.role === "admin" ? "" : (state.teacherContext?.teacher || state.userName);
       return localState.essays.filter((essay) => !teacherName || essay.teacher === teacherName);
     }
     const student = studentProfile();
@@ -215,7 +224,7 @@
       const actionLabel = essay.status === "returned" ? "开始改写" : essay.status === "draft" ? "继续写作" : "查看详情";
       return `<article class="writing-row" data-status="${essay.status}">
         <span class="writing-row-mark" aria-hidden="true">写</span>
-        <div class="writing-row-copy"><strong>${safe(essay.title)}</strong><p>${safe(essay.requirements)}</p><small>提交给 ${safe(essay.teacher)} · ${wordCount(essay)}字 · 第${essay.version || 1}稿 · ${formatDate(essay.updatedAt)}</small></div>
+        <div class="writing-row-copy"><strong>${safe(essay.title)}</strong><p>${safe(essay.requirements)}</p><small>提交给 ${safe(essay.teacher || "本机草稿")} · ${wordCount(essay)}字 · 第${essay.version || 1}稿 · ${formatDate(essay.updatedAt)}</small></div>
         <span class="writing-row-status">${statusLabels[essay.status] || essay.status}</span>
         <div class="writing-row-actions">${canWrite ? `<button class="resume-button" type="button" data-writing-open="${essay.id}">${actionLabel}</button>` : `<button type="button" data-writing-review="${essay.id}">${actionLabel}</button>`}</div>
       </article>`;
@@ -261,9 +270,25 @@
 
   function renderTeacherSummary() {
     if (!el.teacherPending) return;
-    const teacherName = state.role === "admin" ? "" : (state.teacherContext.teacher || state.userName);
+    const teacherName = state.role === "admin" ? "" : (state.teacherContext?.teacher || state.userName);
     const pending = localState.essays.filter((essay) => essay.status === "submitted" && (!teacherName || essay.teacher === teacherName)).length;
     el.teacherPending.textContent = `${pending}篇待批阅`;
+  }
+
+  function teacherOptions() {
+    const courses = (typeof state !== "undefined" && Array.isArray(state.studentCourses) && state.studentCourses.length) ? state.studentCourses : [];
+    const student = studentProfile();
+    const fallbackTeacher = student?.teacher || "";
+    const seen = new Set();
+    const options = [];
+    const addOption = (value, label) => {
+      if (!value || seen.has(value)) return;
+      seen.add(value);
+      options.push({ value, label });
+    };
+    if (courses.length) courses.forEach((course) => addOption(course.teacher || fallbackTeacher, `${course.teacher || "教师"} 老师 · ${bookById(course.bookId).label}`));
+    if (fallbackTeacher && !seen.has(fallbackTeacher)) options.push({ value: fallbackTeacher, label: `${fallbackTeacher} 老师` });
+    return options;
   }
 
   function openSetup() {
@@ -274,7 +299,12 @@
       return;
     }
     el.setupForm.reset();
-    el.teacherSelect.innerHTML = teachers.map((teacher) => `<option${teacher === student.teacher ? " selected" : ""}>${teacher}</option>`).join("");
+    const options = teacherOptions();
+    el.teacherSelect.required = Boolean(options.length);
+    el.teacherSelect.innerHTML = options.length
+      ? options.map((option) => `<option value="${safe(option.value)}"${option.value === student.teacher ? " selected" : ""}>${safe(option.label)}</option>`).join("")
+      : '<option value="">尚未加入课程 / No course yet</option>';
+    if (el.setupHint) el.setupHint.hidden = Boolean(options.length);
     el.localeSelect.innerHTML = localeOptions.map(([code, label]) => `<option value="${code}">${label}</option>`).join("");
     openDialog(el.setupDialog);
     window.setTimeout(() => el.titleInput.focus(), 80);
@@ -289,7 +319,7 @@
       id: uid("essay"),
       title: String(data.get("title") || "").trim(),
       requirements: String(data.get("requirements") || "").trim(),
-      teacher: String(data.get("teacher") || teachers[0]),
+      teacher: String(data.get("teacher") || teacherOptions()[0]?.value || "").trim(),
       locale: String(data.get("locale") || "zh-CN"),
       studentName: student.chineseName || state.userName,
       studentEnglishName: student.englishName || "",
@@ -306,6 +336,7 @@
       updatedAt: now,
     };
     if (!essay.title || !essay.requirements) return;
+    if (!essay.teacher) showToast("提示：尚未绑定教师，作文会保存在本机，教师端暂不可见。请先联系教师获取课程邀请码。");
     localState.essays.unshift(essay);
     saveEssays();
     closeDialog(el.setupDialog);
@@ -507,8 +538,10 @@
           el.saveStatus.textContent = `本机和云端均已保存 · ${formatDate(essay.updatedAt)}`;
           showToast("作文草稿已保存到云端");
         } catch (error) {
-          el.saveStatus.textContent = `已保存在本机 · 云端同步失败`;
-          showToast(error.message || "云端草稿保存失败，本机草稿仍然保留");
+          const authLost = cloudAuthFailure(error);
+          if (authLost) expireCloudSession();
+          el.saveStatus.textContent = authLost ? `云端登录已失效 · 已保存在本机` : `已保存在本机 · 云端同步失败`;
+          showToast(authLost ? "云端登录已失效，草稿已保存在本机，请重新登录后再同步" : (error.message || "云端草稿保存失败，本机草稿仍然保留"));
         } finally { setAiWorking(false); }
       } else {
         el.saveStatus.textContent = `已保存在本机 · ${formatDate(essay.updatedAt)}`;
@@ -626,7 +659,9 @@
         essay.status = "submitted";
       }
     } catch (error) {
-      essay.aiError = error.message || "AI评价暂时不可用";
+      const authLost = cloudAuthFailure(error);
+      if (authLost) expireCloudSession();
+      essay.aiError = authLost ? "云端登录已失效，请重新登录后再提交" : (error.message || "AI评价暂时不可用");
       essay.status = "draft";
       showToast(`提交未完成：${essay.aiError}`);
     } finally {
@@ -806,7 +841,7 @@
       }
       setAiWorking(false);
     }
-    essay.teacherFeedback = { ...essay.teacherFeedback, ...values, updatedAt: new Date().toISOString(), teacher: state.userName || state.teacherContext.teacher };
+    essay.teacherFeedback = { ...essay.teacherFeedback, ...values, updatedAt: new Date().toISOString(), teacher: state.userName || state.teacherContext?.teacher };
     if (!savedToCloud && action === "return") {
       essay.status = "returned";
       essay.version = (essay.version || 1) + 1;
