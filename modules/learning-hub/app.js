@@ -3,6 +3,16 @@ const defaultTeacher = "曹丹丹";
 const administrator = "鄢清华";
 const TEST_STUDENT_ACCOUNT = "test";
 const TEST_INVITE_CODE = "123456";
+const REVIEW_DATA_FILES = ["lesson-content.json", "lesson-practice.json", "pronunciation.json", "practice-translations.json", "text-notes.json", "vocabulary-metadata.json"];
+const REVIEW_LANGUAGE_CODES = new Set(["zh", "pinyin", "en", "es", "fr", "id", "ja", "ko", "lo", "ms", "my", "ru", "th", "vi"]);
+const languageShortLabels = {
+  zh: "中文", pinyin: "拼音", en: "英语", es: "西语", fr: "法语", id: "印尼语", ja: "日语", ko: "韩语",
+  lo: "老挝语", ms: "马来语", my: "缅甸语", ru: "俄语", th: "泰语", vi: "越南语",
+};
+
+function defaultTeacherRegistry() {
+  return [{ id: "teacher-seed", account: defaultTeacher, name: defaultTeacher, active: true, createdAt: new Date().toISOString() }];
+}
 
 const catalog = [
   {
@@ -91,10 +101,15 @@ const state = {
   openLevel: learningBooks[storedBookId] ? bookById(storedBookId).level : "intermediate",
   search: "",
   enrollments: readStored("learningHubStudentEnrollments", []),
+  teachers: readStored("learningHubTeachers", defaultTeacherRegistry()),
+  publishing: readStored("learningHubPublishing", {}),
+  contentReview: readStored("learningHubContentReview", {}),
   teacherContext: { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" },
   studentProfile: null,
   authenticationOptions: { student: null, teacher: null },
 };
+
+let pendingRemoveEnrollment = null;
 
 const viewLabels = { home: "首页", courses: "我的课程", writing: "写作专区", games: "趣味游戏", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
 
@@ -136,6 +151,16 @@ const elements = {
   teacherName: document.querySelector("#teacherContextName"),
   classStudentList: document.querySelector("#classStudentList"),
   classStudentCount: document.querySelector("#classStudentCount"),
+  addStudentDialog: document.querySelector("#addStudentDialog"),
+  confirmDialog: document.querySelector("#confirmDialog"),
+  confirmDialogMessage: document.querySelector("#confirmDialogMessage"),
+  addStudentForm: document.querySelector("#addStudentForm"),
+  addStudentContextLabel: document.querySelector("#addStudentContextLabel"),
+  addTeacherForm: document.querySelector("#addTeacherForm"),
+  teacherCount: document.querySelector("#teacherCount"),
+  adminTeacherList: document.querySelector("#adminTeacherList"),
+  adminPublishingList: document.querySelector("#adminPublishingList"),
+  adminReviewList: document.querySelector("#adminReviewList"),
   writingInputMode: document.querySelector("#writingInputModeSelect"),
   saveWritingPolicy: document.querySelector("#saveWritingPolicyButton"),
   writingPolicyStatus: document.querySelector("#writingPolicyStatus"),
@@ -205,7 +230,7 @@ function bookById(id) {
 
 function bookOptionMarkup(selected = "") {
   return catalog.map((level) => `<optgroup label="${level.label}">${level.books.map(([id, label]) => {
-    const available = Boolean(learningBooks[id]);
+    const available = effectiveBookOpen(id);
     return `<option value="${id}"${id === selected ? " selected" : ""}${available ? "" : " disabled"}>发展汉语·${label}${available ? "" : "（未开放）"}</option>`;
   }).join("")}</optgroup>`).join("");
 }
@@ -231,6 +256,7 @@ function setView(view) {
   });
   document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
   if (view === "teacher") renderTeacherWorkspace();
+  if (view === "admin") renderAdminView();
   if (view === "writing") window.WritingZone?.render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -243,7 +269,9 @@ function renderCatalog() {
   elements.levelCatalog.innerHTML = visibleBooks.length
     ? `<div class="course-book-grid">${visibleBooks.map(([id, label]) => {
       const learningBook = learningBooks[id];
-      return `<button class="book-choice${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${learningBook ? `第1-${learningBook.available}课可学习` : "内容准备中"}</small></button>`;
+      const available = effectiveAvailable(id);
+      const open = effectiveBookOpen(id);
+      return `<button class="book-choice${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${learningBook ? (open ? `第1-${available}课可学习` : "暂未开放课程") : (open ? "已开放 · 内容准备中" : "未开放")}</small></button>`;
     }).join("")}</div>`
     : '<p class="empty-state">没有找到符合条件的教材。</p>';
   renderCourseDialogLessons();
@@ -252,13 +280,14 @@ function renderCatalog() {
 function renderCourseDialogLessons() {
   const book = bookById(state.selectedBookId);
   const learningBook = learningBooks[book.id];
-  if (!learningBook) {
-    elements.courseDialogLessons.innerHTML = `<header><span>已选择</span><strong>《发展汉语·${book.label}》</strong></header><p>该教材已建立入口，内容准备中。</p>`;
+  if (!learningBook || !effectiveBookOpen(book.id)) {
+    elements.courseDialogLessons.innerHTML = `<header><span>已选择</span><strong>《发展汉语·${book.label}》</strong></header><p>${learningBook ? "该教材暂未开放课程。" : "该教材已建立入口，内容准备中。"}</p>`;
     return;
   }
+  const available = effectiveAvailable(book.id);
   elements.courseDialogLessons.innerHTML = `<header><span>选择课次 / Lesson</span><strong>《发展汉语·${book.label}》</strong></header><div class="dialog-lesson-grid">${learningBook.lessons.map((title, index) => {
     const lessonNumber = index + 1;
-    return index < learningBook.available
+    return index < available
       ? `<a href="../digital-book/?lesson=${learningBook.lessonPrefix}-${lessonNumber}"><b>${String(lessonNumber).padStart(2, "0")}</b><span>${title}</span></a>`
       : `<button type="button" data-unavailable-lesson="${lessonNumber}"><b>${String(lessonNumber).padStart(2, "0")}</b><span>${title}</span></button>`;
   }).join("")}</div>`;
@@ -269,14 +298,14 @@ function renderLessons() {
   const learningBook = learningBooks[book.id];
   elements.lessonTitle.textContent = book.label;
   elements.currentBookLabel.textContent = book.label;
-  if (!learningBook) {
-    elements.lessonCount.textContent = "内容准备中";
-    elements.lessonList.innerHTML = `<p class="empty-approval">《发展汉语·${book.label}》已建立入口，课程内容尚未接入。</p>`;
-    elements.currentLessonLabel.textContent = "内容准备中";
+  if (!learningBook || !effectiveBookOpen(book.id)) {
+    elements.lessonCount.textContent = learningBook ? "暂未开放课程" : "内容准备中";
+    elements.lessonList.innerHTML = `<p class="empty-approval">《发展汉语·${book.label}》${learningBook ? "暂未开放课程。" : "已建立入口，课程内容尚未接入。"}</p>`;
+    elements.currentLessonLabel.textContent = learningBook ? "暂未开放课程" : "内容准备中";
     return;
   }
   const firstLessonUrl = `../digital-book/?lesson=${learningBook.lessonPrefix}-1`;
-  elements.lessonCount.textContent = learningBook.countLabel;
+  elements.lessonCount.textContent = effectiveCountLabel(book.id);
   elements.currentLessonLabel.textContent = `第1课 · ${learningBook.lessons[0]}`;
   elements.courseCoverTitle.innerHTML = learningBook.cover;
   elements.continueTitle.textContent = `第1课 · ${learningBook.lessons[0]}`;
@@ -295,7 +324,7 @@ function renderLessons() {
     elements.secondaryTaskMeta.textContent = "第41—48题";
   }
   elements.lessonList.innerHTML = learningBook.lessons.map((title, index) => {
-    const available = index < learningBook.available;
+    const available = index < effectiveAvailable(book.id);
     const lessonNumber = index + 1;
     const inner = `<span>${String(index + 1).padStart(2, "0")}</span><span><strong>${title}</strong><small>${available ? learningBook.contentLabel : "内容准备中"}</small></span><b>${available ? "进入 ›" : "未开放"}</b>`;
     return available ? `<a class="lesson-item available" href="../digital-book/?lesson=${learningBook.lessonPrefix}-${lessonNumber}">${inner}</a>` : `<button class="lesson-item" type="button" data-unavailable-lesson="${lessonNumber}">${inner}</button>`;
@@ -388,6 +417,48 @@ function saveEnrollments() {
   localStorage.setItem("learningHubStudentEnrollments", JSON.stringify(state.enrollments));
 }
 
+function saveTeachers() {
+  localStorage.setItem("learningHubTeachers", JSON.stringify(state.teachers));
+}
+
+function savePublishing() {
+  localStorage.setItem("learningHubPublishing", JSON.stringify(state.publishing));
+}
+
+function saveContentReview() {
+  localStorage.setItem("learningHubContentReview", JSON.stringify(state.contentReview));
+}
+
+function effectiveBookOpen(bookId) {
+  const record = state.publishing[bookId];
+  return record ? record.open : Boolean(learningBooks[bookId]);
+}
+
+function effectiveAvailable(bookId) {
+  const record = state.publishing[bookId];
+  const fallback = learningBooks[bookId] ? learningBooks[bookId].available : 0;
+  return record && typeof record.available === "number" ? record.available : fallback;
+}
+
+function effectiveCountLabel(bookId) {
+  const learningBook = learningBooks[bookId];
+  if (!learningBook) return "内容准备中";
+  const total = learningBook.lessons.length;
+  const available = effectiveAvailable(bookId);
+  return total === available ? `已开放${available}课` : `共${total}课 · 已开放${available}课`;
+}
+
+function findStudentEnrollment(studentId, teacherHint) {
+  const candidates = state.enrollments.filter((item) => item.studentId === studentId);
+  if (!candidates.length) return null;
+  return candidates.find((item) => item.teacher === teacherHint) || candidates[0];
+}
+
+function renderStudentRow(student, pending) {
+  const sourceLabel = student.source === "teacher" ? "教师录入" : "自助加入";
+  return `<div class="student-row"><span><strong>${escapeHtml(student.chineseName)}${student.englishName ? ` · ${escapeHtml(student.englishName)}` : ""}</strong><small>学号 ${escapeHtml(student.studentId)} · ${sourceLabel}${pending ? " · 待确认" : ""}</small></span><span class="student-row-actions">${pending ? `<button class="confirm-button" type="button" data-action="confirm-student" data-id="${escapeHtml(student.id)}">确认加入</button>` : ""}<button class="danger-button" type="button" data-action="remove-student" data-id="${escapeHtml(student.id)}">移除</button></span></div>`;
+}
+
 async function handleStudentLogin(form) {
   const data = new FormData(form);
   const studentId = data.get("studentAccount").trim();
@@ -409,18 +480,28 @@ async function handleStudentLogin(form) {
       ...selection.context,
     };
   }
-  const enrollment = {
-    id: `student-${profile.userId}-${profile.classId || profile.term}-${profile.bookId}`,
-    chineseName: profile.name || profile.userId,
-    englishName: profile.englishName || "",
-    studentId: profile.userId,
-    classId: profile.classId || "",
-    className: profile.className || "",
-    term: profile.term,
-    teacher: profile.teacher,
-    book: profile.bookId,
-    joinedAt: new Date().toISOString(),
-  };
+  let enrollment;
+  const existing = window.LearningApi?.isConfigured() ? null : findStudentEnrollment(profile.userId, profile.teacher);
+  const joinedAt = new Date().toISOString();
+  if (existing) {
+    enrollment = { ...existing, joinedAt: existing.joinedAt, updatedAt: joinedAt, status: existing.status || "confirmed", source: existing.source || "self" };
+  } else {
+    enrollment = {
+      id: `student-${profile.userId}-${profile.classId || profile.term}-${profile.bookId}`,
+      chineseName: profile.name || profile.userId,
+      englishName: profile.englishName || "",
+      studentId: profile.userId,
+      classId: profile.classId || "",
+      className: profile.className || "",
+      term: profile.term,
+      teacher: profile.teacher,
+      book: profile.bookId,
+      status: "pending",
+      source: "self",
+      joinedAt,
+      updatedAt: joinedAt,
+    };
+  }
   if (!window.LearningApi?.isConfigured()) {
     const existingIndex = state.enrollments.findIndex((item) => item.id === enrollment.id);
     if (existingIndex >= 0) state.enrollments[existingIndex] = enrollment;
@@ -432,7 +513,9 @@ async function handleStudentLogin(form) {
   elements.roleDialog.close();
   selectBook(enrollment.book);
   setView("courses");
-  showToast(`已进入 ${enrollment.term} · 发展汉语·${bookById(enrollment.book).label}`);
+  showToast(enrollment.status === "pending"
+    ? "已提交加入申请，等待教师确认 / Pending teacher approval"
+    : `已进入 ${enrollment.term} · 发展汉语·${bookById(enrollment.book).label}`);
 }
 
 async function handleTeacherLogin(form) {
@@ -451,7 +534,7 @@ async function handleTeacherLogin(form) {
       return;
     }
   } else {
-    profile = { role: "teacher", userId: teacherAccount, name: teacherAccount, ...selection.context };
+    profile = { role: "teacher", userId: teacherAccount, name: selection.account?.name || teacherAccount, ...selection.context };
   }
   state.studentProfile = null;
   applyIdentity("teacher", profile.teacher || profile.name);
@@ -462,13 +545,25 @@ async function handleTeacherLogin(form) {
 }
 
 function localAuthenticationOptions(role, account, inviteCode) {
-  const validAccount = role === "student" ? account === TEST_STUDENT_ACCOUNT : Boolean(account);
-  if (!validAccount || inviteCode !== TEST_INVITE_CODE) throw new Error("账号或邀请码不正确");
-  const teacher = role === "teacher" ? account : defaultTeacher;
-  return {
-    account: { id: account, name: role === "student" ? "测试学生" : teacher, englishName: role === "student" ? "Test" : "" },
-    contexts: [{ id: `local-class:${books[0].id}`, classId: "local-class", className: "本地测试班", teacher, term: terms[0], bookId: books[0].id }],
-  };
+  if (inviteCode !== TEST_INVITE_CODE) throw new Error("邀请码不正确");
+  if (role === "student") {
+    if (!account) throw new Error("请输入学号或姓名");
+    return {
+      account: { id: account, name: "测试学生", englishName: "Test" },
+      contexts: [{ id: `local-class:${books[0].id}`, classId: "local-class", className: "本地测试班", teacher: defaultTeacher, term: terms[0], bookId: books[0].id }],
+    };
+  }
+  if (role === "teacher") {
+    const teacherRecord = state.teachers.find((item) => item.account === account);
+    if (!teacherRecord) throw new Error("教师账号未开通，请联系管理员");
+    if (!teacherRecord.active) throw new Error("该教师账号已停用，请联系管理员");
+    const teacher = teacherRecord.name || account;
+    return {
+      account: { id: account, name: teacher, englishName: "" },
+      contexts: [{ id: `local-class:${books[0].id}`, classId: "local-class", className: "本地测试班", teacher, term: terms[0], bookId: books[0].id }],
+    };
+  }
+  throw new Error("当前原型不支持该身份");
 }
 
 function authenticationContextLabel(context) {
@@ -554,10 +649,73 @@ function renderTeacherWorkspace() {
     return;
   }
   const students = state.enrollments.filter((enrollment) => enrollment.teacher === context.teacher && enrollment.term === context.term && enrollment.book === context.book);
+  const pendingStudents = students.filter((student) => student.status === "pending");
+  const confirmedStudents = students.filter((student) => student.status !== "pending");
   elements.classStudentCount.textContent = `${students.length}人`;
-  elements.classStudentList.innerHTML = students.length
-    ? students.map((student) => `<div class="student-row"><span><strong>${escapeHtml(student.chineseName)} · ${escapeHtml(student.englishName)}</strong><small>学号 ${escapeHtml(student.studentId)}</small></span><b>已加入</b></div>`).join("")
-    : '<p class="empty-approval">当前学期和教材还没有学生使用邀请码加入。</p>';
+  elements.classStudentList.innerHTML = `<div class="class-list-toolbar"><span>已确认 <b>${confirmedStudents.length}</b> · 待确认 <b>${pendingStudents.length}</b></span><button class="quiet-button" type="button" data-action="open-add-student">＋ 新增学生</button></div>${pendingStudents.length ? `<div class="class-subgroup"><header>待确认 <small>学生用邀请码自助加入，需确认后生效</small></header>${pendingStudents.map((student) => renderStudentRow(student, true)).join("")}</div>` : ""}${confirmedStudents.length ? `<div class="class-subgroup"><header>已确认</header>${confirmedStudents.map((student) => renderStudentRow(student, false)).join("")}</div>` : ""}${!students.length ? '<p class="empty-approval">还没有学生。点“＋新增学生”录入名单，或让学生用邀请码自助加入。</p>' : ""}`;
+}
+
+function openAddStudentDialog() {
+  const context = state.teacherContext;
+  elements.addStudentContextLabel.textContent = `${context.term} · ${bookById(context.book).label} · ${context.teacher} 老师`;
+  elements.addStudentDialog.showModal();
+}
+
+function addStudentByTeacher(name, studentId, englishName) {
+  if (!name || !studentId) throw new Error("姓名和学号不能为空");
+  const context = state.teacherContext;
+  const now = new Date().toISOString();
+  const id = `student-${studentId}-${context.term}-${context.book}`;
+  const existingIndex = state.enrollments.findIndex((item) => item.id === id);
+  const enrollment = {
+    id,
+    chineseName: name,
+    englishName: englishName || "",
+    studentId,
+    classId: "local-class",
+    className: "本地测试班",
+    term: context.term,
+    teacher: context.teacher,
+    book: context.book,
+    status: "confirmed",
+    source: "teacher",
+    joinedAt: existingIndex >= 0 ? state.enrollments[existingIndex].joinedAt : now,
+    updatedAt: now,
+  };
+  if (existingIndex >= 0) state.enrollments[existingIndex] = enrollment;
+  else state.enrollments.push(enrollment);
+  saveEnrollments();
+  renderTeacherWorkspace();
+  return enrollment;
+}
+
+function confirmEnrollment(id) {
+  const enrollment = state.enrollments.find((item) => item.id === id);
+  if (!enrollment) return;
+  enrollment.status = "confirmed";
+  enrollment.updatedAt = new Date().toISOString();
+  saveEnrollments();
+  renderTeacherWorkspace();
+  showToast(`已确认 ${enrollment.chineseName} 加入本班`);
+}
+
+function removeEnrollment(id) {
+  const enrollment = state.enrollments.find((item) => item.id === id);
+  if (!enrollment) return;
+  pendingRemoveEnrollment = enrollment;
+  elements.confirmDialogMessage.textContent = `确定移除学生“${enrollment.chineseName}”（学号 ${enrollment.studentId}）？`;
+  elements.confirmDialog.showModal();
+}
+
+function confirmPendingRemoveEnrollment() {
+  elements.confirmDialog.close();
+  const enrollment = pendingRemoveEnrollment;
+  pendingRemoveEnrollment = null;
+  if (!enrollment) return;
+  state.enrollments = state.enrollments.filter((item) => item.id !== enrollment.id);
+  saveEnrollments();
+  renderTeacherWorkspace();
+  showToast("已移除该学生");
 }
 
 async function loadCloudClassSettings() {
@@ -604,6 +762,178 @@ async function loadCloudTeacherStudents() {
   }
 }
 
+function showAdminTab(tab) {
+  document.querySelectorAll("[data-admin-tab]").forEach((button) => button.classList.toggle("active", button.dataset.adminTab === tab));
+  document.querySelectorAll("[data-admin-panel]").forEach((panel) => {
+    const active = panel.dataset.adminPanel === tab;
+    panel.hidden = !active;
+    panel.classList.toggle("active", active);
+  });
+}
+
+function renderAdminView() {
+  renderAdminUsers();
+  renderAdminPublishing();
+  renderAdminReview();
+}
+
+function renderAdminUsers() {
+  const activeCount = state.teachers.filter((teacher) => teacher.active).length;
+  elements.teacherCount.textContent = `${state.teachers.length} 个账号 · ${activeCount} 个启用`;
+  elements.adminTeacherList.innerHTML = state.teachers.length
+    ? state.teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"} · ${new Date(teacher.createdAt).toLocaleDateString() || ""} 开通</small></span><button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用" : "启用"}</button></div>`).join("")
+    : '<p class="empty-approval">还没有教师账号，请点击“新增教师”。</p>';
+}
+
+function renderAdminPublishing() {
+  elements.adminPublishingList.innerHTML = catalog.map((level) => `<div class="publish-level"><h3>${level.label}</h3><div class="admin-list">${level.books.map(([id, label]) => {
+    const learningBook = learningBooks[id];
+    const isOpen = effectiveBookOpen(id);
+    const available = effectiveAvailable(id);
+    const total = learningBook ? learningBook.lessons.length : 0;
+    return `<div class="admin-row publish-row"><span><strong>《发展汉语·${label}》</strong><small>${learningBook ? `共 ${total} 课 · 当前开放 ${available} 课` : "内容尚未接入，仅可开放入口"}</small></span><span class="publish-controls">${learningBook ? `<label><span>开放课数</span><select data-publish-available="${id}">${Array.from({ length: total }, (_, index) => index + 1).map((count) => `<option value="${count}"${count === available ? " selected" : ""}>${count}课</option>`).join("")}</select></label><button class="quiet-button" type="button" data-action="reset-publish" data-id="${id}">默认</button>` : ""}<button class="switch-button${isOpen ? " on" : ""}" type="button" data-action="toggle-publish" data-id="${id}" role="switch" aria-checked="${isOpen}"><i></i><span>${isOpen ? "已开放" : "未开放"}</span></button></span></div>`;
+  }).join("")}</div></div>`).join("");
+}
+
+function renderAdminReview() {
+  const contentBooks = books.filter((book) => learningBooks[book.id] && effectiveBookOpen(book.id));
+  if (!contentBooks.length) {
+    elements.adminReviewList.innerHTML = '<p class="empty-approval">当前没有已开放的教材，语种审核列表为空。</p>';
+    return;
+  }
+  elements.adminReviewList.innerHTML = contentBooks.map((book) => {
+    const learningBook = learningBooks[book.id];
+    const available = effectiveAvailable(book.id);
+    return `<div class="publish-level"><h3>《发展汉语·${book.label}》</h3><div class="admin-list">${learningBook.lessons.slice(0, available).map((title, index) => {
+      const lessonId = `${learningBook.lessonPrefix}-${index + 1}`;
+      const record = state.contentReview[lessonId] || {};
+      const badges = (record.languages || []).map((code) => `<i class="lang-badge${record.reviewed ? " reviewed" : ""}">${escapeHtml(languageShortLabels[code] || code)}</i>`).join("");
+      return `<div class="admin-row review-row"><span><strong>第${index + 1}课 · ${escapeHtml(title)}</strong><small>${badges || '<span class="muted">尚未统计语种覆盖</span>'}</small></span><span class="review-controls"><button class="quiet-button" type="button" data-action="refresh-review" data-id="${lessonId}">刷新统计</button><button class="review-toggle${record.reviewed ? " on" : ""}" type="button" data-action="toggle-review" data-id="${lessonId}">${record.reviewed ? "已审核 ✓" : "标记通过"}</button></span></div>`;
+    }).join("")}</div></div>`;
+  }).join("");
+}
+
+async function refreshAllReview() {
+  elements.adminReviewList.innerHTML = '<p class="empty-approval">正在从云端数据统计语种覆盖，请稍候…</p>';
+  const lessonIds = [];
+  for (const book of books) {
+    const learningBook = learningBooks[book.id];
+    if (!learningBook || !effectiveBookOpen(book.id)) continue;
+    for (let index = 0; index < effectiveAvailable(book.id); index += 1) lessonIds.push(`${learningBook.lessonPrefix}-${index + 1}`);
+  }
+  await Promise.all(lessonIds.map((lessonId) => refreshReviewForLesson(lessonId).catch(() => null)));
+  renderAdminReview();
+  showToast("语种覆盖统计完成 / Language coverage updated");
+}
+
+async function refreshReviewForLesson(lessonId) {
+  const root = window.HANZI_COMPANION_CONFIG?.runtimeDataRoot || "";
+  if (!root) return [];
+  const documents = await Promise.all(REVIEW_DATA_FILES.map((file) => fetch(`${root}/lessons/${lessonId}/${file}`).then((response) => (response.ok ? response.json() : null)).catch(() => null)));
+  const codes = new Set();
+  documents.forEach((document) => { if (document) collectLanguageCodes(document, codes); });
+  const record = state.contentReview[lessonId] || {};
+  record.languages = Array.from(codes).sort((a, b) => languageOrder(a) - languageOrder(b));
+  state.contentReview[lessonId] = record;
+  saveContentReview();
+  return record.languages;
+}
+
+function collectLanguageCodes(node, codes) {
+  if (Array.isArray(node)) {
+    node.forEach((item) => collectLanguageCodes(item, codes));
+    return;
+  }
+  if (!node || typeof node !== "object") return;
+  for (const [key, value] of Object.entries(node)) {
+    if (REVIEW_LANGUAGE_CODES.has(key)) codes.add(key);
+    if (value && typeof value === "object") collectLanguageCodes(value, codes);
+  }
+}
+
+function languageOrder(code) {
+  const order = ["zh", "pinyin", "en", "es", "fr", "id", "ja", "ko", "lo", "ms", "my", "ru", "th", "vi"];
+  const index = order.indexOf(code);
+  return index === -1 ? 99 : index;
+}
+
+function addTeacher(name, account) {
+  if (!name || !account) throw new Error("教师姓名和登录账号不能为空");
+  if (state.teachers.some((item) => item.account === account)) throw new Error("该登录账号已存在");
+  state.teachers.push({ id: `teacher-${Date.now()}`, account, name, active: true, createdAt: new Date().toISOString() });
+  saveTeachers();
+  renderAdminUsers();
+}
+
+function toggleTeacherActive(id) {
+  const teacher = state.teachers.find((item) => item.id === id);
+  if (!teacher) return;
+  teacher.active = !teacher.active;
+  saveTeachers();
+  renderAdminUsers();
+  showToast(teacher.active ? `已启用教师 ${teacher.name}` : `已停用教师 ${teacher.name}`);
+}
+
+function firstOpenContentBookId() {
+  const book = books.find((item) => learningBooks[item.id] && effectiveBookOpen(item.id));
+  return book ? book.id : "intermediate-comprehensive-1";
+}
+
+function refreshBookSelects() {
+  const fallback = firstOpenContentBookId();
+  document.querySelectorAll("[data-book-options]").forEach((select) => {
+    const current = select.value;
+    select.innerHTML = bookOptionMarkup(current && effectiveBookOpen(current) ? current : fallback);
+  });
+  const current = elements.teacherBook.value;
+  elements.teacherBook.innerHTML = bookOptionMarkup(current && effectiveBookOpen(current) ? current : fallback);
+}
+
+function toggleBookPublish(bookId) {
+  const record = state.publishing[bookId] || {};
+  const wasOpen = effectiveBookOpen(bookId);
+  record.open = !wasOpen;
+  if (record.open && typeof record.available !== "number" && learningBooks[bookId]) record.available = learningBooks[bookId].available;
+  state.publishing[bookId] = record;
+  savePublishing();
+  refreshAfterPublishingChange();
+  showToast(record.open ? "教材已开放" : "教材已关闭");
+}
+
+function setPublishAvailable(bookId, count) {
+  const record = state.publishing[bookId] || {};
+  record.available = count;
+  if (record.open === undefined) record.open = Boolean(learningBooks[bookId]);
+  state.publishing[bookId] = record;
+  savePublishing();
+  refreshAfterPublishingChange();
+}
+
+function resetBookPublish(bookId) {
+  delete state.publishing[bookId];
+  savePublishing();
+  refreshAfterPublishingChange();
+  showToast("已恢复默认开放设置");
+}
+
+function refreshAfterPublishingChange() {
+  renderAdminPublishing();
+  renderAdminReview();
+  refreshBookSelects();
+  renderCatalog();
+  renderLessons();
+}
+
+function toggleLessonReview(lessonId) {
+  const record = state.contentReview[lessonId] || {};
+  record.reviewed = !record.reviewed;
+  record.reviewedAt = record.reviewed ? new Date().toISOString() : "";
+  state.contentReview[lessonId] = record;
+  saveContentReview();
+  renderAdminReview();
+  showToast(record.reviewed ? `第 ${lessonId} 课已标记审核通过` : "已取消审核标记");
+}
+
 let toastTimer;
 function showToast(message, duration = 2400) {
   clearTimeout(toastTimer);
@@ -635,6 +965,29 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("[data-auth-close]")) { elements.roleDialog.close(); return; }
   const selectedBook = event.target.closest("[data-select-book]")?.dataset.selectBook;
   if (selectedBook) { selectBook(selectedBook); return; }
+  if (event.target.closest("[data-add-student-close]")) { elements.addStudentDialog.close(); return; }
+  if (event.target.closest("[data-action='open-add-student']")) { openAddStudentDialog(); return; }
+  const confirmStudent = event.target.closest("[data-action='confirm-student']");
+  if (confirmStudent) { confirmEnrollment(confirmStudent.dataset.id); return; }
+  const removeStudent = event.target.closest("[data-action='remove-student']");
+  if (removeStudent) { removeEnrollment(removeStudent.dataset.id); return; }
+  if (event.target.closest("[data-confirm-cancel]")) { elements.confirmDialog.close(); pendingRemoveEnrollment = null; return; }
+  if (event.target.closest("[data-confirm-ok]")) { confirmPendingRemoveEnrollment(); return; }
+  const adminTab = event.target.closest("[data-admin-tab]")?.dataset.adminTab;
+  if (adminTab) { showAdminTab(adminTab); return; }
+  if (event.target.closest("[data-action='open-add-teacher']")) { elements.addTeacherForm.hidden = false; elements.addTeacherForm.querySelector('[name="teacherName"]')?.focus(); return; }
+  if (event.target.closest("[data-action='cancel-add-teacher']")) { elements.addTeacherForm.hidden = true; elements.addTeacherForm.reset(); return; }
+  const toggleTeacher = event.target.closest("[data-action='toggle-teacher']");
+  if (toggleTeacher) { toggleTeacherActive(toggleTeacher.dataset.id); return; }
+  const togglePublish = event.target.closest("[data-action='toggle-publish']");
+  if (togglePublish) { toggleBookPublish(togglePublish.dataset.id); return; }
+  const resetPublish = event.target.closest("[data-action='reset-publish']");
+  if (resetPublish) { resetBookPublish(resetPublish.dataset.id); return; }
+  const refreshReview = event.target.closest("[data-action='refresh-review']");
+  if (refreshReview) { void refreshReviewForLesson(refreshReview.dataset.id).then(() => renderAdminReview()).catch(() => { showToast("统计失败，请检查网络或数据文件"); }); return; }
+  if (event.target.closest("[data-action='review-refresh-all']")) { void refreshAllReview(); return; }
+  const toggleReview = event.target.closest("[data-action='toggle-review']");
+  if (toggleReview) { toggleLessonReview(toggleReview.dataset.id); return; }
   const unavailableLesson = event.target.closest("[data-unavailable-lesson]")?.dataset.unavailableLesson;
   if (unavailableLesson) showToast(`第${unavailableLesson}课内容尚未接入`);
 });
@@ -650,6 +1003,39 @@ elements.search.addEventListener("input", () => { state.search = elements.search
 elements.teacherTerm.addEventListener("change", () => { state.teacherContext.term = elements.teacherTerm.value; renderTeacherWorkspace(); });
 elements.teacherBook.addEventListener("change", () => { state.teacherContext.book = elements.teacherBook.value; renderTeacherWorkspace(); });
 elements.saveWritingPolicy.addEventListener("click", () => { void saveCloudClassSettings(); });
+elements.addStudentDialog.addEventListener("click", (event) => { if (event.target === elements.addStudentDialog) elements.addStudentDialog.close(); });
+elements.confirmDialog.addEventListener("click", (event) => { if (event.target === elements.confirmDialog) { elements.confirmDialog.close(); pendingRemoveEnrollment = null; } });
+[["roleDialog", "header"], ["courseDialog", "header"], ["addStudentDialog", "header"], ["confirmDialog", "header"]].forEach(([key, handle]) => {
+  if (elements[key]) window.attachDraggable?.({ element: elements[key], handle });
+});
+elements.addStudentDialog.addEventListener("close", () => { elements.addStudentForm.reset(); });
+elements.addStudentForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = new FormData(event.currentTarget);
+  try {
+    const enrollment = addStudentByTeacher(data.get("chineseName").trim(), data.get("studentId").trim(), data.get("englishName").trim());
+    elements.addStudentDialog.close();
+    showToast(`已添加并确认 ${enrollment.chineseName} 加入本班`);
+  } catch (error) {
+    showToast(error.message || "添加失败");
+  }
+});
+elements.addTeacherForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = new FormData(event.currentTarget);
+  try {
+    addTeacher(data.get("teacherName").trim(), data.get("teacherAccount").trim());
+    event.currentTarget.reset();
+    event.currentTarget.hidden = true;
+    showToast("已新增教师账号");
+  } catch (error) {
+    showToast(error.message || "添加失败");
+  }
+});
+document.addEventListener("change", (event) => {
+  const publishAvailable = event.target.closest("[data-publish-available]")?.dataset.publishAvailable;
+  if (publishAvailable) setPublishAvailable(publishAvailable, Number(event.target.value));
+});
 
 populateFormOptions();
 renderCatalog();

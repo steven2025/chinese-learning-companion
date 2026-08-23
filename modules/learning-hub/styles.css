@@ -236,6 +236,11 @@ button { cursor: pointer; }
 .role-dialog { width: min(650px, calc(100% - 24px)); padding: 0; color: var(--ink); border: 1px solid #b9cbc7; border-radius: 8px; background: #fff; box-shadow: 0 24px 70px rgba(18,59,61,.28); }
 .role-dialog::backdrop { background: rgba(18, 44, 46, .55); }
 .auth-dialog-shell { padding: 22px; }
+
+.role-dialog header { cursor: move; touch-action: none; user-select: none; }
+.writing-setup-shell > header, .writing-assist-shell > header, .writing-review-shell > header, .writing-analysis-shell > header, .essay-writing-window > header { cursor: move; touch-action: none; user-select: none; }
+.confirm-dialog-message { margin: 18px 0 6px; font-size: 15px; line-height: 1.7; color: var(--ink); }
+.confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 .role-dialog header { display: flex; justify-content: space-between; align-items: start; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .role-dialog h2 { margin: 4px 0 0; font-size: 22px; }
 .role-dialog header button { width: 36px; height: 36px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; background: #fff; font-size: 24px; }
@@ -330,4 +335,70 @@ button { cursor: pointer; }
   .lesson-directory { padding: 15px; }
   .level-books { padding-left: 16px; }
   .auth-tabs button { padding-inline: 4px; font-size: 10px; }
+}
+
+/* ---- teacher class roster ---- */
+.class-list-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0 6px; }
+.class-list-toolbar > span { color: var(--muted); font-size: 11px; font-weight: 700; }
+.class-list-toolbar > span b { color: var(--teal); }
+.class-list-toolbar .quiet-button { min-height: 34px; padding: 0 12px; font-size: 11px; }
+.class-subgroup { margin-top: 8px; }
+.class-subgroup > header { display: flex; align-items: baseline; gap: 8px; padding: 4px 0; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .4px; }
+.class-subgroup > header small { color: var(--muted); font-size: 9px; font-weight: 600; }
+.student-row-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.student-row-actions button { min-height: 30px; padding: 0 11px; border-radius: 6px; font-size: 11px; font-weight: 750; cursor: pointer; }
+.confirm-button { color: #fff; border: 0; background: var(--teal); }
+.danger-button { color: #b04a3c; border: 1px solid #e5c0b8; background: #fff; }
+
+/* ---- admin panels ---- */
+.admin-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.admin-tabs button { min-height: 40px; padding: 0 18px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; background: #fff; font-weight: 750; cursor: pointer; }
+.admin-tabs button.active { color: #fff; border-color: var(--teal); background: var(--teal); }
+.admin-panel { margin-bottom: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.admin-panel[hidden] { display: none; }
+.admin-panel-heading { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+.admin-panel-heading span { color: var(--coral); font-size: 10px; font-weight: 800; }
+.admin-panel-heading h2 { margin: 3px 0 0; font-size: 18px; }
+.admin-panel-heading p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+.admin-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 4px 0 10px; color: var(--muted); font-size: 11px; }
+.admin-toolbar strong { color: var(--ink); font-size: 12px; }
+.admin-toolbar .quiet-button { min-height: 32px; font-size: 11px; }
+.admin-list { border: 1px solid var(--line); border-radius: 8px; background: #fff; overflow: hidden; }
+.admin-row { min-height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 16px; border-bottom: 1px solid #e8eeec; }
+.admin-row:last-child { border-bottom: 0; }
+.admin-row strong, .admin-row small { display: block; }
+.admin-row strong { font-size: 13px; }
+.admin-row small { margin-top: 3px; color: var(--muted); font-size: 10px; }
+.admin-row .quiet-button { min-height: 32px; font-size: 11px; }
+.admin-inline-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto; gap: 12px; align-items: end; padding: 14px; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 8px; background: #f4f8f6; }
+.admin-inline-form[hidden] { display: none; }
+.admin-inline-form label { display: grid; gap: 6px; }
+.admin-inline-form label span { color: var(--muted); font-size: 10px; font-weight: 750; }
+.admin-inline-form input { min-height: 40px; padding: 0 10px; border: 1px solid #b9c9c5; border-radius: 6px; background: #fff; }
+.admin-inline-form .primary-button, .admin-inline-form .quiet-button { min-height: 40px; }
+.publish-level h3 { margin: 0 0 6px; color: var(--teal); font-size: 12px; }
+.publish-level + .publish-level { margin-top: 18px; }
+.publish-controls { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.publish-controls label { display: grid; gap: 2px; }
+.publish-controls label span { color: var(--muted); font-size: 9px; font-weight: 750; }
+.publish-controls select { min-height: 34px; padding: 0 6px; border: 1px solid #bccbc7; border-radius: 6px; background: #fff; font-size: 11px; }
+.switch-button { min-width: 78px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; color: var(--muted); border: 1px solid #c9d4d1; border-radius: 999px; background: #f1f5f3; font-size: 11px; font-weight: 800; cursor: pointer; }
+.switch-button i { width: 8px; height: 8px; border-radius: 50%; background: #a9b8b4; }
+.switch-button.on { color: #fff; border-color: var(--teal); background: var(--teal); }
+.switch-button.on i { background: #ffd982; }
+.review-controls { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.review-controls .quiet-button { min-height: 32px; font-size: 11px; }
+.review-toggle { min-height: 32px; padding: 0 12px; color: #b04a3c; border: 1px solid #e5c0b8; border-radius: 999px; background: #fff; font-size: 11px; font-weight: 800; cursor: pointer; }
+.review-toggle.on { color: #fff; border-color: #3b9d8f; background: #3b9d8f; }
+.lang-badge { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 7px; color: #08776f; border: 1px solid #bfe0da; border-radius: 999px; background: #eefaf7; font-style: normal; font-size: 10px; font-weight: 750; }
+.lang-badge.reviewed { color: #7a5200; border-color: #e6cd92; background: #fff7df; }
+.muted { color: var(--muted); }
+
+@media (max-width: 760px) {
+  .admin-tabs button { flex: 1 1 40%; }
+  .admin-inline-form { grid-template-columns: 1fr; }
+  .admin-row, .publish-controls, .review-controls { flex-wrap: wrap; }
+  .class-list-toolbar { flex-direction: column; align-items: stretch; }
+  .class-list-toolbar .quiet-button { width: 100%; }
+  .student-row-actions { width: 100%; justify-content: flex-end; }
 }

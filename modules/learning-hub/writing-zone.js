@@ -928,6 +928,9 @@
   });
   el.setupForm?.addEventListener("submit", (event) => { event.preventDefault(); createEssay(event.currentTarget); });
   [el.setupDialog, el.assistDialog, el.reviewDialog, el.analysisDialog].forEach((dialog) => dialog?.addEventListener("click", (event) => { if (event.target === dialog) closeDialog(dialog); }));
+  [el.setupDialog, el.assistDialog, el.reviewDialog, el.analysisDialog].forEach((dialog) => {
+    if (dialog) window.attachDraggable?.({ element: dialog, handle: "header" });
+  });
   el.canvasDialog?.addEventListener("click", (event) => { if (event.target === el.canvasDialog) closeDialog(el.canvasDialog); });
   setupDrag();
 

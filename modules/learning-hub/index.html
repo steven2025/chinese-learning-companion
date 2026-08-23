@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260811-1">
+  <link rel="stylesheet" href="styles.css?v=20260823-3">
   <link rel="stylesheet" href="writing-zone.css?v=20260811-3">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
@@ -197,8 +197,33 @@
       </section>
 
       <section class="app-view" id="adminView" data-view-panel="admin" hidden>
-        <header class="page-heading"><div><span>管理员身份</span><h1>系统管理</h1><p>此处只定义未来管理入口，不接入云端操作。</p></div></header>
-        <div class="management-list"><button>教材与课程发布 <span>待接入</span></button><button>多语言内容审核 <span>待接入</span></button><button>用户与角色管理 <span>待接入</span></button><button>系统配置 <span>待接入</span></button></div>
+        <header class="page-heading"><div><span>管理员身份</span><h1>系统管理</h1><p>管理教师账号、教材开放与多语言内容审核。</p></div></header>
+        <nav class="admin-tabs" aria-label="系统管理功能">
+          <button class="active" type="button" data-admin-tab="users">用户与角色管理</button>
+          <button type="button" data-admin-tab="publishing">教材与课程发布</button>
+          <button type="button" data-admin-tab="review">多语言内容审核</button>
+        </nav>
+        <section class="admin-panel" data-admin-panel="users">
+          <div class="admin-panel-heading"><div><span>角色</span><h2>用户与角色管理</h2><p>教师负责本班学生名单；管理员负责教师账号的开通与停用。</p></div></div>
+          <form class="admin-inline-form" id="addTeacherForm" hidden>
+            <label><span>教师姓名 / Name</span><input name="teacherName" required maxlength="40" placeholder="如：曹丹丹"></label>
+            <label><span>登录账号 / Account</span><input name="teacherAccount" required maxlength="40" placeholder="如：caodd"></label>
+            <button class="primary-button" type="submit">添加教师</button>
+            <button class="quiet-button" type="button" data-action="cancel-add-teacher">取消</button>
+          </form>
+          <div class="admin-toolbar"><strong>教师账号 <span id="teacherCount">0</span></strong><button class="quiet-button" type="button" data-action="open-add-teacher">＋ 新增教师</button></div>
+          <div class="admin-list" id="adminTeacherList"></div>
+        </section>
+        <section class="admin-panel" data-admin-panel="publishing" hidden>
+          <div class="admin-panel-heading"><div><span>课程</span><h2>教材与课程发布</h2><p>控制教材是否开放给学生，以及已开放课次数量，学生端实时生效。</p></div></div>
+          <div class="admin-list" id="adminPublishingList"></div>
+        </section>
+        <section class="admin-panel" data-admin-panel="review" hidden>
+          <div class="admin-panel-heading"><div><span>语种</span><h2>多语言内容审核</h2><p>从云端数据统计已开放课次的语种覆盖，并标记审核状态。</p></div></div>
+          <div class="admin-toolbar"><strong>覆盖语种：中文 · 拼音 · 英 · 西 · 法 · 印尼 · 日 · 韩 · 老挝 · 马来 · 缅 · 俄 · 泰</strong><button class="quiet-button" type="button" data-action="review-refresh-all">全部刷新统计</button></div>
+          <div class="admin-list" id="adminReviewList"></div>
+        </section>
+        <div class="management-list"><button>系统配置 <span>待接入</span></button></div>
       </section>
     </main>
 
@@ -229,12 +254,12 @@
 
       <form class="auth-panel active" id="studentLoginForm" data-auth-panel="student-login">
         <div class="form-grid two-columns">
-          <label><span>学生账号 / Account</span><input name="studentAccount" value="test" required autocomplete="username"></label>
+          <label><span>学号或姓名 / ID or name</span><input name="studentAccount" value="test" required autocomplete="username"></label>
           <label><span>邀请码 / Invite code</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
           <label class="wide-field" data-auth-context hidden><span>选择班级与教材 / Class and textbook</span><select name="contextId"></select></label>
         </div>
         <button class="primary-button" type="submit" data-auth-submit>验证并进入课程</button>
-        <p>账号验证后，系统会自动读取班级、学期、教师和可用教材。</p>
+        <p>教师录入的学号可直接进入班级；新学生提交加入申请，等待教师确认。</p>
       </form>
 
       <form class="auth-panel" id="teacherLoginForm" data-auth-panel="teacher-login" hidden>
@@ -244,7 +269,7 @@
           <label class="wide-field" data-auth-context hidden><span>选择班级与教材 / Class and textbook</span><select name="contextId"></select></label>
         </div>
         <button class="primary-button" type="submit" data-auth-submit>验证并进入工作台</button>
-        <p>登录后可进入已分配的学期、班级和教材。</p>
+        <p>教师账号由管理员开通；登录后可进入已分配的学期、班级和教材。</p>
       </form>
 
       <form class="auth-panel" id="adminLoginForm" data-auth-panel="admin-login" hidden>
@@ -254,6 +279,19 @@
         <p>当前管理员为鄢清华，测试邀请码为 123456。</p>
       </form>
     </div>
+  </dialog>
+
+  <dialog class="role-dialog" id="addStudentDialog" aria-labelledby="addStudentDialogTitle">
+    <form class="auth-dialog-shell" id="addStudentForm">
+      <header><div><span>教学工作台</span><h2 id="addStudentDialogTitle">新增学生 <small>Add student</small></h2></div><button type="button" data-add-student-close aria-label="关闭">×</button></header>
+      <div class="form-grid two-columns">
+        <label><span>姓名 / Name</span><input name="chineseName" required maxlength="40" placeholder="学生中文姓名"></label>
+        <label><span>学号 / Student ID</span><input name="studentId" required maxlength="40" placeholder="唯一学号，用于登录"></label>
+        <label class="wide-field"><span>英文名 / English name（可选）</span><input name="englishName" maxlength="40" placeholder="English name"></label>
+      </div>
+      <p>添加后将立即确认加入：<strong id="addStudentContextLabel"></strong></p>
+      <button class="primary-button" type="submit">添加并确认 <small>Add</small></button>
+    </form>
   </dialog>
 
   <dialog class="writing-setup-dialog" id="writingSetupDialog" aria-labelledby="writingSetupTitle">
@@ -343,11 +381,23 @@
     </div>
   </dialog>
 
+  <dialog class="role-dialog" id="confirmDialog" aria-labelledby="confirmDialogTitle">
+    <form class="auth-dialog-shell" id="confirmDialogForm">
+      <header><div><span>提示</span><h2 id="confirmDialogTitle">请确认</h2></div><button type="button" data-confirm-cancel aria-label="关闭">×</button></header>
+      <p class="confirm-dialog-message" id="confirmDialogMessage"></p>
+      <footer class="confirm-dialog-actions">
+        <button class="quiet-button" type="button" data-confirm-cancel>取消</button>
+        <button class="danger-button" type="button" data-confirm-ok>确认</button>
+      </footer>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="../../config.js?v=20260818-2"></script>
   <script src="../shared/learning-api-client.js?v=20260811-7"></script>
+  <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260823-1"></script>
-  <script src="app.js?v=20260823-1" defer></script>
-  <script src="writing-zone.js?v=20260811-3" defer></script>
+  <script src="app.js?v=20260823-3" defer></script>
+  <script src="writing-zone.js?v=20260811-4" defer></script>
 </body>
 </html>
