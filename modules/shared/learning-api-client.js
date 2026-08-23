@@ -149,6 +149,7 @@
     adminTeachers: () => request("/admin/teachers", {}),
     createAdminTeacher: (input) => request("/admin/teachers/create", input),
     updateAdminTeacher: (input) => request("/admin/teachers/update", input),
+    removeAdminTeacher: (input) => request("/admin/teachers/remove", input),
     resetAdminTeacherInvite: (input) => request("/admin/teachers/reset-invite", input),
     classSettings: () => request("/classes/settings", {}),
     updateClassSettings: (input) => request("/classes/settings/update", input),
