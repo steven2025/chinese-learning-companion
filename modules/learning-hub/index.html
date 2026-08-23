@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260823-3">
+  <link rel="stylesheet" href="styles.css?v=20260823-4">
   <link rel="stylesheet" href="writing-zone.css?v=20260811-3">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
@@ -393,11 +393,16 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" hidden></div>
-  <script src="../../config.js?v=20260818-2"></script>
+  <script src="../../config.js?v=20260823-1"></script>
   <script src="../shared/learning-api-client.js?v=20260811-7"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260823-1"></script>
-  <script src="app.js?v=20260823-3" defer></script>
+  <script src="app.js?v=20260823-4" defer></script>
   <script src="writing-zone.js?v=20260811-4" defer></script>
+
+  <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
+    <span><strong>发现新版本</strong><small>点击刷新以更新到最新内容 / New version ready, tap to refresh</small></span>
+    <button class="pwa-install-action" type="button" data-pwa-refresh>刷新 / Refresh</button>
+  </section>
 </body>
 </html>

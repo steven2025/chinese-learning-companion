@@ -115,8 +115,24 @@ const viewLabels = { home: "首页", courses: "我的课程", writing: "写作�
 
 if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("../../sw.js?v=44", { scope: "../../" }).catch(() => {});
+    navigator.serviceWorker.register("../../sw.js", { scope: "../../" })
+      .then((registration) => {
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              showUpdateBanner();
+            }
+          });
+        });
+      })
+      .catch(() => {});
   });
+}
+
+function showUpdateBanner() {
+  if (elements.pwaUpdateBanner) elements.pwaUpdateBanner.hidden = false;
 }
 const elements = {
   search: document.querySelector("#globalSearch"),
@@ -165,6 +181,7 @@ const elements = {
   saveWritingPolicy: document.querySelector("#saveWritingPolicyButton"),
   writingPolicyStatus: document.querySelector("#writingPolicyStatus"),
   toast: document.querySelector("#toast"),
+  pwaUpdateBanner: document.querySelector("#pwaUpdateBanner"),
   installAppButton: document.querySelector("#installAppButton"),
   pwaInstallBanner: document.querySelector("#pwaInstallBanner"),
   pwaInstallMessage: document.querySelector("#pwaInstallMessage"),
@@ -182,7 +199,7 @@ function hideInstallUi() {
 }
 
 function showInstallNotice() {
-  if (isInstalledApp() || sessionStorage.getItem("pwaInstallNoticeDismissed")) return;
+  if (isInstalledApp() || localStorage.getItem("pwaInstallNoticeDismissed")) return;
   elements.pwaInstallBanner.hidden = false;
 }
 
@@ -948,9 +965,10 @@ function escapeHtml(value) {
 
 document.addEventListener("click", (event) => {
   if (event.target.closest("[data-pwa-install]")) { void requestAppInstall(); return; }
+  if (event.target.closest("[data-pwa-refresh]")) { window.location.reload(); return; }
   if (event.target.closest("[data-pwa-dismiss]")) {
     elements.pwaInstallBanner.hidden = true;
-    sessionStorage.setItem("pwaInstallNoticeDismissed", "1");
+    localStorage.setItem("pwaInstallNoticeDismissed", "1");
     return;
   }
   const view = event.target.closest("[data-view]")?.dataset.view;
