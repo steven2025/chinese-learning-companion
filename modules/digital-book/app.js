@@ -2706,6 +2706,12 @@ function renderWordQuiz(word) {
     </div>`;
 }
 
+function activePracticeStep(item) {
+  if (item.unitType !== "practiceActivity" || !Array.isArray(item.steps)) return null;
+  const index = Number.isInteger(state.activityStepIndex[item.id]) ? state.activityStepIndex[item.id] : 0;
+  return item.steps[Math.min(index, item.steps.length - 1)] || null;
+}
+
 function renderPracticeAssist() {
   const item = currentItem();
   if (item.unitType === "practiceIntro") {
@@ -2720,14 +2726,15 @@ function renderPracticeAssist() {
       ${renderDeepAssistPanel({ unitType: "practice-intro", unitId: item.groupId, assistType: "deep-explain" })}`;
     return;
   }
-  const support = localizedPracticeSupport(item);
+  const assistItem = activePracticeStep(item) || item;
+  const support = localizedPracticeSupport(assistItem);
   if (state.assistTab === "understand") {
     elements.assistContent.innerHTML = `
       <div class="assist-block">
         <span class="assist-label">题目要求</span>
         <p class="translation-large">${escapeHtml(support.promptMeaning || "先确认题目要求你补充、改写还是解释什么内容。")}</p>
       </div>
-      ${renderDeepAssistPanel({ unitType: "practice", unitId: item.id, assistType: "prompt-meaning" })}`;
+      ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "prompt-meaning" })}`;
     return;
   }
   if (state.assistTab === "hint") {
@@ -2738,7 +2745,7 @@ function renderPracticeAssist() {
         ${support.writingStructure?.length ? `<strong>参考结构</strong><ol>${support.writingStructure.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ol>` : ""}
         ${support.keywordGuidance?.length ? `<strong>关键词语</strong><div class="word-bank">${support.keywordGuidance.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div>` : ""}
       </div>
-      ${renderDeepAssistPanel({ unitType: "practice", unitId: item.id, assistType: "thinking-hint" })}`;
+      ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "thinking-hint" })}`;
     return;
   }
   const example = support.similarExample;
@@ -2750,7 +2757,7 @@ function renderPracticeAssist() {
       </div>
       ${example ? `<div class="assist-block"><span class="assist-label">实例解析</span><p>${escapeHtml(example.answer)}\n${escapeHtml(example.explanation)}</p></div>` : ""}
     </div>
-    ${renderDeepAssistPanel({ unitType: "practice", unitId: item.id, assistType: "similar-example" })}`;
+    ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "similar-example" })}`;
 }
 
 function localizedPracticeSupport(item) {
@@ -4071,6 +4078,10 @@ function bindEvents() {
       closePracticeWritingPanel();
       renderPracticeUnit(item, currentIndex());
       bilingualizeButtons(elements.unitContent);
+      if (state.assistOpen) {
+        renderAssistContext();
+        renderAssistContent();
+      }
       return;
     }
     const referenceExample = event.target.closest("[data-reference-example]")?.dataset.referenceExample;
@@ -4313,6 +4324,11 @@ function bindEvents() {
     if (event.key === "ArrowLeft") moveUnit(-1);
     if (event.key === "ArrowRight") moveUnit(1);
   });
+  window.attachDraggable?.({
+    element: elements.writingDialog,
+    handle: ".writing-dialog-header",
+  });
+
   window.addEventListener("beforeunload", () => {
     stopRecordedAudio();
     destroyVoiceOrbs();
