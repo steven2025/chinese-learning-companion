@@ -1,5 +1,5 @@
 const terms = ["2026 Fall", "2027 Spring", "2027 Fall", "2028 Spring", "2028 Fall"];
-const defaultTeacher = "曹丹丹";
+const defaultTeacher = "";
 const administrator = "鄢清华";
 const TEST_STUDENT_ACCOUNT = "test";
 const TEST_INVITE_CODE = "123456";
@@ -10,9 +10,6 @@ const languageShortLabels = {
   lo: "老挝语", ms: "马来语", my: "缅甸语", ru: "俄语", th: "泰语", vi: "越南语",
 };
 
-function defaultTeacherRegistry() {
-  return [{ id: "teacher-seed", account: defaultTeacher, name: defaultTeacher, active: true, createdAt: new Date().toISOString() }];
-}
 
 const catalog = [
   {
@@ -101,7 +98,7 @@ const state = {
   openLevel: learningBooks[storedBookId] ? bookById(storedBookId).level : "intermediate",
   search: "",
   enrollments: readStored("learningHubStudentEnrollments", []),
-  teachers: readStored("learningHubTeachers", defaultTeacherRegistry()),
+  teachers: readStored("learningHubTeachers", []),
   publishing: readStored("learningHubPublishing", {}),
   contentReview: readStored("learningHubContentReview", {}),
   teacherContext: { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" },
@@ -597,7 +594,7 @@ async function handleTeacherLogin(form) {
   let profile;
   if (window.LearningApi?.isConfigured()) {
     try {
-      const session = await window.LearningApi.createSession({ role: "teacher", inviteCode, teacherId: teacherAccount, teacher: teacherAccount, contextId: selection.context.id });
+      const session = await window.LearningApi.createSession({ role: "teacher", inviteCode, teacherId: teacherAccount, teacher: teacherAccount, ...(selection.context ? { contextId: selection.context.id } : {}) });
       profile = session.profile;
     } catch (error) {
       showToast(error.message || "教师邀请码登录失败");
@@ -634,15 +631,15 @@ function localAuthenticationOptions(role, account, inviteCode) {
     };
   }
   if (role === "teacher") {
-    const teacherRecord = state.teachers.find((item) => item.account === account);
+    const teacherRecord = state.teachers.find((item) => item.name === account || item.id === account || item.account === account);
     if (!teacherRecord) throw new Error("教师账号未开通，请联系管理员");
     if (!teacherRecord.active) throw new Error("该教师账号已停用，请联系管理员");
-    const validCode = (teacherRecord.inviteCode && teacherRecord.inviteCode !== TEST_INVITE_CODE) ? teacherRecord.inviteCode : TEST_INVITE_CODE;
+    const validCode = teacherRecord.inviteCode || TEST_INVITE_CODE;
     if (inviteCode !== validCode) throw new Error("邀请码不正确");
     const teacher = teacherRecord.name || account;
     return {
-      account: { id: account, name: teacher, englishName: "" },
-      contexts: [{ id: `local-class:${books[0].id}`, classId: "local-class", className: "本地测试班", teacher, term: terms[0], bookId: books[0].id }],
+      account: { id: teacher, name: teacher, englishName: "" },
+      contexts: [],
     };
   }
   throw new Error("当前原型不支持该身份");
@@ -682,11 +679,11 @@ async function resolveAuthenticationContext(form, role, account, inviteCode) {
   }
   const selectedId = form.querySelector('[name="contextId"]')?.value || record.contexts[0]?.id;
   const context = record.contexts.find((item) => item.id === selectedId) || record.contexts[0];
-  if (!context) {
+  if (!context && role !== "teacher") {
     showToast("该账号尚未分配班级或教材");
     return null;
   }
-  return { account: record.account, context };
+  return { account: record.account, context: context || null };
 }
 
 async function handleAdminLogin(form) {
@@ -714,7 +711,7 @@ async function handleAdminLogin(form) {
 function defaultLocalCourses() {
   return [{
     courseId: "local-course-1",
-    teacher: defaultTeacher,
+    teacher: "本地教师",
     term: terms[0],
     bookId: "intermediate-comprehensive-1",
     className: "本地测试班",
@@ -1246,7 +1243,7 @@ function renderAdminUsersCloud() {
   const activeCount = teachers.filter((teacher) => teacher.active).length;
   elements.teacherCount.textContent = `${teachers.length} 个账号 · ${activeCount} 个启用`;
   elements.adminTeacherList.innerHTML = teachers.length
-    ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"}<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code> · ${escapeHtml(adminAssignmentLabel(teacher))}</small></span><span class="teacher-row-actions"><button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码</button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码</button><button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用" : "启用"}</button></span></div>`).join("")
+    ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"}<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code> · ${escapeHtml(adminAssignmentLabel(teacher))}</small></span><span class="teacher-row-actions"><button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码</button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码</button><button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用" : "启用"}</button><button class="quiet-button danger-button" type="button" data-remove-teacher="${escapeHtml(teacher.id)}">删除</button></span></div>`).join("")
     : '<p class="empty-approval">还没有教师账号，请点击“新增教师”。</p>';
 }
 
@@ -1255,7 +1252,7 @@ function renderAdminUsersLocal() {
   const activeCount = teachers.filter((teacher) => teacher.active).length;
   elements.teacherCount.textContent = `${teachers.length} 个账号 · ${activeCount} 个启用`;
   elements.adminTeacherList.innerHTML = teachers.length
-    ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"} · ${new Date(teacher.createdAt).toLocaleDateString() || ""} 开通${teacher.inviteCode ? `<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code>` : ""}</small></span><span class="teacher-row-actions">${teacher.inviteCode ? `<button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码</button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码</button>` : ""}<button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用" : "启用"}</button></span></div>`).join("")
+    ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"} · ${new Date(teacher.createdAt).toLocaleDateString() || ""} 开通${teacher.inviteCode ? `<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code>` : ""}</small></span><span class="teacher-row-actions">${teacher.inviteCode ? `<button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码</button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码</button>` : ""}<button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用" : "启用"}</button><button class="quiet-button danger-button" type="button" data-remove-teacher="${escapeHtml(teacher.id)}">删除</button></span></div>`).join("")
     : '<p class="empty-approval">还没有教师账号，请点击“新增教师”。</p>';
 }
 
@@ -1331,12 +1328,12 @@ function languageOrder(code) {
   return index === -1 ? 99 : index;
 }
 
-function addTeacher(name, account, inviteCode, term, bookIds) {
-  if (!name || !account) throw new Error("教师姓名和登录账号不能为空");
-  if (state.teachers.some((item) => item.account === account)) throw new Error("该登录账号已存在");
+function addTeacher(name, inviteCode) {
+  if (!name) throw new Error("教师姓名不能为空");
+  if (state.teachers.some((item) => item.name === name)) throw new Error("该教师姓名已存在");
   state.teachers.push({
-    id: `teacher-${Date.now()}`, account, name, active: true,
-    inviteCode: inviteCode || generateLocalInviteCode(), assignments: term ? [{ term, bookIds: bookIds || [] }] : [],
+    id: name, account: name, name, active: true,
+    inviteCode: inviteCode || generateLocalInviteCode(), assignments: [],
     createdAt: new Date().toISOString(),
   });
   saveTeachers();
@@ -1346,17 +1343,39 @@ function addTeacher(name, account, inviteCode, term, bookIds) {
 async function handleAddTeacherForm(form) {
   const data = new FormData(form);
   const name = data.get("teacherName").trim();
-  const account = data.get("teacherAccount").trim();
   const inviteCode = data.get("teacherInviteCode").trim();
-  const term = data.get("teacherTerm") || "";
-  const bookIds = data.getAll("teacherBookIds").filter(Boolean);
-  if (!name || !account) throw new Error("教师姓名和登录账号不能为空");
+  if (!name) throw new Error("教师姓名不能为空");
+  if (!inviteCode) throw new Error("请设置教师邀请码");
   if (adminIsCloud()) {
-    const result = await window.LearningApi.createAdminTeacher({ name, account, ...(inviteCode ? { inviteCode } : {}), term, bookIds });
-    return { name, account, inviteCode: result.inviteCode };
+    const result = await window.LearningApi.createAdminTeacher({ name, inviteCode });
+    return { name, inviteCode: result.inviteCode };
   }
-  addTeacher(name, account, inviteCode, term, bookIds);
-  return { name, account, inviteCode: inviteCode || "" };
+  addTeacher(name, inviteCode);
+  return { name, inviteCode };
+}
+
+async function removeAdminTeacher(id) {
+  let teacher;
+  if (adminIsCloud()) {
+    teacher = (state.adminTeachers || []).find((item) => item.id === id);
+    if (!teacher) return;
+    if (!window.confirm(`确定删除教师“${teacher.name}”？删除后该教师无法再登录。`)) return;
+    try {
+      const result = await window.LearningApi.removeAdminTeacher({ teacherId: id });
+      showToast(`已删除教师 ${result.name || teacher.name}`);
+    } catch (error) {
+      showToast(error.message || "删除失败");
+    }
+    void loadAdminTeachers();
+    return;
+  }
+  teacher = state.teachers.find((item) => item.id === id);
+  if (!teacher) return;
+  if (!window.confirm(`确定删除教师“${teacher.name}”？删除后该教师无法再登录。`)) return;
+  state.teachers = state.teachers.filter((item) => item.id !== id);
+  saveTeachers();
+  renderAdminUsersLocal();
+  showToast(`已删除教师 ${teacher.name}`);
 }
 
 async function toggleTeacherActive(id) {
@@ -1540,6 +1559,8 @@ document.addEventListener("click", (event) => {
   if (adminTab) { showAdminTab(adminTab); return; }
   if (event.target.closest("[data-action='open-add-teacher']")) { elements.addTeacherForm.hidden = false; elements.addTeacherForm.querySelector('[name="teacherName"]')?.focus(); return; }
   if (event.target.closest("[data-action='cancel-add-teacher']")) { elements.addTeacherForm.hidden = true; elements.addTeacherForm.reset(); return; }
+  const removeTeacherBtn = event.target.closest("[data-remove-teacher]");
+  if (removeTeacherBtn) { void removeAdminTeacher(removeTeacherBtn.dataset.removeTeacher); return; }
   const toggleTeacher = event.target.closest("[data-action='toggle-teacher']");
   if (toggleTeacher) { void toggleTeacherActive(toggleTeacher.dataset.id); return; }
   const copyTeacherInviteBtn = event.target.closest("[data-copy-teacher-invite]");

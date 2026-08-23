@@ -226,13 +226,10 @@
           <button type="button" data-admin-tab="review">多语言内容审核</button>
         </nav>
         <section class="admin-panel" data-admin-panel="users">
-          <div class="admin-panel-heading"><div><span>角色</span><h2>用户与角色管理</h2><p>教师负责本班学生名单；管理员负责教师账号的开通与停用。</p></div></div>
+          <div class="admin-panel-heading"><div><span>角色</span><h2>用户与角色管理</h2><p>教师负责本班学生名单；管理员负责教师账号的开通、停用与删除。</p></div></div>
           <form class="admin-inline-form" id="addTeacherForm" hidden>
-            <label><span>教师姓名 / Name</span><input name="teacherName" required maxlength="40" placeholder="如：曹丹丹"></label>
-            <label><span>登录账号 / Account</span><input name="teacherAccount" required maxlength="40" placeholder="如：caodd"></label>
-            <label><span>教师邀请码 / Invite（选填）</span><input name="teacherInviteCode" maxlength="12" placeholder="留空自动生成"></label>
-            <label><span>学期 / Term</span><select name="teacherTerm" data-term-options></select></label>
-            <label><span>教材 / Textbook（可多选）</span><select name="teacherBookIds" data-book-options multiple size="4"></select></label>
+            <label><span>教师姓名 / Name</span><input name="teacherName" required maxlength="40" placeholder="教师中文姓名或英文名"></label>
+            <label><span>教师邀请码 / Invite（必填）</span><input name="teacherInviteCode" required maxlength="12" placeholder="教师登录用邀请码，自行设置"></label>
             <button class="primary-button" type="submit">添加教师</button>
             <button class="quiet-button" type="button" data-action="cancel-add-teacher">取消</button>
           </form>
@@ -288,12 +285,12 @@
 
       <form class="auth-panel" id="teacherLoginForm" data-auth-panel="teacher-login" hidden>
         <div class="form-grid two-columns">
-          <label><span>教师姓名或账号</span><input name="teacherAccount" value="曹丹丹" required autocomplete="username"></label>
-          <label><span>教师邀请码</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
+          <label><span>教师姓名或账号</span><input name="teacherAccount" required autocomplete="username" placeholder="请输入教师姓名"></label>
+          <label><span>教师邀请码</span><input name="inviteCode" required autocomplete="one-time-code" placeholder="管理员发放的邀请码"></label>
           <label class="wide-field" data-auth-context hidden><span>选择班级与教材 / Class and textbook</span><select name="contextId"></select></label>
         </div>
         <button class="primary-button" type="submit" data-auth-submit>验证并进入工作台</button>
-        <p>教师账号由管理员开通；登录后可进入已分配的学期、班级和教材。</p>
+        <p>教师账号由管理员开通（姓名＋邀请码）；登录后可自行新建课程并管理学生。</p>
       </form>
 
       <form class="auth-panel" id="adminLoginForm" data-auth-panel="admin-login" hidden>
@@ -433,10 +430,10 @@
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="../../vendor/xlsx.full.min.js"></script>
   <script src="../../config.js?v=20260823-1"></script>
-  <script src="../shared/learning-api-client.js?v=20260823-3"></script>
+  <script src="../shared/learning-api-client.js?v=20260823-4"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260823-1"></script>
-  <script src="app.js?v=20260823-5" defer></script>
+  <script src="app.js?v=20260823-6" defer></script>
   <script src="writing-zone.js?v=20260823-1" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
