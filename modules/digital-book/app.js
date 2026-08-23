@@ -4385,3 +4385,25 @@ if (LESSON.renderer === "pronunciation" && window.PronunciationRenderer) {
 } else {
   start();
 }
+
+if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("../../sw.js", { scope: "../../" })
+      .then((registration) => {
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              const banner = document.querySelector("#pwaUpdateBanner");
+              if (banner) banner.hidden = false;
+            }
+          });
+        });
+      })
+      .catch(() => {});
+  });
+}
+document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-pwa-refresh]")) { window.location.reload(); return; }
+});

@@ -1485,3 +1485,13 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
   .number-reading-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .hanzi-completion-grid { grid-template-columns: 1fr; }
 }
+
+.pwa-update-banner { position: fixed; right: 22px; bottom: 22px; z-index: 96; width: min(500px, calc(100% - 28px)); min-height: 70px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 11px 12px; color: #fff; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; background: var(--shell); box-shadow: var(--shadow); }
+.pwa-update-banner[hidden] { display: none; }
+.pwa-update-banner strong, .pwa-update-banner small { display: block; }
+.pwa-update-banner strong { font-size: 13px; }
+.pwa-update-banner small { margin-top: 4px; color: #c4dcda; font-size: 10px; line-height: 1.35; }
+.pwa-update-banner .pwa-install-action { min-height: 38px; padding: 0 13px; color: #17383a; border: 1px solid #f4c566; border-radius: 6px; background: #ffd982; box-shadow: 0 3px 0 #a86f0a; font-size: 11px; font-weight: 800; white-space: nowrap; }
+@media (max-width: 700px) {
+  .pwa-update-banner { left: 14px; right: 14px; bottom: 14px; width: auto; grid-template-columns: minmax(0, 1fr) auto; }
+}
