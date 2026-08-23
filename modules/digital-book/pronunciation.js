@@ -506,13 +506,15 @@
     const group = currentGroup(unit);
     const selected = selectedItem(unit, group);
     return `${renderChapterNavigation(unit)}${renderGroupNavigation(unit, group)}
-      <div class="pron-exercise-layout">
+      <div class="pron-exercise-layout pron-workbench">
         <section class="pron-selector-panel">
           <header><span>${unit.type === "soundDiscrimination" ? "选择对比音" : unit.type === "toneSeries" ? "选择声调" : "选择练习项"}</span><small>点击后进入语音学习台</small></header>
           ${renderItemSelector(unit, group, selected)}
         </section>
+        <div class="pron-workbench-main">
         ${unit.type === "toneMarking" ? renderToneMarking(unit, group, selected) : renderFocusStage(unit, group, selected)}
         ${renderChallenge(unit, group, selected)}
+        </div>
       </div>`;
   }
 
@@ -552,11 +554,12 @@
     const answered = items.filter((item) => state.initialAnswers[item.id]?.correct).length;
     const display = solved ? `${selected.expectedInitial}${selected.prompt}` : selected.prompt;
     return `${renderChapterNavigation(unit)}${renderGroupNavigation(unit, group)}
-      <div class="pron-exercise-layout">
+      <div class="pron-exercise-layout pron-workbench">
         <section class="pron-selector-panel">
           <header><span>选择练习项</span><small>点击后进入语音学习台</small></header>
           ${renderItemSelector(unit, group, selected)}
         </section>
+        <div class="pron-workbench-main">
         <section class="pron-focus-stage initial-writing-stage">
           <header>
             <span>听后写出声母<small>Listen and write the initials</small></span>
@@ -580,6 +583,7 @@
           </div>
           ${result.choice ? `<p class="pron-answer-feedback ${result.correct ? "correct" : "wrong"}">${result.correct ? `正确：${selected.answer.display}` : result.revealed ? `正确答案是 ${selected.expectedInitial}。请再听一次。` : "再听一次，注意声母的发音。"}</p>` : ""}
         </section>
+        </div>
       </div>`;
   }
 
