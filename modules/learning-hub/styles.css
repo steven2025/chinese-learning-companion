@@ -407,3 +407,231 @@ button { cursor: pointer; }
   .class-list-toolbar .quiet-button { width: 100%; }
   .student-row-actions { width: 100%; justify-content: flex-end; }
 }
+
+/* ===== 学生：我的课程卡片 ===== */
+.student-course-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.student-course-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px;
+  background: var(--card, #ffffff);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.student-course-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+.student-course-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.student-course-mark {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #4f8cff, #7c5cff);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.student-course-card > span:nth-child(2) {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+.student-course-card strong {
+  font-size: 16px;
+}
+.student-course-card small {
+  color: #64748b;
+}
+.student-course-card b {
+  color: #4f8cff;
+}
+
+/* ===== 教师：课程管理 ===== */
+.teacher-course-panel {
+  display: grid;
+  gap: 12px;
+}
+.teacher-course-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.teacher-course-head h2 {
+  margin: 0 0 4px;
+}
+.teacher-course-head p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+.teacher-course-list {
+  display: grid;
+  gap: 10px;
+}
+.teacher-course-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  background: var(--card, #ffffff);
+}
+.teacher-course-info {
+  display: grid;
+  gap: 4px;
+}
+.teacher-course-info small {
+  color: #64748b;
+}
+.teacher-course-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ===== 教师：课程内学生管理 ===== */
+.course-student-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px;
+  background: var(--card, #ffffff);
+}
+.course-student-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.course-student-title {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+}
+.course-student-title small {
+  color: #64748b;
+}
+.course-student-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.file-import-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+  cursor: pointer;
+}
+.file-import-label:hover {
+  background: #f1f5f9;
+}
+.course-import-result {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 13px;
+}
+.course-student-table {
+  display: grid;
+  gap: 6px;
+}
+.course-student-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1.4fr 2.2fr;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 13px;
+}
+.course-student-row.head {
+  background: transparent;
+  color: #94a3b8;
+  font-size: 12px;
+  padding: 4px 12px;
+}
+.invite-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.invite-cell code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+.course-student-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+@media (max-width: 760px) {
+  .course-student-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .course-student-row.head {
+    display: none;
+  }
+}
+
+
+/* ===== 管理员：教师账号 ===== */
+.admin-invite-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 1px 6px;
+  border-radius: 5px;
+  letter-spacing: 0.5px;
+}
+.teacher-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.admin-inline-form label select[multiple] {
+  min-width: 220px;
+}
+@media (max-width: 760px) {
+  .teacher-row-actions { justify-content: flex-start; }
+}

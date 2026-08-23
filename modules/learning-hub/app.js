@@ -106,6 +106,9 @@ const state = {
   contentReview: readStored("learningHubContentReview", {}),
   teacherContext: { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" },
   studentProfile: null,
+  studentCourses: [],
+  activeTeacherCourse: null,
+  localCourses: readStored("learningHubTeacherCoursesLocal", defaultLocalCourses()),
   authenticationOptions: { student: null, teacher: null },
 };
 
@@ -180,6 +183,18 @@ const elements = {
   writingInputMode: document.querySelector("#writingInputModeSelect"),
   saveWritingPolicy: document.querySelector("#saveWritingPolicyButton"),
   writingPolicyStatus: document.querySelector("#writingPolicyStatus"),
+  studentCourseList: document.querySelector("#studentCourseList"),
+  coursePageIntro: document.querySelector("#coursePageIntro"),
+  teacherCoursePanel: document.querySelector("#teacherCoursePanel"),
+  teacherCourseList: document.querySelector("#teacherCourseList"),
+  courseStudentPanel: document.querySelector("#courseStudentPanel"),
+  courseStudentTitle: document.querySelector("#courseStudentTitle"),
+  courseStudentMeta: document.querySelector("#courseStudentMeta"),
+  courseStudentTable: document.querySelector("#courseStudentTable"),
+  courseImportResult: document.querySelector("#courseImportResult"),
+  newCourseDialog: document.querySelector("#newCourseDialog"),
+  newCourseForm: document.querySelector("#newCourseForm"),
+  studentExcelInput: document.querySelector("#studentExcelInput"),
   toast: document.querySelector("#toast"),
   pwaUpdateBanner: document.querySelector("#pwaUpdateBanner"),
   installAppButton: document.querySelector("#installAppButton"),
@@ -274,6 +289,7 @@ function setView(view) {
   document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
   if (view === "teacher") renderTeacherWorkspace();
   if (view === "admin") renderAdminView();
+  if (view === "courses") renderStudentCoursesView();
   if (view === "writing") window.WritingZone?.render();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -413,7 +429,11 @@ function restoreStoredIdentity() {
       term: profile.term || terms[0],
       book: profile.bookId || "intermediate-comprehensive-1",
     };
+    state.studentCourses = profile.courseId
+      ? [{ id: `${profile.courseId}:${profile.bookId}`, courseId: profile.courseId, classId: profile.classId || "", className: profile.className || "班", teacher: profile.teacher || defaultTeacher, term: profile.term || terms[0], bookId: profile.bookId || "intermediate-comprehensive-1" }]
+      : [];
     applyIdentity("student", state.studentProfile.chineseName);
+    renderStudentCoursesView();
     if (profile.bookId && learningBooks[bookById(profile.bookId).id]) selectBook(profile.bookId);
     return;
   }
@@ -480,59 +500,92 @@ async function handleStudentLogin(form) {
   const data = new FormData(form);
   const studentId = data.get("studentAccount").trim();
   const inviteCode = data.get("inviteCode").trim();
-  const selection = await resolveAuthenticationContext(form, "student", studentId, inviteCode);
-  if (!selection) return;
-  let profile;
+  if (!studentId || !inviteCode) {
+    showToast("请输入学号和邀请码 / Enter your ID and invitation code");
+    return;
+  }
+  let result;
   if (window.LearningApi?.isConfigured()) {
     try {
-      const session = await window.LearningApi.createSession({ role: "student", inviteCode, userId: studentId, contextId: selection.context.id });
-      profile = session.profile;
+      result = await window.LearningApi.authenticationOptions({ role: "student", inviteCode, userId: studentId });
     } catch (error) {
-      showToast(error.message || "邀请码登录失败");
+      showToast(error.message || "学号或邀请码无效");
       return;
     }
   } else {
-    profile = {
-      role: "student", userId: studentId, name: "测试学生", englishName: TEST_STUDENT_ACCOUNT,
-      ...selection.context,
-    };
+    try {
+      result = localAuthenticationOptions("student", studentId, inviteCode);
+    } catch (error) {
+      showToast(error.message || "学号或邀请码无效");
+      return;
+    }
   }
-  let enrollment;
-  const existing = window.LearningApi?.isConfigured() ? null : findStudentEnrollment(profile.userId, profile.teacher);
-  const joinedAt = new Date().toISOString();
-  if (existing) {
-    enrollment = { ...existing, joinedAt: existing.joinedAt, updatedAt: joinedAt, status: existing.status || "confirmed", source: existing.source || "self" };
-  } else {
-    enrollment = {
-      id: `student-${profile.userId}-${profile.classId || profile.term}-${profile.bookId}`,
-      chineseName: profile.name || profile.userId,
-      englishName: profile.englishName || "",
-      studentId: profile.userId,
-      classId: profile.classId || "",
-      className: profile.className || "",
-      term: profile.term,
-      teacher: profile.teacher,
-      book: profile.bookId,
-      status: "pending",
-      source: "self",
-      joinedAt,
-      updatedAt: joinedAt,
-    };
+  const contexts = (result.contexts || []).filter((context) => context.bookId && context.teacher);
+  if (!contexts.length) {
+    showToast("该学号尚未加入任何课程 / No course found");
+    return;
   }
-  if (!window.LearningApi?.isConfigured()) {
-    const existingIndex = state.enrollments.findIndex((item) => item.id === enrollment.id);
-    if (existingIndex >= 0) state.enrollments[existingIndex] = enrollment;
-    else state.enrollments.push(enrollment);
-    saveEnrollments();
-  }
-  state.studentProfile = enrollment;
-  applyIdentity("student", enrollment.chineseName);
+  state.studentCourses = contexts;
+  state.authenticationOptions.student = { signature: `${studentId}\u0000${inviteCode}`, account: result.account, contexts };
+  state.studentProfile = {
+    chineseName: result.account?.name || studentId,
+    englishName: result.account?.englishName || "",
+    studentId,
+    teacher: contexts[0].teacher || defaultTeacher,
+    term: contexts[0].term || terms[0],
+    book: contexts[0].bookId || "intermediate-comprehensive-1",
+  };
+  applyIdentity("student", state.studentProfile.chineseName);
   elements.roleDialog.close();
-  selectBook(enrollment.book);
+  renderStudentCoursesView();
   setView("courses");
-  showToast(enrollment.status === "pending"
-    ? "已提交加入申请，等待教师确认 / Pending teacher approval"
-    : `已进入 ${enrollment.term} · 发展汉语·${bookById(enrollment.book).label}`);
+  showToast(`欢迎，${state.studentProfile.chineseName}！请选择课程进入 / Choose a course`);
+}
+
+function renderStudentCoursesView() {
+  const isStudent = state.role === "student";
+  const overview = document.querySelector(".course-overview");
+  if (!isStudent) {
+    if (overview) overview.hidden = false;
+    elements.studentCourseList.hidden = true;
+    return;
+  }
+  elements.coursePageIntro.textContent = "选择一门课程，进入对应教材 / Choose a course to enter";
+  if (overview) overview.hidden = true;
+  elements.studentCourseList.hidden = false;
+  if (!state.studentCourses.length) {
+    elements.studentCourseList.innerHTML = '<p class="empty-approval">当前学号没有已加入的课程，请联系教师获取邀请码。</p>';
+    return;
+  }
+  elements.studentCourseList.innerHTML = state.studentCourses.map((context) => {
+    const book = bookById(context.bookId);
+    const open = effectiveBookOpen(context.bookId);
+    const label = `${context.teacher} 老师 · ${escapeHtml(context.term)} · ${escapeHtml(context.className || "班")}`;
+    return `<button class="student-course-card" type="button" data-enter-course="${escapeHtml(context.id)}"${open ? "" : " disabled"}><span class="student-course-mark">课</span><span><strong>发展汉语·${escapeHtml(book.label)}</strong><small>${label}</small></span><b>进入 ›</b></button>`;
+  }).join("");
+}
+
+async function enterStudentCourse(contextId) {
+  const context = state.studentCourses.find((item) => item.id === contextId);
+  if (!context) return;
+  if (window.LearningApi?.isConfigured()) {
+    const stored = state.authenticationOptions.student || {};
+    const inviteCode = String(stored.signature || "\u0000").split("\u0000")[1] || "";
+    try {
+      const session = await window.LearningApi.createSession({ role: "student", inviteCode, userId: state.studentProfile.studentId, contextId });
+      state.studentProfile.book = session.profile.bookId;
+      state.studentProfile.teacher = session.profile.teacher;
+      state.studentProfile.term = session.profile.term;
+      state.studentProfile.classId = session.profile.classId || "";
+      state.studentProfile.className = session.profile.className || "";
+    } catch (error) {
+      showToast(error.message || "进入课程失败");
+      return;
+    }
+  }
+  const book = bookById(context.bookId);
+  const lessonId = `${learningBooks[book.id]?.lessonPrefix || "zjzh-1"}-1`;
+  window.location.href = `../digital-book/?lesson=${lessonId}`;
 }
 
 async function handleTeacherLogin(form) {
@@ -562,18 +615,30 @@ async function handleTeacherLogin(form) {
 }
 
 function localAuthenticationOptions(role, account, inviteCode) {
-  if (inviteCode !== TEST_INVITE_CODE) throw new Error("邀请码不正确");
   if (role === "student") {
-    if (!account) throw new Error("请输入学号或姓名");
+    if (!account) throw new Error("请输入学号");
+    const entries = [];
+    for (const course of state.localCourses) {
+      if (course.active === false) continue;
+      const entry = (course.students || []).find((item) => item.studentId === account && item.active !== false);
+      if (!entry) continue;
+      entries.push({ course, entry });
+    }
+    if (!entries.length) throw new Error("学号或邀请码无效");
+    const verified = entries.some(({ entry }) => entry.inviteCode === inviteCode);
+    if (!verified) throw new Error("学号或邀请码无效");
+    const matched = entries.map(({ course }) => ({ id: `${course.courseId}:${course.bookId}`, classId: course.courseId, className: course.className || "班", teacher: course.teacher, term: course.term, bookId: course.bookId, courseId: course.courseId }));
     return {
-      account: { id: account, name: "测试学生", englishName: "Test" },
-      contexts: [{ id: `local-class:${books[0].id}`, classId: "local-class", className: "本地测试班", teacher: defaultTeacher, term: terms[0], bookId: books[0].id }],
+      account: { id: account, name: "本地学生", englishName: "" },
+      contexts: matched,
     };
   }
   if (role === "teacher") {
     const teacherRecord = state.teachers.find((item) => item.account === account);
     if (!teacherRecord) throw new Error("教师账号未开通，请联系管理员");
     if (!teacherRecord.active) throw new Error("该教师账号已停用，请联系管理员");
+    const validCode = (teacherRecord.inviteCode && teacherRecord.inviteCode !== TEST_INVITE_CODE) ? teacherRecord.inviteCode : TEST_INVITE_CODE;
+    if (inviteCode !== validCode) throw new Error("邀请码不正确");
     const teacher = teacherRecord.name || account;
     return {
       account: { id: account, name: teacher, englishName: "" },
@@ -645,6 +710,361 @@ async function handleAdminLogin(form) {
   showToast("已进入管理员界面原型");
 }
 
+
+function defaultLocalCourses() {
+  return [{
+    courseId: "local-course-1",
+    teacher: defaultTeacher,
+    term: terms[0],
+    bookId: "intermediate-comprehensive-1",
+    className: "本地测试班",
+    active: true,
+    createdAt: new Date().toISOString(),
+    students: [
+      { studentId: "test", chineseName: "测试学生", englishName: "Test", inviteCode: "123456", active: true, createdAt: new Date().toISOString() },
+    ],
+  }];
+}
+
+function saveLocalCourses() {
+  localStorage.setItem("learningHubTeacherCoursesLocal", JSON.stringify(state.localCourses));
+}
+
+function localCourseKey(course) {
+  return `${course.teacher}:${course.term}:${course.bookId}:${course.className || ""}`;
+}
+
+function simpleHash(value) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0;
+  }
+  return `local-${Math.abs(hash).toString(36)}`;
+}
+
+function teacherIsCloud() {
+  return Boolean(window.LearningApi?.isConfigured() && window.LearningApi.profile()?.role === "teacher");
+}
+
+function renderTeacherCoursePanel() {
+  elements.teacherCoursePanel.hidden = false;
+}
+
+async function loadTeacherCourses() {
+  let courses;
+  if (teacherIsCloud()) {
+    try {
+      const result = await window.LearningApi.teacherCourses();
+      courses = result.courses || [];
+    } catch (error) {
+      showToast(error.message || "课程列表读取失败");
+      return;
+    }
+  } else {
+    const teacher = state.teacherContext.teacher || state.userName;
+    courses = state.localCourses.filter((course) => course.teacher === teacher).map((course) => ({ ...course, studentCount: (course.students || []).length })).sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+  }
+  state.teacherCourses = courses;
+  renderTeacherCourses(courses);
+}
+
+function renderTeacherCourses(courses) {
+  elements.teacherCourseList.innerHTML = courses.length
+    ? courses.map((course) => `<div class="teacher-course-row"><span class="teacher-course-info"><strong>${escapeHtml(course.className || "班")}</strong><small>${escapeHtml(course.term)} · 发展汉语·${escapeHtml(bookById(course.bookId).label)} · ${course.studentCount || 0}名学生</small></span><span class="teacher-course-actions">${course.active === false ? '<b class="muted">已停用</b>' : ""}<button class="quiet-button" type="button" data-open-course-students="${escapeHtml(course.courseId)}">管理学生</button></span></div>`).join("")
+    : '<p class="empty-approval">还没有课程，点击“＋新建课程”。</p>';
+}
+
+function openNewCourse() {
+  elements.newCourseForm.reset();
+  elements.newCourseDialog.showModal();
+}
+
+async function createTeacherCourseByForm(form) {
+  const data = new FormData(form);
+  const term = data.get("term").trim();
+  const bookId = data.get("bookId");
+  const className = data.get("className").trim();
+  if (!term || !bookId) throw new Error("学期和教材不能为空");
+  if (teacherIsCloud()) {
+    await window.LearningApi.createTeacherCourse({ term, bookId, className });
+  } else {
+    const teacher = state.teacherContext.teacher || state.userName || defaultTeacher;
+    const courseId = simpleHash(localCourseKey({ teacher, term, bookId, className }));
+    if (state.localCourses.some((course) => course.courseId === courseId)) throw new Error("该课程已存在（同一教师、学期、教材、班名）");
+    state.localCourses.push({ courseId, teacher, term, bookId, className: className || `${teacher}班`, active: true, createdAt: new Date().toISOString(), students: [] });
+    saveLocalCourses();
+  }
+  elements.newCourseDialog.close();
+  showToast("课程已创建 / Course created");
+  await loadTeacherCourses();
+}
+
+async function openCourseStudents(courseId) {
+  const cloud = teacherIsCloud();
+  let course;
+  let students = [];
+  if (cloud) {
+    course = (state.teacherCourses || []).find((item) => item.courseId === courseId);
+    try {
+      const result = await window.LearningApi.courseStudents({ courseId });
+      students = result.students || [];
+    } catch (error) {
+      showToast(error.message || "学生名单读取失败");
+      return;
+    }
+  } else {
+    course = state.localCourses.find((item) => item.courseId === courseId);
+    students = course?.students || [];
+  }
+  if (!course) return;
+  state.activeTeacherCourse = { ...course, students };
+  elements.teacherCourseList.hidden = true;
+  elements.courseStudentPanel.hidden = false;
+  elements.courseStudentTitle.textContent = `${course.className || "班"} · ${bookById(course.bookId).label}`;
+  elements.courseStudentMeta.textContent = `${course.term} · ${course.teacher} 老师 · ${students.length}名学生`;
+  renderCourseStudentsTable(students);
+}
+
+function backCourseList() {
+  state.activeTeacherCourse = null;
+  elements.courseStudentPanel.hidden = true;
+  elements.teacherCourseList.hidden = false;
+}
+
+function renderCourseStudentsTable(students) {
+  if (!students.length) {
+    elements.courseStudentTable.innerHTML = '<p class="empty-approval">还没有学生，点击“＋新增学生”或“导入 Excel”。</p>';
+    return;
+  }
+  elements.courseStudentTable.innerHTML = `<div class="course-student-row head"><span>姓名</span><span>英文名</span><span>学号</span><span>邀请码</span><span>操作</span></div>` + students.map((student) => `<div class="course-student-row"><span><strong>${escapeHtml(student.chineseName || "—")}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="invite-cell"><code>${escapeHtml(student.inviteCode)}</code><button class="quiet-button" type="button" data-copy-invite="${escapeHtml(student.studentId)}">复制</button></span><span class="course-student-actions"><button class="quiet-button" type="button" data-reset-invite="${escapeHtml(student.studentId)}">重置码</button><button class="quiet-button" type="button" data-edit-student="${escapeHtml(student.studentId)}">编辑</button><button class="danger-button" type="button" data-remove-student-course="${escapeHtml(student.studentId)}">移除</button></span></div>`).join("");
+}
+
+function openAddStudentDialog(entry) {
+  const course = state.activeTeacherCourse;
+  if (course) {
+    elements.addStudentContextLabel.textContent = `${course.term} · ${bookById(course.bookId).label} · ${course.teacher} 老师`;
+  } else {
+    const context = state.teacherContext;
+    elements.addStudentContextLabel.textContent = `${context.term} · ${bookById(context.book).label} · ${context.teacher} 老师`;
+  }
+  state.pendingEditStudent = entry || null;
+  const form = elements.addStudentForm;
+  form.reset();
+  if (entry) {
+    form.querySelector('[name="chineseName"]').value = entry.chineseName || "";
+    form.querySelector('[name="englishName"]').value = entry.englishName || "";
+    form.querySelector('[name="studentId"]').value = entry.studentId || "";
+    form.querySelector('[name="studentId"]').disabled = true;
+    form.querySelector('[name="inviteCode"]').value = "";
+    form.querySelector('[name="inviteCode"]').placeholder = "留空保持不变";
+    document.querySelector("#addStudentDialogTitle").textContent = "编辑学生 / Edit student";
+  } else {
+    form.querySelector('[name="studentId"]').disabled = false;
+    form.querySelector('[name="inviteCode"]').placeholder = "留空则自动生成";
+    document.querySelector("#addStudentDialogTitle").textContent = "新增学生 / Add student";
+  }
+  elements.addStudentDialog.showModal();
+}
+
+async function addCourseStudentByForm(data) {
+  const course = state.activeTeacherCourse;
+  if (!course) throw new Error("请先选择课程");
+  const chineseName = data.get("chineseName").trim();
+  const studentId = data.get("studentId").trim();
+  const englishName = data.get("englishName").trim();
+  const inviteCode = data.get("inviteCode").trim();
+  if (!chineseName || !studentId) throw new Error("姓名和学号不能为空");
+  if (teacherIsCloud()) {
+    const result = await window.LearningApi.addCourseStudents({ courseId: course.courseId, students: [{ studentId, chineseName, englishName, inviteCode }] });
+    if (result.imported !== 1) throw new Error(result.results?.[0]?.message || "添加失败");
+    return { studentId, inviteCode: result.results[0].inviteCode };
+  }
+  const local = state.localCourses.find((item) => item.courseId === course.courseId);
+  if (!local) throw new Error("课程不存在");
+  if (local.students.some((item) => item.studentId === studentId)) throw new Error("该学号已存在");
+  const code = inviteCode || generateLocalInviteCode();
+  local.students.push({ studentId, chineseName, englishName, inviteCode: code, active: true, createdAt: new Date().toISOString() });
+  saveLocalCourses();
+  return { studentId, inviteCode: code };
+}
+
+async function updateCourseStudentByForm(data) {
+  const course = state.activeTeacherCourse;
+  const entry = state.pendingEditStudent;
+  if (!course || !entry) throw new Error("请先选择课程");
+  const chineseName = data.get("chineseName").trim();
+  const englishName = data.get("englishName").trim();
+  const inviteCode = data.get("inviteCode").trim();
+  if (!chineseName) throw new Error("姓名不能为空");
+  if (teacherIsCloud()) {
+    const result = await window.LearningApi.updateCourseStudent({ courseId: course.courseId, studentId: entry.studentId, chineseName, englishName, ...(inviteCode ? { inviteCode } : {}) });
+    return result;
+  }
+  const local = state.localCourses.find((item) => item.courseId === course.courseId);
+  const target = local?.students.find((item) => item.studentId === entry.studentId);
+  if (!local || !target) throw new Error("该学生在课程中不存在");
+  target.chineseName = chineseName;
+  target.englishName = englishName;
+  if (inviteCode) target.inviteCode = inviteCode;
+  saveLocalCourses();
+  return { studentId: entry.studentId, inviteCode: target.inviteCode };
+}
+
+async function removeCourseStudentEntry(courseId, studentId) {
+  if (teacherIsCloud()) {
+    await window.LearningApi.removeCourseStudent({ courseId, studentId });
+    return;
+  }
+  const local = state.localCourses.find((item) => item.courseId === courseId);
+  if (!local) return;
+  local.students = local.students.filter((item) => item.studentId !== studentId);
+  saveLocalCourses();
+}
+
+async function resetCourseStudentInvite(courseId, studentId) {
+  let code;
+  if (teacherIsCloud()) {
+    const result = await window.LearningApi.resetCourseStudentInvite({ courseId, studentId });
+    code = result.inviteCode;
+  } else {
+    const local = state.localCourses.find((item) => item.courseId === courseId);
+    const target = local?.students.find((item) => item.studentId === studentId);
+    if (!target) throw new Error("该学生在课程中不存在");
+    target.inviteCode = generateLocalInviteCode();
+    saveLocalCourses();
+    code = target.inviteCode;
+  }
+  showToast(`已生成新邀请码 / New code: ${code}`);
+  await refreshActiveCourseStudents();
+}
+
+function generateLocalInviteCode(length = 8) {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let code = "";
+  for (let index = 0; index < length; index += 1) code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return code;
+}
+
+async function refreshActiveCourseStudents() {
+  const course = state.activeTeacherCourse;
+  if (!course) return;
+  let students;
+  if (teacherIsCloud()) {
+    const result = await window.LearningApi.courseStudents({ courseId: course.courseId });
+    students = result.students || [];
+  } else {
+    const local = state.localCourses.find((item) => item.courseId === course.courseId);
+    students = local?.students || [];
+  }
+  course.students = students;
+  state.activeTeacherCourse = course;
+  renderCourseStudentsTable(students);
+  elements.courseStudentMeta.textContent = `${course.term} · ${course.teacher} 老师 · ${students.length}名学生`;
+}
+
+function studentInviteText(entry) {
+  const course = state.activeTeacherCourse || {};
+  const book = bookById(course.bookId);
+  return `Your Id: ${entry.studentId}\nInvitation code: ${entry.inviteCode}\nCourse: ${book.label}\nSign in with your Id and Invitation code.\nhttps://steven2025.github.io/chinese-learning-companion`;
+}
+
+async function copyTextToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    textarea.remove();
+    return copied;
+  }
+}
+
+async function copyStudentInvite(studentId) {
+  const entry = (state.activeTeacherCourse?.students || []).find((item) => item.studentId === studentId);
+  if (!entry) return;
+  await copyTextToClipboard(studentInviteText(entry));
+  showToast("已复制邀请信息 / Invite copied");
+}
+
+async function copyAllInvites() {
+  const students = state.activeTeacherCourse?.students || [];
+  if (!students.length) {
+    showToast("该课程还没有学生");
+    return;
+  }
+  await copyTextToClipboard(students.map((entry) => studentInviteText(entry)).join("\n\n"));
+  showToast(`已复制 ${students.length} 条邀请信息 / ${students.length} copied`);
+}
+
+function downloadStudentTemplate() {
+  if (!window.XLSX) {
+    showToast("Excel 组件未加载");
+    return;
+  }
+  const sheet = window.XLSX.utils.aoa_to_sheet([
+    ["学号 (Student ID)", "中文名 (Chinese name)", "英文名 (English name)", "邀请码 (Invitation code, 留空自动生成)"],
+    ["20260001", "王小明", "Mike", ""],
+  ]);
+  const workbook = window.XLSX.utils.book_new();
+  window.XLSX.utils.book_append_sheet(workbook, sheet, "学生名单");
+  window.XLSX.writeFile(workbook, "学生导入模板.xlsx");
+}
+
+async function importStudentExcel(file) {
+  if (!window.XLSX) {
+    showToast("Excel 组件未加载");
+    return;
+  }
+  const course = state.activeTeacherCourse;
+  if (!course) throw new Error("请先选择课程");
+  const buffer = await file.arrayBuffer();
+  const workbook = window.XLSX.read(buffer, { type: "array" });
+  const rows = window.XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+  const students = [];
+  for (let index = 1; index < rows.length; index += 1) {
+    const [studentId, chineseName, englishName, inviteCode] = rows[index] || [];
+    const id = String(studentId ?? "").trim();
+    const cn = String(chineseName ?? "").trim();
+    const en = String(englishName ?? "").trim();
+    if (!id && !cn && !en) continue;
+    students.push({ studentId: id, chineseName: cn, englishName: en, inviteCode: String(inviteCode ?? "").trim() });
+  }
+  if (!students.length) {
+    showToast("Excel 中没有可导入的学生");
+    return;
+  }
+  let result;
+  if (teacherIsCloud()) {
+    result = await window.LearningApi.addCourseStudents({ courseId: course.courseId, students });
+  } else {
+    const local = state.localCourses.find((item) => item.courseId === course.courseId);
+    if (!local) throw new Error("课程不存在");
+    const imported = [];
+    const skipped = [];
+    for (const entry of students) {
+      if (!entry.studentId || (!entry.chineseName && !entry.englishName)) { skipped.push({ studentId: entry.studentId || "?", message: "学号或姓名无效" }); continue; }
+      if (local.students.some((item) => item.studentId === entry.studentId)) { skipped.push({ studentId: entry.studentId, message: "学号已存在" }); continue; }
+      const code = entry.inviteCode || generateLocalInviteCode();
+      local.students.push({ studentId: entry.studentId, chineseName: entry.chineseName, englishName: entry.englishName, inviteCode: code, active: true, createdAt: new Date().toISOString() });
+      imported.push({ studentId: entry.studentId, inviteCode: code, ok: true });
+    }
+    saveLocalCourses();
+    result = { imported: imported.length, skipped: skipped.length, results: [...imported, ...skipped] };
+  }
+  const summary = `导入成功 ${result.imported} 条${result.skipped ? `，跳过 ${result.skipped} 条` : ""}`;
+  const failures = (result.results || []).filter((item) => !item.ok).map((item) => `${item.studentId}: ${item.message}`).join("；");
+  elements.courseImportResult.hidden = false;
+  elements.courseImportResult.textContent = failures ? `${summary}。失败：${failures}` : summary;
+  showToast(summary);
+  await refreshActiveCourseStudents();
+}
+
 function renderTeacherWorkspace() {
   const cloudProfile = window.LearningApi?.isConfigured() ? window.LearningApi.profile() : null;
   if (cloudProfile?.role === "teacher") {
@@ -659,12 +1079,14 @@ function renderTeacherWorkspace() {
   window.WritingZone?.renderTeacherSummary();
   window.PracticeAnalytics?.render();
   if (cloudProfile?.role === "teacher") {
-    elements.classStudentCount.textContent = "读取中";
-    elements.classStudentList.innerHTML = '<p class="empty-approval">正在读取本班学生名单…</p>';
-    void loadCloudTeacherStudents();
+    state.teacherContext = { teacher: cloudProfile.teacher, term: cloudProfile.term, book: cloudProfile.bookId, courseId: cloudProfile.courseId || "" };
+    renderTeacherCoursePanel();
+    void loadTeacherCourses();
     void loadCloudClassSettings();
     return;
   }
+  renderTeacherCoursePanel();
+  void loadTeacherCourses();
   const students = state.enrollments.filter((enrollment) => enrollment.teacher === context.teacher && enrollment.term === context.term && enrollment.book === context.book);
   const pendingStudents = students.filter((student) => student.status === "pending");
   const confirmedStudents = students.filter((student) => student.status !== "pending");
@@ -789,16 +1211,51 @@ function showAdminTab(tab) {
 }
 
 function renderAdminView() {
-  renderAdminUsers();
+  void loadAdminTeachers();
   renderAdminPublishing();
   renderAdminReview();
 }
 
-function renderAdminUsers() {
-  const activeCount = state.teachers.filter((teacher) => teacher.active).length;
-  elements.teacherCount.textContent = `${state.teachers.length} 个账号 · ${activeCount} 个启用`;
-  elements.adminTeacherList.innerHTML = state.teachers.length
-    ? state.teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"} · ${new Date(teacher.createdAt).toLocaleDateString() || ""} 开通</small></span><button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用" : "启用"}</button></div>`).join("")
+function adminIsCloud() {
+  return Boolean(window.LearningApi?.isConfigured() && window.LearningApi.profile()?.role === "admin");
+}
+
+function adminAssignmentLabel(teacher) {
+  const assignments = Array.isArray(teacher.assignments) && teacher.assignments.length ? teacher.assignments : [];
+  if (!assignments.length) return "未分配学期/教材";
+  return assignments.map((assignment) => `${assignment.term} · ${(assignment.bookIds || []).map((id) => bookById(id).label).join("、")}${assignment.className ? ` · ${assignment.className}` : ""}`).join("；");
+}
+
+async function loadAdminTeachers() {
+  if (!adminIsCloud()) {
+    renderAdminUsersLocal();
+    return;
+  }
+  try {
+    const result = await window.LearningApi.adminTeachers();
+    state.adminTeachers = result.teachers || [];
+    renderAdminUsersCloud();
+  } catch (error) {
+    showToast(error.message || "教师列表读取失败");
+    elements.adminTeacherList.innerHTML = `<p class="empty-approval">${escapeHtml(error.message || "教师列表读取失败")}</p>`;
+  }
+}
+
+function renderAdminUsersCloud() {
+  const teachers = state.adminTeachers || [];
+  const activeCount = teachers.filter((teacher) => teacher.active).length;
+  elements.teacherCount.textContent = `${teachers.length} 个账号 · ${activeCount} 个启用`;
+  elements.adminTeacherList.innerHTML = teachers.length
+    ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"}<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code> · ${escapeHtml(adminAssignmentLabel(teacher))}</small></span><span class="teacher-row-actions"><button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码</button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码</button><button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用" : "启用"}</button></span></div>`).join("")
+    : '<p class="empty-approval">还没有教师账号，请点击“新增教师”。</p>';
+}
+
+function renderAdminUsersLocal() {
+  const teachers = state.teachers;
+  const activeCount = teachers.filter((teacher) => teacher.active).length;
+  elements.teacherCount.textContent = `${teachers.length} 个账号 · ${activeCount} 个启用`;
+  elements.adminTeacherList.innerHTML = teachers.length
+    ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"} · ${new Date(teacher.createdAt).toLocaleDateString() || ""} 开通${teacher.inviteCode ? `<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code>` : ""}</small></span><span class="teacher-row-actions">${teacher.inviteCode ? `<button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码</button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码</button>` : ""}<button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用" : "启用"}</button></span></div>`).join("")
     : '<p class="empty-approval">还没有教师账号，请点击“新增教师”。</p>';
 }
 
@@ -874,21 +1331,83 @@ function languageOrder(code) {
   return index === -1 ? 99 : index;
 }
 
-function addTeacher(name, account) {
+function addTeacher(name, account, inviteCode, term, bookIds) {
   if (!name || !account) throw new Error("教师姓名和登录账号不能为空");
   if (state.teachers.some((item) => item.account === account)) throw new Error("该登录账号已存在");
-  state.teachers.push({ id: `teacher-${Date.now()}`, account, name, active: true, createdAt: new Date().toISOString() });
+  state.teachers.push({
+    id: `teacher-${Date.now()}`, account, name, active: true,
+    inviteCode: inviteCode || generateLocalInviteCode(), assignments: term ? [{ term, bookIds: bookIds || [] }] : [],
+    createdAt: new Date().toISOString(),
+  });
   saveTeachers();
-  renderAdminUsers();
+  renderAdminUsersLocal();
 }
 
-function toggleTeacherActive(id) {
+async function handleAddTeacherForm(form) {
+  const data = new FormData(form);
+  const name = data.get("teacherName").trim();
+  const account = data.get("teacherAccount").trim();
+  const inviteCode = data.get("teacherInviteCode").trim();
+  const term = data.get("teacherTerm") || "";
+  const bookIds = data.getAll("teacherBookIds").filter(Boolean);
+  if (!name || !account) throw new Error("教师姓名和登录账号不能为空");
+  if (adminIsCloud()) {
+    const result = await window.LearningApi.createAdminTeacher({ name, account, ...(inviteCode ? { inviteCode } : {}), term, bookIds });
+    return { name, account, inviteCode: result.inviteCode };
+  }
+  addTeacher(name, account, inviteCode, term, bookIds);
+  return { name, account, inviteCode: inviteCode || "" };
+}
+
+async function toggleTeacherActive(id) {
+  if (adminIsCloud()) {
+    const teacher = (state.adminTeachers || []).find((item) => item.id === id);
+    if (!teacher) return;
+    try {
+      await window.LearningApi.updateAdminTeacher({ teacherId: id, active: !teacher.active });
+      showToast(teacher.active ? `已停用教师 ${teacher.name}` : `已启用教师 ${teacher.name}`);
+    } catch (error) {
+      showToast(error.message || "操作失败");
+    }
+    void loadAdminTeachers();
+    return;
+  }
   const teacher = state.teachers.find((item) => item.id === id);
   if (!teacher) return;
   teacher.active = !teacher.active;
   saveTeachers();
-  renderAdminUsers();
+  renderAdminUsersLocal();
   showToast(teacher.active ? `已启用教师 ${teacher.name}` : `已停用教师 ${teacher.name}`);
+}
+
+async function resetAdminTeacherInvite(id) {
+  if (adminIsCloud()) {
+    const result = await window.LearningApi.resetAdminTeacherInvite({ teacherId: id });
+    showToast(`新邀请码：${result.inviteCode}`);
+    void loadAdminTeachers();
+    return;
+  }
+  const teacher = state.teachers.find((item) => item.id === id);
+  if (!teacher) return;
+  teacher.inviteCode = generateLocalInviteCode();
+  saveTeachers();
+  renderAdminUsersLocal();
+  showToast(`新邀请码：${teacher.inviteCode}`);
+}
+
+async function copyAdminTeacherInvite(id) {
+  let code = "";
+  if (adminIsCloud()) {
+    code = (state.adminTeachers || []).find((item) => item.id === id)?.inviteCode || "";
+  } else {
+    code = state.teachers.find((item) => item.id === id)?.inviteCode || "";
+  }
+  if (!code) {
+    showToast("该教师还没有邀请码");
+    return;
+  }
+  await copyTextToClipboard(code);
+  showToast("邀请码已复制 / Invite copied");
 }
 
 function firstOpenContentBookId() {
@@ -983,6 +1502,32 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("[data-auth-close]")) { elements.roleDialog.close(); return; }
   const selectedBook = event.target.closest("[data-select-book]")?.dataset.selectBook;
   if (selectedBook) { selectBook(selectedBook); return; }
+  const enterCourse = event.target.closest("[data-enter-course]");
+  if (enterCourse) { void enterStudentCourse(enterCourse.dataset.enterCourse); return; }
+  if (event.target.closest("[data-new-course-close]")) { elements.newCourseDialog.close(); return; }
+  if (event.target.closest("[data-action='open-new-course']")) { openNewCourse(); return; }
+  const openCourseStudentsBtn = event.target.closest("[data-open-course-students]");
+  if (openCourseStudentsBtn) { void openCourseStudents(openCourseStudentsBtn.dataset.openCourseStudents); return; }
+  if (event.target.closest("[data-action='back-course-list']")) { backCourseList(); return; }
+  if (event.target.closest("[data-action='copy-all-invites']")) { void copyAllInvites(); return; }
+  if (event.target.closest("[data-action='download-student-template']")) { downloadStudentTemplate(); return; }
+  const copyInvite = event.target.closest("[data-copy-invite]");
+  if (copyInvite) { void copyStudentInvite(copyInvite.dataset.copyInvite); return; }
+  const resetInvite = event.target.closest("[data-reset-invite]");
+  if (resetInvite) { void resetCourseStudentInvite(state.activeTeacherCourse?.courseId, resetInvite.dataset.resetInvite).catch((error) => showToast(error.message || "重置失败")); return; }
+  const editStudent = event.target.closest("[data-edit-student]");
+  if (editStudent) {
+    const entry = (state.activeTeacherCourse?.students || []).find((item) => item.studentId === editStudent.dataset.editStudent);
+    if (entry) openAddStudentDialog(entry);
+    return;
+  }
+  const removeStudentCourse = event.target.closest("[data-remove-student-course]");
+  if (removeStudentCourse) {
+    void removeCourseStudentEntry(state.activeTeacherCourse?.courseId, removeStudentCourse.dataset.removeStudentCourse)
+      .then(() => { showToast("已移除该学生"); return refreshActiveCourseStudents(); })
+      .catch((error) => showToast(error.message || "移除失败"));
+    return;
+  }
   if (event.target.closest("[data-add-student-close]")) { elements.addStudentDialog.close(); return; }
   if (event.target.closest("[data-action='open-add-student']")) { openAddStudentDialog(); return; }
   const confirmStudent = event.target.closest("[data-action='confirm-student']");
@@ -996,7 +1541,11 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("[data-action='open-add-teacher']")) { elements.addTeacherForm.hidden = false; elements.addTeacherForm.querySelector('[name="teacherName"]')?.focus(); return; }
   if (event.target.closest("[data-action='cancel-add-teacher']")) { elements.addTeacherForm.hidden = true; elements.addTeacherForm.reset(); return; }
   const toggleTeacher = event.target.closest("[data-action='toggle-teacher']");
-  if (toggleTeacher) { toggleTeacherActive(toggleTeacher.dataset.id); return; }
+  if (toggleTeacher) { void toggleTeacherActive(toggleTeacher.dataset.id); return; }
+  const copyTeacherInviteBtn = event.target.closest("[data-copy-teacher-invite]");
+  if (copyTeacherInviteBtn) { void copyAdminTeacherInvite(copyTeacherInviteBtn.dataset.copyTeacherInvite); return; }
+  const resetTeacherInviteBtn = event.target.closest("[data-reset-teacher-invite]");
+  if (resetTeacherInviteBtn) { void resetAdminTeacherInvite(resetTeacherInviteBtn.dataset.resetTeacherInvite); return; }
   const togglePublish = event.target.closest("[data-action='toggle-publish']");
   if (togglePublish) { toggleBookPublish(togglePublish.dataset.id); return; }
   const resetPublish = event.target.closest("[data-action='reset-publish']");
@@ -1023,32 +1572,58 @@ elements.teacherBook.addEventListener("change", () => { state.teacherContext.boo
 elements.saveWritingPolicy.addEventListener("click", () => { void saveCloudClassSettings(); });
 elements.addStudentDialog.addEventListener("click", (event) => { if (event.target === elements.addStudentDialog) elements.addStudentDialog.close(); });
 elements.confirmDialog.addEventListener("click", (event) => { if (event.target === elements.confirmDialog) { elements.confirmDialog.close(); pendingRemoveEnrollment = null; } });
-[["roleDialog", "header"], ["courseDialog", "header"], ["addStudentDialog", "header"], ["confirmDialog", "header"]].forEach(([key, handle]) => {
+[["roleDialog", "header"], ["courseDialog", "header"], ["addStudentDialog", "header"], ["confirmDialog", "header"], ["newCourseDialog", "header"]].forEach(([key, handle]) => {
   if (elements[key]) window.attachDraggable?.({ element: elements[key], handle });
 });
-elements.addStudentDialog.addEventListener("close", () => { elements.addStudentForm.reset(); });
+elements.addStudentDialog.addEventListener("close", () => { elements.addStudentForm.reset(); state.pendingEditStudent = null; });
+elements.newCourseDialog.addEventListener("click", (event) => { if (event.target === elements.newCourseDialog) elements.newCourseDialog.close(); });
+elements.newCourseForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  void createTeacherCourseByForm(event.currentTarget).catch((error) => showToast(error.message || "创建失败"));
+});
+elements.studentExcelInput.addEventListener("change", () => {
+  const file = elements.studentExcelInput.files?.[0];
+  if (!file) return;
+  void importStudentExcel(file).catch((error) => showToast(error.message || "导入失败")).finally(() => { elements.studentExcelInput.value = ""; });
+});
 elements.addStudentForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
-  try {
-    const enrollment = addStudentByTeacher(data.get("chineseName").trim(), data.get("studentId").trim(), data.get("englishName").trim());
-    elements.addStudentDialog.close();
-    showToast(`已添加并确认 ${enrollment.chineseName} 加入本班`);
-  } catch (error) {
-    showToast(error.message || "添加失败");
-  }
+  void (async () => {
+    try {
+      if (state.pendingEditStudent) {
+        const result = await updateCourseStudentByForm(data);
+        elements.addStudentDialog.close();
+        state.pendingEditStudent = null;
+        showToast(`已更新学生 ${result.studentId} / Student updated`);
+      } else if (state.activeTeacherCourse) {
+        const result = await addCourseStudentByForm(data);
+        elements.addStudentDialog.close();
+        showToast(`已添加学生，邀请码：${result.inviteCode}`);
+      } else {
+        const enrollment = addStudentByTeacher(data.get("chineseName").trim(), data.get("studentId").trim(), data.get("englishName").trim());
+        elements.addStudentDialog.close();
+        showToast(`已添加并确认 ${enrollment.chineseName} 加入本班`);
+      }
+      await refreshActiveCourseStudents();
+    } catch (error) {
+      showToast(error.message || "添加失败");
+    }
+  })();
 });
 elements.addTeacherForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  const data = new FormData(event.currentTarget);
-  try {
-    addTeacher(data.get("teacherName").trim(), data.get("teacherAccount").trim());
-    event.currentTarget.reset();
-    event.currentTarget.hidden = true;
-    showToast("已新增教师账号");
-  } catch (error) {
-    showToast(error.message || "添加失败");
-  }
+  void (async () => {
+    try {
+      const result = await handleAddTeacherForm(event.currentTarget);
+      event.currentTarget.reset();
+      event.currentTarget.hidden = true;
+      showToast(`已新增教师 ${result.name}，邀请码：${result.inviteCode || "—"}`);
+      renderAdminView();
+    } catch (error) {
+      showToast(error.message || "添加失败");
+    }
+  })();
 });
 document.addEventListener("change", (event) => {
   const publishAvailable = event.target.closest("[data-publish-available]")?.dataset.publishAvailable;

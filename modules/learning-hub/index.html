@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260823-4">
+  <link rel="stylesheet" href="styles.css?v=20260823-5">
   <link rel="stylesheet" href="writing-zone.css?v=20260811-3">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
@@ -136,7 +136,8 @@
       </section>
 
       <section class="app-view" id="coursesView" data-view-panel="courses" hidden>
-        <header class="page-heading"><div><span>课程</span><h1>我的课程</h1><p>按教材系列、阶段和册别查找课程。</p></div></header>
+        <header class="page-heading"><div><span>课程</span><h1>我的课程</h1><p id="coursePageIntro">按教材系列、阶段和册别查找课程。</p></div></header>
+        <section class="student-course-list" id="studentCourseList" hidden></section>
         <section class="course-overview">
           <header class="course-overview-header">
             <div><span>当前教材</span><h2 id="lessonDirectoryTitle">中级综合（Ⅰ）</h2></div>
@@ -164,6 +165,27 @@
           <label><span>学期</span><select id="teacherTermSelect"></select></label>
           <label><span>教材</span><select id="teacherBookSelect"></select></label>
           <div><span>任课教师</span><strong id="teacherContextName">—</strong></div>
+        </section>
+        <section class="teacher-course-panel" id="teacherCoursePanel">
+          <header class="teacher-course-head">
+            <div><span>课程管理</span><h2>我的课程 <small>My courses</small></h2><p>按“学期 + 教材”建立课程，再在课程中添加学生并发放邀请码。</p></div>
+            <button class="primary-button" type="button" data-action="open-new-course">＋ 新建课程</button>
+          </header>
+          <div class="teacher-course-list" id="teacherCourseList"><p class="empty-approval">还没有课程，点击“＋新建课程”。</p></div>
+          <section class="course-student-panel" id="courseStudentPanel" hidden>
+            <header class="course-student-head">
+              <button class="quiet-button" type="button" data-action="back-course-list">← 返回课程列表</button>
+              <div class="course-student-title"><strong id="courseStudentTitle">—</strong><small id="courseStudentMeta">—</small></div>
+              <button class="quiet-button" type="button" data-action="copy-all-invites">复制全部邀请信息</button>
+            </header>
+            <div class="course-student-toolbar">
+              <button class="quiet-button" type="button" data-action="open-add-student">＋ 新增学生</button>
+              <button class="quiet-button" type="button" data-action="download-student-template">下载 Excel 模板</button>
+              <label class="file-import-label"><span>导入 Excel</span><input type="file" id="studentExcelInput" accept=".xlsx,.xls,.csv" hidden></label>
+            </div>
+            <p class="course-import-result" id="courseImportResult" role="status" hidden></p>
+            <div class="course-student-table" id="courseStudentTable"></div>
+          </section>
         </section>
         <section class="writing-policy-panel" aria-labelledby="writingPolicyTitle">
           <div><span>47、48题</span><h2 id="writingPolicyTitle">写作作答方式 <small>Writing input mode</small></h2><p>此设置对当前学期、教材和班级生效。</p></div>
@@ -208,6 +230,9 @@
           <form class="admin-inline-form" id="addTeacherForm" hidden>
             <label><span>教师姓名 / Name</span><input name="teacherName" required maxlength="40" placeholder="如：曹丹丹"></label>
             <label><span>登录账号 / Account</span><input name="teacherAccount" required maxlength="40" placeholder="如：caodd"></label>
+            <label><span>教师邀请码 / Invite（选填）</span><input name="teacherInviteCode" maxlength="12" placeholder="留空自动生成"></label>
+            <label><span>学期 / Term</span><select name="teacherTerm" data-term-options></select></label>
+            <label><span>教材 / Textbook（可多选）</span><select name="teacherBookIds" data-book-options multiple size="4"></select></label>
             <button class="primary-button" type="submit">添加教师</button>
             <button class="quiet-button" type="button" data-action="cancel-add-teacher">取消</button>
           </form>
@@ -254,12 +279,11 @@
 
       <form class="auth-panel active" id="studentLoginForm" data-auth-panel="student-login">
         <div class="form-grid two-columns">
-          <label><span>学号或姓名 / ID or name</span><input name="studentAccount" value="test" required autocomplete="username"></label>
-          <label><span>邀请码 / Invite code</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
-          <label class="wide-field" data-auth-context hidden><span>选择班级与教材 / Class and textbook</span><select name="contextId"></select></label>
+          <label><span>学号 / Student ID</span><input name="studentAccount" required autocomplete="username" placeholder="请输入学号"></label>
+          <label><span>邀请码 / Invitation code</span><input name="inviteCode" required autocomplete="one-time-code" placeholder="教师发放的个人邀请码"></label>
         </div>
         <button class="primary-button" type="submit" data-auth-submit>验证并进入课程</button>
-        <p>教师录入的学号可直接进入班级；新学生提交加入申请，等待教师确认。</p>
+        <p>使用教师发放的“学号 + 个人邀请码”登录；登录后可查看名下所有课程。</p>
       </form>
 
       <form class="auth-panel" id="teacherLoginForm" data-auth-panel="teacher-login" hidden>
@@ -287,10 +311,24 @@
       <div class="form-grid two-columns">
         <label><span>姓名 / Name</span><input name="chineseName" required maxlength="40" placeholder="学生中文姓名"></label>
         <label><span>学号 / Student ID</span><input name="studentId" required maxlength="40" placeholder="唯一学号，用于登录"></label>
-        <label class="wide-field"><span>英文名 / English name（可选）</span><input name="englishName" maxlength="40" placeholder="English name"></label>
+        <label><span>英文名 / English name（可选）</span><input name="englishName" maxlength="40" placeholder="English name"></label>
+        <label><span>邀请码 / Invitation code（可选）</span><input name="inviteCode" maxlength="12" placeholder="留空则自动生成"></label>
       </div>
       <p>添加后将立即确认加入：<strong id="addStudentContextLabel"></strong></p>
       <button class="primary-button" type="submit">添加并确认 <small>Add</small></button>
+    </form>
+  </dialog>
+
+  <dialog class="role-dialog" id="newCourseDialog" aria-labelledby="newCourseTitle">
+    <form class="auth-dialog-shell" id="newCourseForm">
+      <header><div><span>教学工作台</span><h2 id="newCourseTitle">新建课程 <small>Create course</small></h2></div><button type="button" data-new-course-close aria-label="关闭">×</button></header>
+      <div class="form-grid two-columns">
+        <label><span>学期 / Term</span><select name="term" data-term-options required></select></label>
+        <label><span>教材 / Textbook</span><select name="bookId" data-book-options required></select></label>
+        <label class="wide-field"><span>班级名称 / Class name（选填）</span><input name="className" maxlength="40" placeholder="如：初级综合1班"></label>
+      </div>
+      <p>课程按“学期 + 教材”建立，创建后可在课程中添加学生并发放个人邀请码。</p>
+      <button class="primary-button" type="submit">创建课程 <small>Create</small></button>
     </form>
   </dialog>
 
@@ -393,12 +431,13 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" hidden></div>
+  <script src="../../vendor/xlsx.full.min.js"></script>
   <script src="../../config.js?v=20260823-1"></script>
-  <script src="../shared/learning-api-client.js?v=20260811-7"></script>
+  <script src="../shared/learning-api-client.js?v=20260823-3"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260823-1"></script>
-  <script src="app.js?v=20260823-4" defer></script>
-  <script src="writing-zone.js?v=20260811-4" defer></script>
+  <script src="app.js?v=20260823-5" defer></script>
+  <script src="writing-zone.js?v=20260823-1" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
     <span><strong>发现新版本</strong><small>点击刷新以更新到最新内容 / New version ready, tap to refresh</small></span>
