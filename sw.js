@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v56";
+const CACHE_VERSION = "diandian-chinese-v58";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -104,3 +104,4 @@ self.addEventListener("fetch", event => {
     url.pathname.includes("/hanzi-companion/stroke-data/");
   if (isSameOrigin || isStrokeData) event.respondWith(staleWhileRevalidate(request));
 });
+
