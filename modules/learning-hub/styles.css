@@ -16,6 +16,7 @@
   background: var(--page);
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; overflow-x: hidden; background: var(--page); }
 button, input, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
@@ -654,3 +655,74 @@ button { cursor: pointer; }
 .auth-tabs button small { margin-left: 4px; font-size: 9px; font-weight: 650; opacity: .8; }
 .admin-tabs button small, .teacher-tabs button small { margin-left: 5px; font-size: 9px; font-weight: 650; opacity: .75; }
 button.primary-button small, a.primary-button small, .quiet-button small, .danger-button small, .text-button small, .resume-button small { margin-left: 5px; font-size: 9px; font-weight: 700; opacity: .8; }
+
+/* Teacher workspace layout: 2026-08-24 */
+#teacherView .page-heading { min-height: 0; margin-bottom: 14px; }
+#teacherView .page-heading h1 { margin-top: 3px; }
+#teacherView .page-heading p { margin-top: 4px; }
+#teacherView .class-context {
+  grid-template-columns: minmax(180px, 1fr) minmax(240px, 1.35fr) minmax(150px, .7fr);
+  align-items: end;
+  gap: 14px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+}
+#teacherView .class-context label,
+#teacherView .class-context > div { gap: 5px; }
+#teacherView .teacher-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+  width: min(760px, 100%);
+  gap: 8px;
+  margin: 0 0 18px;
+}
+#teacherView .teacher-tabs button { min-height: 44px; padding: 5px 14px; border-radius: 10px; }
+#teacherView .teacher-tabs button small { display: inline; }
+#teacherView .teacher-course-panel { gap: 14px; }
+#teacherView .teacher-course-head { align-items: end; padding-bottom: 4px; }
+#teacherView .teacher-course-head > div { min-width: 0; }
+#teacherView .teacher-course-head h2 { margin: 2px 0 3px; }
+#teacherView .teacher-course-head .primary-button { flex: 0 0 auto; min-width: 170px; }
+#teacherView .teacher-course-row { min-height: 70px; padding: 12px 16px; }
+#teacherView .teacher-course-info { min-width: 0; }
+#teacherView .teacher-course-info small { line-height: 1.45; }
+#teacherView .course-student-panel { gap: 14px; padding: 14px 16px 16px; }
+#teacherView .course-student-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+#teacherView .course-student-title { min-width: 0; }
+#teacherView .course-student-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#teacherView .course-student-toolbar {
+  padding: 10px 12px;
+  border: 1px solid #e1e9e6;
+  border-radius: 10px;
+  background: #f7faf9;
+}
+#teacherView .course-student-toolbar .quiet-button,
+#teacherView .course-student-toolbar .file-import-label { min-height: 40px; }
+
+@media (max-width: 1000px) {
+  #teacherView .class-context { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #teacherView .class-context > div { grid-column: 1 / -1; }
+  #teacherView .teacher-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #teacherView .course-student-head { grid-template-columns: auto minmax(0, 1fr); }
+  #teacherView .course-student-head > :last-child { grid-column: 2; justify-self: start; }
+}
+
+@media (max-width: 760px) {
+  #teacherView .class-context { grid-template-columns: 1fr; padding: 12px; }
+  #teacherView .class-context > div { grid-column: auto; }
+  #teacherView .teacher-course-head .primary-button { width: 100%; }
+  #teacherView .teacher-course-row { align-items: flex-start; flex-direction: column; }
+  #teacherView .teacher-course-actions { width: 100%; justify-content: flex-end; }
+  #teacherView .course-student-head { grid-template-columns: 1fr; }
+  #teacherView .course-student-head > :last-child { grid-column: auto; justify-self: stretch; }
+  #teacherView .course-student-head .quiet-button { width: 100%; }
+  #teacherView .course-student-toolbar { align-items: stretch; flex-direction: column; }
+  #teacherView .course-student-toolbar > * { width: 100%; justify-content: center; }
+}
