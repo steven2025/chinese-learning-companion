@@ -224,6 +224,7 @@ button { cursor: pointer; }
 .book-choice { min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; color: var(--ink); border: 1px solid var(--line); border-radius: 6px; background: #fff; text-align: left; }
 .book-choice span, .book-choice small { display: block; }
 .book-choice span { font-size: 13px; }
+.book-choice span em { display: block; font-style: normal; font-size: 9px; color: var(--muted); margin-top: 2px; }
 .book-choice small { color: var(--muted); font-size: 9px; white-space: nowrap; }
 .book-choice:hover { border-color: #91bdb7; }
 .book-choice.active { color: var(--teal); border: 2px solid var(--teal); background: var(--teal-soft); font-weight: 800; }

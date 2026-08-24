@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260823-9">
+  <link rel="stylesheet" href="styles.css?v=20260823-10">
   <link rel="stylesheet" href="writing-zone.css?v=20260811-6">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
@@ -123,18 +123,18 @@
         <div class="game-library">
           <a class="game-entry featured" href="../character-hit/">
             <div class="game-entry-visual" aria-hidden="true"><i>门</i><b>+</b><i>耳</i><b>→</b><strong>闻</strong></div>
-            <div><span>初级综合Ⅰ 1—2课 · 中级综合Ⅰ 1—3课</span><h2>开心“打”字</h2><p>射中正确部件组汉字，再击中彩色气球完成拼音和母语词义辨认。</p><small>25个精选教材词语</small></div>
-            <em>开始挑战 ›</em>
+            <div><span>初级综合Ⅰ 1—5课 · 中级综合Ⅰ 1—4课</span><h2>开心“打”字 <small>Character Hit</small></h2><p>射中正确部件组汉字，再击中彩色气球完成拼音和母语词义辨认。 · Shoot components to build characters, then pop balloons to match pinyin and meaning.</p><small>45组教材汉字 · 拼音 · 词义</small></div>
+            <em>开始挑战 · Play ›</em>
           </a>
           <a class="game-entry word-link" href="../word-link/">
             <div class="game-entry-mark" aria-hidden="true">连</div>
-            <div><span>初级综合Ⅰ 1—2课 · 中级综合Ⅰ 1—3课</span><h2>单词连连看</h2><p>连接汉字、拼音和母语词义，完成教材词汇的高频回顾。</p><small>156个教材词语 · 多语言匹配</small></div>
-            <em>开始游戏 ›</em>
+            <div><span>初级综合Ⅰ 1—5课 · 中级综合Ⅰ 1—4课</span><h2>单词连连看 <small>Word Link</small></h2><p>连接汉字、拼音和母语词义，完成教材词汇的高频回顾。 · Match characters, pinyin and meanings for high-frequency vocabulary review.</p><small>269个教材词语 · 多语言匹配</small></div>
+            <em>开始游戏 · Play ›</em>
           </a>
           <a class="game-entry hanzi-challenge" href="../hanzi-challenge/">
             <div class="game-entry-mark" aria-hidden="true">闯</div>
-            <div><span>初级综合Ⅰ 1—2课 · 中级综合Ⅰ 1—3课</span><h2>汉字大闯关</h2><p>根据拼音、教材词语和中文提示，从相近汉字中选出正确答案。</p><small>50个教材汉字项目</small></div>
-            <em>开始闯关 ›</em>
+            <div><span>初级综合Ⅰ 1—5课 · 中级综合Ⅰ 1—4课</span><h2>汉字大闯关 <small>Hanzi Challenge</small></h2><p>根据拼音、教材词语和中文提示，从相近汉字中选出正确答案。 · Pick the right character using pinyin, words and Chinese hints.</p><small>90个教材汉字项目 · 汉字辨析</small></div>
+            <em>开始闯关 · Play ›</em>
           </a>
         </div>
       </section>
@@ -208,10 +208,6 @@
             <div class="course-student-table" id="courseStudentTable"></div>
           </section>
         </section>
-        <section class="approval-panel">
-          <header><div><span>课程成员</span><h2>本班学生</h2></div><strong id="classStudentCount">0人</strong></header>
-          <div id="classStudentList"></div>
-        </section>
         </section>
         <section class="teacher-tab-panel" data-teacher-panel="writing" hidden>
         <section class="writing-policy-panel" aria-labelledby="writingPolicyTitle">
@@ -243,7 +239,6 @@
           <button class="quiet-button" type="button" data-view="writing">打开收件箱 <small>Inbox</small></button>
         </section>
         </section>
-        <div class="management-list"><button>课文学习进度 <small>Text progress</small> <span>下一阶段</span></button><button>布置课程与作业 <small>Assignments</small> <span>待接入</span></button><a href="../digital-book/">以学生视图预览第1课 <small>Preview</small> <span>打开 ›</span></a></div>
       </section>
 
       <section class="app-view" id="adminView" data-view-panel="admin" hidden>
@@ -436,7 +431,7 @@
         <button type="button" data-course-close aria-label="关闭">×</button>
       </header>
       <nav class="course-level-tabs" aria-label="学习阶段">
-        <button type="button" data-course-level="beginner">初级 <small>Beginner</small></button>
+        <button type="button" data-course-level="beginner">初级 <small>Elementary</small></button>
         <button class="active" type="button" data-course-level="intermediate">中级 <small>Intermediate</small></button>
         <button type="button" data-course-level="advanced">高级 <small>Advanced</small></button>
       </nav>
@@ -463,7 +458,7 @@
   <script src="../shared/learning-api-client.js?v=20260823-6"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260823-2"></script>
-  <script src="app.js?v=20260823-17" defer></script>
+  <script src="app.js?v=20260823-18" defer></script>
   <script src="writing-zone.js?v=20260823-4" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>

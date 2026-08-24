@@ -60,7 +60,14 @@ const catalog = [
   },
 ];
 
-const books = catalog.flatMap((level) => level.books.map(([id, label]) => ({ id, label, level: level.id })));
+const BOOK_EN_LEVEL = { beginner: "Elementary", intermediate: "Intermediate", advanced: "Advanced" };
+const BOOK_EN_TYPE = { comprehensive: "Comprehensive Course", speaking: "Speaking Course", listening: "Listening Course", "reading-writing": "Reading and Writing Course", reading: "Reading Course", writing: "Writing Course" };
+function bookEnLabel(id) {
+  const match = String(id).match(/^(beginner|intermediate|advanced)-(comprehensive|speaking|listening|reading-writing|reading|writing)-([12])$/);
+  if (!match) return "";
+  return `${BOOK_EN_LEVEL[match[1]]} ${BOOK_EN_TYPE[match[2]]} (${match[3] === "1" ? "Ⅰ" : "Ⅱ"})`;
+}
+const books = catalog.flatMap((level) => level.books.map(([id, label]) => ({ id, label, en: bookEnLabel(id), level: level.id })));
 const learningBooks = Object.freeze({
   "beginner-comprehensive-1": {
     lessonPrefix: "cjzh-1",
@@ -269,9 +276,9 @@ function bookById(id) {
 }
 
 function bookOptionMarkup(selected = "") {
-  return catalog.map((level) => `<optgroup label="${level.label}">${level.books.map(([id, label]) => {
+  return catalog.map((level) => `<optgroup label="${level.label} · ${BOOK_EN_LEVEL[level.id] || ""}">${level.books.map(([id, label]) => {
     const available = effectiveBookOpen(id);
-    return `<option value="${id}"${id === selected ? " selected" : ""}${available ? "" : " disabled"}>发展汉语·${label}${available ? "" : "（未开放）"}</option>`;
+    return `<option value="${id}"${id === selected ? " selected" : ""}${available ? "" : " disabled"}>发展汉语·${label} · ${bookEnLabel(id)}${available ? "" : "（未开放）"}</option>`;
   }).join("")}</optgroup>`).join("");
 }
 
@@ -314,7 +321,7 @@ function renderCatalog() {
       const learningBook = learningBooks[id];
       const available = effectiveAvailable(id);
       const open = effectiveBookOpen(id);
-      return `<button class="book-choice${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》</span><small>${learningBook ? (open ? `第1-${available}课可学习` : "暂未开放课程") : (open ? "已开放 · 内容准备中" : "未开放")}</small></button>`;
+      return `<button class="book-choice${state.selectedBookId === id ? " active" : ""}" type="button" data-select-book="${id}"><span>《发展汉语·${label}》<em>${bookEnLabel(id)}</em></span><small>${learningBook ? (open ? `第1-${available}课可学习` : "暂未开放课程") : (open ? "已开放 · 内容准备中" : "未开放")}</small></button>`;
     }).join("")}</div>`
     : state.role === "guest" ? '<p class="empty-state">请先登录，再选择教材 / Please sign in first</p>' : (allowedBookIds().length ? '<p class="empty-state">没有找到符合条件的教材。</p>' : '<p class="empty-state">您还没有可进入的课程，请联系教师获取邀请码。</p>');
   renderCourseDialogLessons();
@@ -323,16 +330,16 @@ function renderCatalog() {
 function renderCourseDialogLessons() {
   const book = bookById(state.selectedBookId);
   if (state.role !== "admin" && !courseAccessible(book.id)) {
-    elements.courseDialogLessons.innerHTML = `<header><span>已选择</span><strong>《发展汉语·${book.label}》</strong></header><p>该教材不在您的课程中，无法进入。</p>`;
+    elements.courseDialogLessons.innerHTML = `<header><span>已选择</span><strong>《发展汉语·${book.label} · ${book.en}》</strong></header><p>该教材不在您的课程中，无法进入。</p>`;
     return;
   }
   const learningBook = learningBooks[book.id];
   if (!learningBook || !effectiveBookOpen(book.id)) {
-    elements.courseDialogLessons.innerHTML = `<header><span>已选择</span><strong>《发展汉语·${book.label}》</strong></header><p>${learningBook ? "该教材暂未开放课程。" : "该教材已建立入口，内容准备中。"}</p>`;
+    elements.courseDialogLessons.innerHTML = `<header><span>已选择</span><strong>《发展汉语·${book.label} · ${book.en}》</strong></header><p>${learningBook ? "该教材暂未开放课程。" : "该教材已建立入口，内容准备中。"}</p>`;
     return;
   }
   const available = effectiveAvailable(book.id);
-  elements.courseDialogLessons.innerHTML = `<header><span>选择课次 / Lesson</span><strong>《发展汉语·${book.label}》</strong></header><div class="dialog-lesson-grid">${learningBook.lessons.map((title, index) => {
+  elements.courseDialogLessons.innerHTML = `<header><span>选择课次 / Lesson</span><strong>《发展汉语·${book.label} · ${book.en}》</strong></header><div class="dialog-lesson-grid">${learningBook.lessons.map((title, index) => {
     const lessonNumber = index + 1;
     return index < available
       ? `<a href="../digital-book/?lesson=${learningBook.lessonPrefix}-${lessonNumber}"><b>${String(lessonNumber).padStart(2, "0")}</b><span>${title}</span></a>`
@@ -343,7 +350,7 @@ function renderCourseDialogLessons() {
 function renderLessons() {
   const book = bookById(state.selectedBookId);
   const learningBook = learningBooks[book.id];
-  elements.lessonTitle.textContent = book.label;
+  elements.lessonTitle.textContent = `${book.label} · ${book.en}`;
   elements.currentBookLabel.textContent = book.label;
   if (state.role !== "admin" && !courseAccessible(book.id)) {
     elements.lessonCount.textContent = "未加入课程";
@@ -369,10 +376,10 @@ function renderLessons() {
   elements.currentLessonLabel.textContent = `第1课 · ${learningBook.lessons[0]}`;
   elements.courseCoverTitle.innerHTML = learningBook.cover;
   elements.continueTitle.textContent = `第1课 · ${learningBook.lessons[0]}`;
-  elements.continueMeta.textContent = `发展汉语 · ${book.label.replace(/[（）]/g, "")}`;
+  elements.continueMeta.textContent = `发展汉语 · ${book.label.replace(/[（）]/g, "")} · ${book.en}`;
   elements.continueLink.href = firstLessonUrl;
   elements.primaryTaskLink.href = firstLessonUrl;
-  elements.primaryTaskMeta.textContent = `${book.label.replace(/[（）]/g, "")} · 第1课`;
+  elements.primaryTaskMeta.textContent = `${book.label.replace(/[（）]/g, "")} · ${book.en} · 第1课`;
   elements.gameTaskLink.href = `../character-hit/?lesson=${learningBook.lessonPrefix}-1`;
   if (book.id === "beginner-comprehensive-1") {
     elements.secondaryTaskLink.href = firstLessonUrl;
@@ -694,7 +701,7 @@ function renderStudentCoursesView() {
     const open = effectiveBookOpen(context.bookId);
     const teacherLabel = context.teacher ? `${context.teacher} 老师` : "任课教师";
     const label = `${teacherLabel} · ${escapeHtml(context.term)} · ${escapeHtml(context.className || "班")}`;
-    return `<button class="student-course-card" type="button" data-enter-course="${escapeHtml(context.id)}"${open ? "" : " disabled"}><span class="student-course-mark">课</span><span><strong>发展汉语·${escapeHtml(book.label)}</strong><small>${label}</small></span><b>进入 <small>Enter</small> ›</b></button>`;
+    return `<button class="student-course-card" type="button" data-enter-course="${escapeHtml(context.id)}"${open ? "" : " disabled"}><span class="student-course-mark">课</span><span><strong>发展汉语·${escapeHtml(book.label)} · ${escapeHtml(book.en)}</strong><small>${label}</small></span><b>进入 <small>Enter</small> ›</b></button>`;
   }).join("");
 }
 
@@ -878,7 +885,7 @@ function localAuthenticationOptions(role, account, inviteCode) {
 }
 
 function authenticationContextLabel(context) {
-  return `${context.term} · ${context.className} · ${context.teacher} · 发展汉语·${bookById(context.bookId).label}`;
+  return `${context.term} · ${context.className} · ${context.teacher} · 发展汉语·${bookById(context.bookId).label} · ${bookById(context.bookId).en}`;
 }
 
 function showAuthenticationContexts(form, contexts) {
@@ -1008,7 +1015,7 @@ async function loadTeacherCourses() {
 
 function renderTeacherCourses(courses) {
   elements.teacherCourseList.innerHTML = courses.length
-    ? courses.map((course) => `<div class="teacher-course-row"><span class="teacher-course-info"><strong>${escapeHtml(course.className || "班")}</strong><small>${escapeHtml(course.term)} · 发展汉语·${escapeHtml(bookById(course.bookId).label)} · ${course.studentCount || 0}名学生</small></span><span class="teacher-course-actions">${course.active === false ? '<b class="muted">已停用</b>' : ""}<button class="quiet-button" type="button" data-open-course-students="${escapeHtml(course.courseId)}">管理学生 <small>Manage</small></button></span></div>`).join("")
+    ? courses.map((course) => `<div class="teacher-course-row"><span class="teacher-course-info"><strong>${escapeHtml(course.className || "班")}</strong><small>${escapeHtml(course.term)} · 发展汉语·${escapeHtml(bookById(course.bookId).label)} · ${escapeHtml(bookById(course.bookId).en)} · ${course.studentCount || 0}名学生</small></span><span class="teacher-course-actions">${course.active === false ? '<b class="muted">已停用</b>' : ""}<button class="quiet-button" type="button" data-open-course-students="${escapeHtml(course.courseId)}">管理学生 <small>Manage</small></button></span></div>`).join("")
     : '<p class="empty-approval">还没有课程，点击“＋新建课程”。</p>';
 }
 
@@ -1059,7 +1066,7 @@ async function openCourseStudents(courseId) {
   window.__activeTeacherCourseId = courseId;
   elements.teacherCourseList.hidden = true;
   elements.courseStudentPanel.hidden = false;
-  elements.courseStudentTitle.textContent = `${course.className || "班"} · ${bookById(course.bookId).label}`;
+  elements.courseStudentTitle.textContent = `${course.className || "班"} · ${bookById(course.bookId).label} · ${bookById(course.bookId).en}`;
   elements.courseStudentMeta.textContent = `${course.term} · ${course.teacher} 老师 · ${students.length}名学生`;
   renderCourseStudentsTable(students);
   if (cloud) {
@@ -1086,10 +1093,10 @@ function renderCourseStudentsTable(students) {
 function openAddStudentDialog(entry) {
   const course = state.activeTeacherCourse;
   if (course) {
-    elements.addStudentContextLabel.textContent = `${course.term} · ${bookById(course.bookId).label} · ${course.teacher} 老师`;
+    elements.addStudentContextLabel.textContent = `${course.term} · ${bookById(course.bookId).label} · ${bookById(course.bookId).en} · ${course.teacher} 老师`;
   } else {
     const context = state.teacherContext;
-    elements.addStudentContextLabel.textContent = `${context.term} · ${bookById(context.book).label} · ${context.teacher} 老师`;
+    elements.addStudentContextLabel.textContent = `${context.term} · ${bookById(context.book).label} · ${bookById(context.book).en} · ${context.teacher} 老师`;
   }
   state.pendingEditStudent = entry || null;
   const form = elements.addStudentForm;
@@ -1216,7 +1223,7 @@ function studentInviteText(entry) {
   const course = state.activeTeacherCourse || {};
   const book = bookById(course.bookId);
   const name = [entry.chineseName, entry.englishName].filter(Boolean).join(" / ") || entry.studentId;
-  return `Student: ${name}\nYour Id: ${entry.studentId}\nInvitation code: ${entry.inviteCode}\nCourse: ${book.label}\nSign in with your Id and Invitation code.\nhttps://steven2025.github.io/chinese-learning-companion`;
+  return `Student: ${name}\nYour Id: ${entry.studentId}\nInvitation code: ${entry.inviteCode}\nCourse: ${book.en || book.label}\nSign in with your Id and Invitation code.\nhttps://steven2025.github.io/chinese-learning-companion`;
 }
 
 async function copyTextToClipboard(text) {
@@ -1368,16 +1375,11 @@ function renderTeacherWorkspace() {
   }
   renderTeacherCoursePanel();
   void loadTeacherCourses();
-  const students = state.enrollments.filter((enrollment) => enrollment.teacher === context.teacher && enrollment.term === context.term && enrollment.book === context.book);
-  const pendingStudents = students.filter((student) => student.status === "pending");
-  const confirmedStudents = students.filter((student) => student.status !== "pending");
-  elements.classStudentCount.textContent = `${students.length}人`;
-  elements.classStudentList.innerHTML = `<div class="class-list-toolbar"><span>已确认 <b>${confirmedStudents.length}</b> · 待确认 <b>${pendingStudents.length}</b></span><button class="quiet-button" type="button" data-action="open-add-student">＋ 新增学生 <small>Add student</small></button></div>${pendingStudents.length ? `<div class="class-subgroup"><header>待确认 <small>学生用邀请码自助加入，需确认后生效</small></header>${pendingStudents.map((student) => renderStudentRow(student, true)).join("")}</div>` : ""}${confirmedStudents.length ? `<div class="class-subgroup"><header>已确认</header>${confirmedStudents.map((student) => renderStudentRow(student, false)).join("")}</div>` : ""}${!students.length ? '<p class="empty-approval">还没有学生。点“＋新增学生”录入名单，或让学生用邀请码自助加入。</p>' : ""}`;
 }
 
 function openAddStudentDialog() {
   const context = state.teacherContext;
-  elements.addStudentContextLabel.textContent = `${context.term} · ${bookById(context.book).label} · ${context.teacher} 老师`;
+  elements.addStudentContextLabel.textContent = `${context.term} · ${bookById(context.book).label} · ${bookById(context.book).en} · ${context.teacher} 老师`;
   elements.addStudentDialog.showModal();
 }
 
@@ -1474,6 +1476,7 @@ async function saveCloudClassSettings() {
 }
 
 async function loadCloudTeacherStudents() {
+  if (!elements.classStudentList) return;
   try {
     const result = await window.LearningApi.classStudents({ courseId: state.activeTeacherCourse?.courseId || window.__activeTeacherCourseId || "" });
     const students = result.students || [];
@@ -1518,7 +1521,7 @@ function adminIsCloud() {
 function adminAssignmentLabel(teacher) {
   const assignments = Array.isArray(teacher.assignments) && teacher.assignments.length ? teacher.assignments : [];
   if (!assignments.length) return "未分配学期/教材";
-  return assignments.map((assignment) => `${assignment.term} · ${(assignment.bookIds || []).map((id) => bookById(id).label).join("、")}${assignment.className ? ` · ${assignment.className}` : ""}`).join("；");
+  return assignments.map((assignment) => `${assignment.term} · ${(assignment.bookIds || []).map((id) => `${bookById(id).label} · ${bookById(id).en}`).join("、")}${assignment.className ? ` · ${assignment.className}` : ""}`).join("；");
 }
 
 async function loadAdminTeachers() {
@@ -1555,7 +1558,7 @@ function renderAdminUsersLocal() {
 }
 
 function renderAdminPublishing() {
-  elements.adminPublishingList.innerHTML = catalog.map((level) => `<div class="publish-level"><h3>${level.label}</h3><div class="admin-list">${level.books.map(([id, label]) => {
+  elements.adminPublishingList.innerHTML = catalog.map((level) => `<div class="publish-level"><h3>${level.label} · ${BOOK_EN_LEVEL[level.id] || ""}</h3><div class="admin-list">${level.books.map(([id, label]) => {
     const learningBook = learningBooks[id];
     const isOpen = effectiveBookOpen(id);
     const available = effectiveAvailable(id);
@@ -1573,7 +1576,7 @@ function renderAdminReview() {
   elements.adminReviewList.innerHTML = contentBooks.map((book) => {
     const learningBook = learningBooks[book.id];
     const available = effectiveAvailable(book.id);
-    return `<div class="publish-level"><h3>《发展汉语·${book.label}》</h3><div class="admin-list">${learningBook.lessons.slice(0, available).map((title, index) => {
+    return `<div class="publish-level"><h3>《发展汉语·${book.label} · ${book.en}》</h3><div class="admin-list">${learningBook.lessons.slice(0, available).map((title, index) => {
       const lessonId = `${learningBook.lessonPrefix}-${index + 1}`;
       const record = state.contentReview[lessonId] || {};
       const badges = (record.languages || []).map((code) => `<i class="lang-badge${record.reviewed ? " reviewed" : ""}">${escapeHtml(languageShortLabels[code] || code)}</i>`).join("");
