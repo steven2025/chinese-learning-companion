@@ -13,7 +13,7 @@
   const featureLabels = {
     aspiration: ["送气对比", "Aspiration"], place: ["发音位置", "Place of articulation"],
     airflow: ["气流通道", "Airflow"], vowel: ["口形与舌位", "Vowel shape"],
-    nasal: ["鼻音位置", "Nasal ending"],
+    nasal: ["鼻音位置", "Nasal ending"], "tongue-position": ["舌位对比", "Tongue position"],
   };
   const comparisonLabels = {
     en: { mandarin: "Mandarin system", native: "My language system", differences: "Key differences", errors: "Common errors", advice: "Practice advice" },
@@ -47,6 +47,10 @@
     characterIndex: 0,
     practiceIndex: 0,
     practiceModes: {},
+    practiceSubIndex: {},
+    practiceAnswers: {},
+    practiceCheck: {},
+    numberGame: { started: false, number: 0, options: [], answered: false, picked: -1, correct: 0, total: 0 },
     groupIndices: {},
     selectedItems: {},
     locale: localStorage.getItem("digitalBookLocale") || "en",
@@ -54,10 +58,13 @@
     audioSegment: null,
     audioQueue: [],
     audioReadyPromise: null,
+    pendingAudioSource: "",
     loop: false,
     challenge: null,
     toneAnswers: {},
     syllableAnswers: {},
+    initialAnswers: {},
+    initialOptionOrder: {},
     comparisonId: "",
     pinyinRecording: {
       active: false, stream: null, context: null, source: null, processor: null, mute: null,
@@ -227,6 +234,11 @@
       const result = state.toneAnswers[item.id];
       if (result?.correct || result?.revealed) return item.answer;
       return { ...item.answer, display: item.prompt, tone: 0, toneMark: "", toneShown: false };
+    }
+    if (unit.type === "initialWriting") {
+      const result = state.initialAnswers[item.id];
+      if (result?.correct || result?.revealed) return item.answer;
+      return { ...item.answer, display: item.prompt, initial: "", tone: 0, toneMark: "", toneShown: false };
     }
     if (item.initial !== undefined || item.final !== undefined) return item;
     const display = String(item.display || "").split(/[［\[]/)[0].trim();
@@ -419,12 +431,13 @@
     const active = itemKey(item) === itemKey(selected || {});
     const display = item.prompt || item.display;
     const toneResult = item.answer ? state.toneAnswers[item.id] : null;
+    const initialResult = item.expectedInitial ? state.initialAnswers[item.id] : null;
     const tone = item.answer
       ? toneResult?.correct || toneResult?.revealed ? item.answer.tone : 0
       : item.tone;
     return `<button type="button" class="pron-item-button${active ? " active" : ""}" data-pron-select="${escapeHtml(itemKey(item))}">
       ${index !== undefined ? `<small>${String(index + 1).padStart(2, "0")}</small>` : ""}
-      <strong>${escapeHtml(display)}</strong>${tone ? `<span>${tone}</span>` : ""}
+      <strong>${escapeHtml(display)}</strong>${tone ? `<span>${tone}</span>` : ""}${initialResult?.correct ? `<i class="pron-item-done" title="已答对">✓</i>` : ""}
     </button>`;
   }
 
@@ -490,16 +503,19 @@
 
   function renderExercise(unit) {
     if (unit.type === "syllableChoice") return renderSyllableChoice(unit);
+    if (unit.type === "initialWriting") return renderInitialWriting(unit);
     const group = currentGroup(unit);
     const selected = selectedItem(unit, group);
     return `${renderChapterNavigation(unit)}${renderGroupNavigation(unit, group)}
-      <div class="pron-exercise-layout">
+      <div class="pron-exercise-layout pron-workbench">
         <section class="pron-selector-panel">
           <header><span>${unit.type === "soundDiscrimination" ? "选择对比音" : unit.type === "toneSeries" ? "选择声调" : "选择练习项"}</span><small>点击后进入语音学习台</small></header>
           ${renderItemSelector(unit, group, selected)}
         </section>
+        <div class="pron-workbench-main">
         ${unit.type === "toneMarking" ? renderToneMarking(unit, group, selected) : renderFocusStage(unit, group, selected)}
         ${renderChallenge(unit, group, selected)}
+        </div>
       </div>`;
   }
 
@@ -520,9 +536,63 @@
     </article>`;
   }
 
+  function initialOptionOrderFor(item) {
+    if (!state.initialOptionOrder[item.id]) {
+      state.initialOptionOrder[item.id] = Math.random() < 0.5 ? [0, 1] : [1, 0];
+    }
+    return state.initialOptionOrder[item.id];
+  }
+
+  function renderInitialWriting(unit) {
+    const group = currentGroup(unit);
+    const selected = selectedItem(unit, group);
+    if (!selected) return renderExercise(unit);
+    const items = selectableItems(unit, group);
+    const result = state.initialAnswers[selected.id] || { attempts: 0, choice: "" };
+    const solved = Boolean(result.correct || result.revealed);
+    const candidates = [selected.expectedInitial, ...(selected.distractors || [])];
+    const options = initialOptionOrderFor(selected).map((index) => candidates[index]);
+    const answered = items.filter((item) => state.initialAnswers[item.id]?.correct).length;
+    const display = solved ? `${selected.expectedInitial}${selected.prompt}` : selected.prompt;
+    return `${renderChapterNavigation(unit)}${renderGroupNavigation(unit, group)}
+      <div class="pron-exercise-layout pron-workbench">
+        <section class="pron-selector-panel">
+          <header><span>选择练习项</span><small>点击后进入语音学习台</small></header>
+          ${renderItemSelector(unit, group, selected)}
+        </section>
+        <div class="pron-workbench-main">
+        <section class="pron-focus-stage initial-writing-stage">
+          <header>
+            <span>听后写出声母<small>Listen and write the initials</small></span>
+            <b>第 ${items.indexOf(selected) + 1} / ${items.length} 题<small>${answered} / ${items.length} 已答</small></b>
+          </header>
+          <div class="pron-focus-main">
+            <div class="pron-focus-content">
+              <h2 class="pron-initial-syllable">${solved ? escapeHtml(display) : `<span class="pron-initial-blank">＿</span>${escapeHtml(selected.prompt)}`}</h2>
+              ${solved ? renderDecomposition(analysisForItem(selected, unit)) : `<p class="pron-tone-note">先听音频，再勾选正确的声母 <small>Listen, then choose the correct initial.</small></p>`}
+            </div>
+          </div>
+          <div class="pron-focus-actions">
+            <button type="button" class="pron-action primary" data-pron-play="${selected.cueId}">▶ ${bilingual("播放题目", "Play")}</button>
+          </div>
+          <div class="pron-initial-options">
+            ${options.map((option) => {
+              const chosen = result.choice === option;
+              const isCorrect = option === selected.expectedInitial;
+              return `<button type="button" class="${chosen ? (isCorrect ? "correct" : "wrong") : ""}${solved && isCorrect ? " reveal-correct" : ""}" data-pron-initial-answer="${escapeHtml(option)}"${solved ? " disabled" : ""}><b>${escapeHtml(option)}</b><span>声母<small>Initial</small></span></button>`;
+            }).join("")}
+          </div>
+          ${result.choice ? `<p class="pron-answer-feedback ${result.correct ? "correct" : "wrong"}">${result.correct ? `正确：${selected.answer.display}` : result.revealed ? `正确答案是 ${selected.expectedInitial}。请再听一次。` : "再听一次，注意声母的发音。"}</p>` : ""}
+        </section>
+        </div>
+      </div>`;
+  }
+
   function comparisonButtons(unit) {
     if (!unit.comparisonIds?.length || state.assistMode === "immersion") return "";
-    return `<div class="pron-comparison-buttons">${unit.comparisonIds.map((id) => {
+    const ids = unit.comparisonIds.filter((id) => state.model.comparisonConcepts[id]);
+    if (!ids.length) return "";
+    return `<div class="pron-comparison-buttons">${ids.map((id) => {
       const concept = state.model.comparisonConcepts[id];
       return `<button type="button" data-pron-comparison="${id}">◎ ${escapeHtml(localize(concept.title, "zh-CN"))}<small>${escapeHtml(localize(concept.title, "en"))}</small></button>`;
     }).join("")}</div>`;
@@ -535,7 +605,7 @@
     return `${renderChapterNavigation(unit)}<article class="pron-knowledge${translationClass}">
       <header><span>语音知识 <small>Phonetic Notes</small></span><h2>${escapeHtml(localize(unit.title, "zh-CN"))}</h2><p>${escapeHtml(localize(unit.title, "en"))}</p></header>
       ${comparisonButtons(unit)}
-      ${unit.paragraphs ? `<div class="pron-knowledge-copy">${unit.paragraphs.map((paragraph) => `<section><p class="zh">${escapeHtml(paragraph.texts["zh-CN"] || "")}</p>${state.assistMode !== "immersion" ? `<p class="translation">${escapeHtml(localize(paragraph.texts))}</p>` : ""}${paragraph.cueId ? `<button type="button" data-pron-play="${paragraph.cueId}" aria-label="播放本段">▶</button>` : ""}</section>`).join("")}</div>` : ""}
+      ${unit.paragraphs ? `<div class="pron-knowledge-copy">${unit.paragraphs.map((paragraph) => `<section><p class="zh">${escapeHtml(paragraph.texts["zh-CN"] || "")}</p>${state.assistMode !== "immersion" ? `<p class="translation">${escapeHtml(localize(paragraph.texts))}</p>` : ""}${(paragraph.cueIds?.length || paragraph.cueId) ? `<button type="button" data-pron-play="${paragraph.cueIds?.length ? paragraph.cueIds.join(",") : paragraph.cueId}" aria-label="播放本段">▶</button>` : ""}</section>`).join("")}</div>` : ""}
       ${examples.length ? `<div class="pron-example-grid">${examples.map((example) => `<section><h3>${escapeHtml(example.display)}</h3>${example.hanzi && example.hanzi !== example.display ? `<p class="pron-example-hanzi">${escapeHtml(example.hanzi)}</p>` : ""}${renderDecomposition(example)}${renderToneCurve(example.tone, true)}<div class="pron-example-actions">${example.cueId ? `<button type="button" data-pron-play="${example.cueId}">▶ 播放 <small>Play</small></button>` : ""}<button type="button" data-knowledge-repeat="${escapeHtml(example.id)}">● 跟读测评 <small>Repeat</small></button></div></section>`).join("")}</div>` : ""}
       ${unit.items ? `<section class="pron-chart-section"><div class="pron-chart-grid">${unit.items.map((item) => `<button type="button" class="${itemKey(item) === itemKey(selected || {}) ? "active" : ""}" data-pron-select="${escapeHtml(itemKey(item))}"><strong>${escapeHtml(item.display)}</strong><span>选择 <small>Select</small></span></button>`).join("")}</div>${selected ? renderFocusStage(unit, null, selected) : ""}</section>` : ""}
     </article>`;
@@ -544,12 +614,15 @@
   function setAudioSource(source) {
     if (!source) return;
     const resolved = new URL(source, window.location.href).href;
-    if (elements.audio.src === resolved) return;
+    if (state.pendingAudioSource === resolved) return;
     stopAudio();
     state.audioSegment = null;
     state.audioReadyPromise = null;
-    elements.audio.src = source;
-    elements.audio.load();
+    state.pendingAudioSource = resolved;
+    if (elements.audio.getAttribute("src")) {
+      elements.audio.removeAttribute("src");
+      elements.audio.load();
+    }
   }
 
   function textGroupForItem(item) {
@@ -708,7 +781,7 @@
   function renderGuidedDialoguePractice(item) {
     const saved = localStorage.getItem(`beginnerPractice:${state.model.lessonId}:${item.id}`) || "";
     if (item.scenarios?.length) {
-      return `${renderPracticeSupport(item)}<div class="practice-dialogue-list">${item.scenarios.map((scenario) => `<article class="practice-fill-dialogue"><h3>${escapeHtml(scenario.prompt)}</h3>${scenario.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</article>`).join("")}</div><label class="practice-open-field"><span>我的对话 <small>My dialogue</small></span><textarea rows="5" data-practice-open placeholder="A：……\nB：……">${escapeHtml(saved)}</textarea></label>`;
+      return `${renderPracticeSupport(item)}<div class="practice-dialogue-list">${item.scenarios.map((scenario) => `<article class="practice-fill-dialogue"><h3>${escapeHtml(scenario.prompt)}</h3>${scenario.lines.map((line, lineIndex) => `<p>${escapeHtml(line)}${(scenario.pinyin || [])[lineIndex] ? `<small class="practice-pinyin">${escapeHtml((scenario.pinyin || [])[lineIndex])}</small>` : ""}</p>`).join("")}</article>`).join("")}</div><label class="practice-open-field"><span>我的对话 <small>My dialogue</small></span><textarea rows="5" data-practice-open placeholder="A：……\nB：……">${escapeHtml(saved)}</textarea></label>`;
     }
     if (state.model.lessonId === "cjzh-1-3") {
       const mode = state.practiceModes[item.id] || "cards";
@@ -762,10 +835,14 @@
   }
 
   function renderDialogueFillPractice(item) {
+    if (isSubItemMode(item)) {
+      return `${renderPracticeSupport(item)}${renderSubItemNav(item)}<div class="practice-subitem-panel">${renderSubItemBody(item)}</div>`;
+    }
     if (state.model.lessonId === "cjzh-1-3") {
       const choices = [...new Set((item.dialogues || []).flatMap((dialogue) => dialogue.blanks.flatMap((blank) => blank.answers)))];
+      const numberBlanks = (lines) => { let n = 0; return lines.map((line) => line.replace(/_+/g, () => `（${++n}）______`)); };
       return `${renderPracticeSupport(item)}<p class="practice-instruction">从词句卡中选择答案；需要时可切换为自己输入。<small>Choose an answer card. You can switch to typing when ready.</small></p><div class="practice-dialogue-list">
-        ${(item.dialogues || []).map((dialogue, dialogueIndex) => `<article class="practice-fill-dialogue"><h3>对话 ${dialogueIndex + 1} <small>Dialogue ${dialogueIndex + 1}</small></h3><div class="practice-dialogue-copy">${dialogue.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div><div class="practice-blank-list">${dialogue.blanks.map((blank, index) => `<label data-dialogue-blank="${escapeHtml(blank.id)}"><span>第 ${index + 1} 空</span><select><option value="">请选择</option>${choices.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("")}</select></label>`).join("")}</div></article>`).join("")}</div>`;
+        ${(item.dialogues || []).map((dialogue, dialogueIndex) => `<article class="practice-fill-dialogue"><h3>对话 ${dialogueIndex + 1} <small>Dialogue ${dialogueIndex + 1}</small></h3><div class="practice-dialogue-copy">${numberBlanks(dialogue.lines).map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div><div class="practice-blank-list">${dialogue.blanks.map((blank, index) => `<label data-dialogue-blank="${escapeHtml(blank.id)}"><span>（${index + 1}）</span><select><option value="">请选择</option>${choices.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("")}</select></label>`).join("")}</div></article>`).join("")}</div>`;
     }
     return `<div class="practice-dialogue-list">
       ${(item.dialogues || []).map((dialogue, dialogueIndex) => `<article class="practice-fill-dialogue" data-dialogue-id="${escapeHtml(dialogue.id)}">
@@ -809,11 +886,12 @@
       <p class="practice-support-note">完整答案和解析只在提交后显示，避免直接透露答案。<small>Full answers appear only after submission.</small></p></div></details>`;
   }
 
-  function practiceAnswerField(key, answers, choices = []) {
+  function practiceAnswerField(key, answers, choices = [], value = "", checkResult) {
     const expected = (Array.isArray(answers) ? answers : [answers]).filter(Boolean);
+    const stateClass = checkResult === true ? "is-correct" : checkResult === false ? "is-wrong" : "";
     const attrs = `data-generic-key="${escapeHtml(key)}" data-generic-answers="${escapeHtml(expected.join("||"))}"`;
-    if (choices.length) return `<select ${attrs}><option value="">请选择</option>${choices.map((choice) => `<option value="${escapeHtml(choice)}">${escapeHtml(choice)}</option>`).join("")}</select>`;
-    return `<input ${attrs} autocomplete="off" placeholder="在这里作答">`;
+    if (choices.length) return `<select class="${stateClass}" ${attrs}><option value="">请选择</option>${choices.map((choice) => `<option value="${escapeHtml(choice)}"${String(choice) === String(value) ? " selected" : ""}>${escapeHtml(choice)}</option>`).join("")}</select>`;
+    return `<input class="${stateClass}" ${attrs} autocomplete="off" placeholder="在这里作答" value="${escapeHtml(value)}">`;
   }
 
   function renderCharacterPinyin(hanzi, syllables = []) {
@@ -830,6 +908,178 @@
     return `<span>${escapeHtml(value)}</span>${fallbackPinyin ? `<small>${escapeHtml(fallbackPinyin)}</small>` : ""}`;
   }
 
+  function isSubItemMode(item) {
+    if (state.model.lessonId === "cjzh-1-4") return ["wordBankFill", "sentenceTransform", "dialogueFill"].includes(item.type);
+    if (state.model.lessonId === "cjzh-1-5") return ["wordBankFill", "questionFromAnswer", "dialogueFill"].includes(item.type);
+    return false;
+  }
+
+  function subItemCount(item) {
+    return item.type === "dialogueFill" ? (item.dialogues || []).length : (item.items || []).length;
+  }
+
+  function currentSubIndex(item) {
+    const count = subItemCount(item);
+    const index = Number(state.practiceSubIndex[item.id] || 0);
+    return count ? Math.min(Math.max(0, index), count - 1) : 0;
+  }
+
+  function fieldKeysForItem(item, entry) {
+    if (item.type === "threeWayMatch") return item.columns.filter((column) => !entry.given.includes(column)).map((column) => `${entry.id}:${column}`);
+    if (item.type === "questionAnswerTransform") return [`${entry.id}:question`, `${entry.id}:positive`, `${entry.id}:negative`];
+    return [entry.id];
+  }
+
+  function expectedAnswersFor(item, entry, key) {
+    if (item.type === "threeWayMatch") return [entry[key.split(":")[1]]];
+    if (item.type === "wordBankFill") return [entry.answer];
+    if (item.type === "sentenceTransform") return [entry.answer, ...(entry.acceptedAnswers || [])];
+    if (item.type === "questionFromAnswer") return [entry.answer, ...(entry.acceptedAnswers || [])];
+    if (item.type === "questionAnswerTransform") return [entry[key.split(":")[1]]];
+    return [];
+  }
+
+  function saveCurrentSubAnswers(item) {
+    if (!isSubItemMode(item)) return;
+    const sub = currentSubIndex(item);
+    const saved = state.practiceAnswers[item.id] = state.practiceAnswers[item.id] || {};
+    saved[sub] = saved[sub] || {};
+    if (item.type === "dialogueFill") {
+      const dialogue = item.dialogues[sub];
+      if (!dialogue) return;
+      dialogue.blanks.forEach((blank) => {
+        const field = elements.unitContent.querySelector(`[data-dialogue-blank="${blank.id}"]`);
+        saved[sub][blank.id] = field?.querySelector("input, select")?.value || "";
+      });
+      return;
+    }
+    const entry = item.items[sub];
+    if (!entry) return;
+    fieldKeysForItem(item, entry).forEach((key) => {
+      const field = elements.unitContent.querySelector(`[data-generic-key="${key}"]`);
+      saved[sub][key] = field?.value || "";
+    });
+  }
+
+  function renderSubItemNav(item) {
+    const count = subItemCount(item);
+    const current = currentSubIndex(item);
+    const check = state.practiceCheck[item.id] || {};
+    return `<nav class="practice-subitem-strip" aria-label="选择小题">${Array.from({ length: count }, (_, index) => {
+      const result = check[index];
+      const cls = ["subitem-btn", index === current ? "active" : "", result ? (result.allOk ? "is-correct" : "is-wrong") : ""].filter(Boolean).join(" ");
+      const mark = result ? (result.allOk ? "✓" : "✗") : "";
+      return `<button type="button" class="${cls}" data-practice-subitem="${index}" aria-label="第${index + 1}小题"><strong>${String(index + 1).padStart(2, "0")}</strong>${mark ? `<small>${mark}</small>` : ""}</button>`;
+    }).join("")}</nav>`;
+  }
+
+  function renderDialogueSub(item, sub, numbered = true) {
+    const dialogue = item.dialogues[sub];
+    const saved = (state.practiceAnswers[item.id] || {})[sub] || {};
+    const check = (state.practiceCheck[item.id] || {})[sub] || {};
+    const pyLines = dialogue.pinyin || [];
+    const numberBlanks = (lines) => { if (!numbered) return lines; let n = 0; return lines.map((line) => line.replace(/_+/g, () => `（${++n}）______`)); };
+    return `<div class="practice-dialogue-list"><article class="practice-fill-dialogue" data-dialogue-id="${escapeHtml(dialogue.id)}"><h3>对话 ${sub + 1} <small>Dialogue ${sub + 1}</small></h3><div class="practice-dialogue-copy">${numberBlanks(dialogue.lines).map((line, index) => `<p>${escapeHtml(line)}${pyLines[index] ? `<small class="practice-pinyin">${escapeHtml(pyLines[index])}</small>` : ""}</p>`).join("")}</div><div class="practice-blank-list">${dialogue.blanks.map((blank, index) => `<label data-dialogue-blank="${escapeHtml(blank.id)}"><span>（${index + 1}）</span><input autocomplete="off" value="${escapeHtml(saved[blank.id] || "")}" class="${check[blank.id] === true ? "is-correct" : check[blank.id] === false ? "is-wrong" : ""}"></label>`).join("")}</div></article></div>`;
+  }
+
+  function renderSubItemBody(item) {
+    const sub = currentSubIndex(item);
+    const saved = (state.practiceAnswers[item.id] || {})[sub] || {};
+    const check = (state.practiceCheck[item.id] || {})[sub] || {};
+    if (item.type === "dialogueFill") return renderDialogueSub(item, sub, state.model.lessonId !== "cjzh-1-5");
+    const entry = item.items[sub];
+    if (!entry) return `<p class="load-error">小题数据缺失。</p>`;
+    if (item.type === "wordBankFill") {
+      return `<div class="practice-word-bank">${item.wordBank.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div><div class="practice-blank-list"><label><span>${sub + 1}. ${alignedPracticeText(entry.prompt, entry.syllables, entry.pinyin)}</span>${practiceAnswerField(entry.id, entry.answer, item.wordBank, saved[entry.id], check[entry.id])}</label></div>`;
+    }
+    if (item.type === "sentenceTransform") {
+      return `<p class="practice-instruction">例：${escapeHtml(item.example.source)} → ${escapeHtml(item.example.answer)}</p><div class="practice-blank-list"><label><span>${sub + 1}. ${escapeHtml(entry.source)}${entry.pinyin ? `<small class="practice-pinyin">${escapeHtml(entry.pinyin)}</small>` : ""}</span>${practiceAnswerField(entry.id, [entry.answer, ...(entry.acceptedAnswers || [])], [], saved[entry.id], check[entry.id])}</label></div>`;
+    }
+    if (item.type === "questionFromAnswer") {
+      return `<div class="practice-blank-list"><label><span>${sub + 1}. B：${escapeHtml(entry.answerLine)}${entry.answerPinyin ? `<small class="practice-pinyin">${escapeHtml(entry.answerPinyin)}</small>` : ""}</span><span>A：</span>${practiceAnswerField(entry.id, [entry.answer, ...(entry.acceptedAnswers || [])], [], saved[entry.id], check[entry.id])}</label></div>`;
+    }
+    return "";
+  }
+
+  const NUMBER_GAME_DIGIT_PY = ["líng", "yī", "èr", "sān", "sì", "wǔ", "liù", "qī", "bā", "jiǔ"];
+  const NUMBER_GAME_DIGIT_HZ = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+  const NUMBER_GAME_TENS_HZ = { 2: "二十", 3: "三十", 4: "四十", 5: "五十", 6: "六十", 7: "七十", 8: "八十", 9: "九十" };
+  const NUMBER_GAME_COLORS = ["#e88a84", "#f2b65c", "#59b8a8", "#8fa8e8", "#b59be0", "#ef9fb8", "#7fc7d9", "#d9a45c", "#86c98f", "#c58fe0"];
+
+  function twoDigitPinyin(number) {
+    const tens = Math.floor(number / 10);
+    const ones = number % 10;
+    if (tens === 1) return ones === 0 ? "shí" : `shí ${NUMBER_GAME_DIGIT_PY[ones]}`;
+    return ones === 0 ? `${NUMBER_GAME_DIGIT_PY[tens]} shí` : `${NUMBER_GAME_DIGIT_PY[tens]} shí ${NUMBER_GAME_DIGIT_PY[ones]}`;
+  }
+
+  function twoDigitHanzi(number) {
+    const tens = Math.floor(number / 10);
+    const ones = number % 10;
+    if (tens === 1) return ones === 0 ? "十" : `十${NUMBER_GAME_DIGIT_HZ[ones]}`;
+    return ones === 0 ? NUMBER_GAME_TENS_HZ[tens] : `${NUMBER_GAME_TENS_HZ[tens]}${NUMBER_GAME_DIGIT_HZ[ones]}`;
+  }
+
+  function numberGameNewRound() {
+    const tens = 1 + Math.floor(Math.random() * 9);
+    let ones = Math.floor(Math.random() * 10);
+    if (ones === tens) ones = (ones + 1) % 10;
+    const number = tens * 10 + ones;
+    const correct = twoDigitPinyin(number);
+    const wrong = `${NUMBER_GAME_DIGIT_PY[tens]} ${NUMBER_GAME_DIGIT_PY[ones]}`;
+    state.numberGame.number = number;
+    state.numberGame.options = Math.random() < 0.5 ? [correct, wrong] : [wrong, correct];
+    state.numberGame.answered = false;
+    state.numberGame.picked = -1;
+  }
+
+  function numberGamePick(index) {
+    const game = state.numberGame;
+    if (!game.answered) {
+      game.answered = true;
+      game.picked = index;
+      game.correct += Number(game.options[index] === twoDigitPinyin(game.number));
+      game.total += 1;
+    }
+    render();
+  }
+
+  function numberGameAccuracyRing() {
+    const game = state.numberGame;
+    const percent = game.total ? Math.round(game.correct / game.total * 100) : 0;
+    const radius = 26;
+    const circumference = 2 * Math.PI * radius;
+    const filled = percent / 100 * circumference;
+    return `<svg class="number-game-ring" viewBox="0 0 64 64" role="img" aria-label="正确率 ${percent}%"><circle class="number-game-ring-bg" cx="32" cy="32" r="${radius}"></circle><circle class="number-game-ring-fg" cx="32" cy="32" r="${radius}" stroke-dasharray="${filled.toFixed(1)} ${circumference.toFixed(1)}"></circle><text class="number-game-ring-text" x="32" y="37" text-anchor="middle">${percent}%</text></svg>`;
+  }
+
+  function renderNumberGame(item) {
+    const game = state.numberGame;
+    if (!game.started) {
+      return `${renderPracticeSupport(item)}<div class="number-game-rules"><h3>${escapeHtml("游戏规则 / Yóuxì guīzé / Game rules")}</h3><p class="number-game-rule-zh">${escapeHtml("屏幕中央会显示一个两位数，从两个拼音中选择正确的读音。点选后立即知道对错，可以一直玩，看看你的正确率。")}</p><p class="number-game-rule-py">${escapeHtml("Píngmù zhōngyāng huì xiǎnshì yī gè liǎng wèi shù, qǐng cóng liǎng gè pīnyīn zhōng xuǎnzé zhèngquè de dúyīn. Diǎn xuǎn hòu lìjí zhīdào duì cuò, kěyǐ yīzhí wán, kànkan nǐ de zhèngquè lǜ.")}</p><p class="number-game-rule-en">${escapeHtml("A two-digit number appears in the centre. Choose the pinyin that reads it correctly, get instant feedback, and keep playing — watch your accuracy.")}</p><div class="number-game-start"><button type="button" class="pron-action primary" data-number-game-start>${bilingual("开始游戏", "Start game")}</button></div></div>`;
+    }
+    const correctPinyin = twoDigitPinyin(game.number);
+    const hanzi = twoDigitHanzi(game.number);
+    const color = NUMBER_GAME_COLORS[game.number % 10];
+    const optionState = (index) => {
+      if (!game.answered) return "";
+      if (game.options[index] === correctPinyin) return "is-correct";
+      if (index === game.picked) return "is-wrong";
+      return "is-dim";
+    };
+    const feedback = game.answered ? (game.options[game.picked] === correctPinyin
+      ? `<p class="number-game-feedback is-correct">✓ ${escapeHtml(`${twoDigitHanzi(game.number)} ${correctPinyin}`)} <small>${escapeHtml(`${game.number} · 正确 Duì le Correct`)}</small></p>`
+      : `<p class="number-game-feedback is-wrong">✗ ${escapeHtml(`${twoDigitHanzi(game.number)} ${correctPinyin}`)} <small>${escapeHtml(`${game.number} · 不对 Bú duì Not quite`)}</small></p>`) : "";
+    return `<div class="number-game-stage">
+      <div class="number-game-score">${numberGameAccuracyRing()}<div class="number-game-score-text"><strong>${escapeHtml("正确率 / Zhèngquè lǜ / Correct rate")}</strong><span>${escapeHtml(`${game.correct} / ${game.total} 对`) }<small>${escapeHtml(`Correct · ${game.total} answered`)}</small></span></div></div>
+      <div class="number-game-number" style="--number-game-color:${color}">${escapeHtml(String(game.number))}</div>
+      <p class="number-game-number-hint">${escapeHtml("读一读这个数字 / Dú yī dú zhè gè shùzì / Read this number")}</p>
+      <div class="number-game-options">${game.options.map((option, index) => `<button type="button" class="number-game-option ${optionState(index)}" data-number-game-pick="${index}"><strong>${escapeHtml(option)}</strong></button>`).join("")}</div>
+      ${feedback}
+      <div class="number-game-actions"><button type="button" class="pron-action primary" data-number-game-next>${bilingual(game.answered ? "下一题" : "换一题", game.answered ? "Next" : "Another")}</button><button type="button" class="pron-action ghost" data-number-game-restart>${bilingual("重新开始", "Restart")}</button></div>
+    </div>`;
+  }
+
   function renderStructuredPractice(item) {
     if (item.type === "digitCards") {
       return `${renderPracticeSupport(item)}<div class="digit-card-board">${item.digits.map((digit) => `<span>${escapeHtml(digit)}</span>`).join("")}</div><div class="practice-number-example"><strong>示例</strong><span>${item.example.cards.map((digit) => `<b>${escapeHtml(digit)}</b>`).join("")} → ${escapeHtml(item.example.number)} → ${escapeHtml(item.example.hanzi)}</span><small>${escapeHtml(item.example.pinyin)}</small></div><label class="practice-open-field"><span>写出示例数字的汉字读法</span>${practiceAnswerField("number-reading",item.example.hanzi)}</label>`;
@@ -844,22 +1094,28 @@
       return `${renderPracticeSupport(item)}<div class="number-reading-grid">${item.items.map((entry) => `<article><strong>${escapeHtml(entry.number)}</strong><span>${escapeHtml(entry.hanzi)}</span><small>${escapeHtml(entry.pinyin)}</small></article>`).join("")}</div>`;
     }
     if (item.type === "questionFromAnswer") {
+      if (isSubItemMode(item)) return `${renderPracticeSupport(item)}${renderSubItemNav(item)}<div class="practice-subitem-panel">${renderSubItemBody(item)}</div>`;
       return `${renderPracticeSupport(item)}<div class="practice-blank-list">${item.items.map((entry,index) => `<label><span>${index+1}. B：${escapeHtml(entry.answerLine)}<small>${escapeHtml(entry.answerPinyin)}</small></span><span>A：</span>${practiceAnswerField(entry.id,[entry.answer,...(entry.acceptedAnswers||[])])}</label>`).join("")}</div>`;
     }
     if (item.type === "hanziWordComplete") {
+      if (state.model.lessonId === "cjzh-1-5") {
+        return `${renderPracticeSupport(item)}<div class="hanzi-card-grid">${item.items.map((entry,index) => `<article class="hanzi-card hanzi-card-${(index % 5) + 1}"><b class="hanzi-card-no">${index + 1}</b><div class="hanzi-card-word"><span class="hanzi-part">${escapeHtml(entry.before)}</span><input data-generic-key="${escapeHtml(entry.id)}" data-generic-answers="${escapeHtml(entry.answer)}" autocomplete="off" placeholder="字" maxlength="2"><span class="hanzi-part">${escapeHtml(entry.after)}</span></div><p class="hanzi-card-word-hint">${escapeHtml(entry.word)}<small>${escapeHtml(entry.pinyin)}</small></p></article>`).join("")}</div>`;
+      }
       return `${renderPracticeSupport(item)}<div class="hanzi-completion-grid">${item.items.map((entry,index) => `<label><b>${index+1}.</b><span>${escapeHtml(entry.before)}</span>${practiceAnswerField(entry.id,entry.answer)}<span>${escapeHtml(entry.after)}</span><small>${escapeHtml(entry.pinyin)}</small></label>`).join("")}</div>`;
     }
     if (item.type === "substitutionDialogue") {
       return `${renderPracticeSupport(item)}<div class="practice-dialogue-list">${item.patterns.map((pattern, index) => `<article class="practice-fill-dialogue"><h3>练习 ${index + 1}</h3>${pattern.example.map((line) => `<p><b>${escapeHtml(line.role)}：</b>${escapeHtml(line.hanzi)}<small>${escapeHtml(line.pinyin || "")}</small></p>`).join("")}</article>`).join("")}</div><label class="practice-open-field"><span>选择词语后写下或说出一组新对话</span><textarea rows="4" data-practice-open placeholder="A：……\nB：……"></textarea></label>`;
     }
     if (item.type === "threeWayMatch") {
-      const pools = Object.fromEntries(item.columns.map((column) => [column, item.rows.map((row) => row[column])]));
-      return `${renderPracticeSupport(item)}<div class="practice-name-grid">${item.rows.map((row) => `<article class="practice-name-card"><header><strong>${escapeHtml(row.given.map((key) => row[key]).join(" · "))}</strong></header>${item.columns.filter((column) => !row.given.includes(column)).map((column) => `<label><span>${escapeHtml({country:"国家",nationality:"国籍",language:"语言"}[column])}</span>${practiceAnswerField(`${row.id}:${column}`, row[column], pools[column])}</label>`).join("")}</article>`).join("")}</div>`;
+      const columnLabel = { country: "国家", nationality: "国籍", language: "语言" };
+      return `${renderPracticeSupport(item)}<div class="practice-name-grid">${item.rows.map((row) => `<article class="practice-name-card"><header><strong>${escapeHtml(row.given.map((key) => row[key]).join(" · "))}</strong>${row.given.some((key) => row.pinyin?.[key]) ? `<small>${escapeHtml(row.given.map((key) => row.pinyin?.[key]).filter(Boolean).join(" · "))}</small>` : ""}${row.given.some((key) => row.en?.[key]) ? `<em>${escapeHtml(row.given.map((key) => row.en?.[key]).filter(Boolean).join(" · "))}</em>` : ""}</header>${item.columns.filter((column) => !row.given.includes(column)).map((column) => `<label><span>${escapeHtml(columnLabel[column] || column)}</span><select data-generic-key="${escapeHtml(`${row.id}:${column}`)}" data-generic-answers="${escapeHtml(row[column])}"><option value="">请选择</option>${item.rows.map((candidate) => `<option value="${escapeHtml(candidate[column])}">${escapeHtml(candidate[column])}${candidate.pinyin?.[column] ? ` ${escapeHtml(candidate.pinyin[column])}` : ""}${candidate.en?.[column] ? ` · ${escapeHtml(candidate.en[column])}` : ""}</option>`).join("")}</select></label>`).join("")}</article>`).join("")}</div>`;
     }
     if (item.type === "wordBankFill") {
+      if (isSubItemMode(item)) return `${renderPracticeSupport(item)}${renderSubItemNav(item)}<div class="practice-subitem-panel">${renderSubItemBody(item)}</div>`;
       return `${renderPracticeSupport(item)}<div class="practice-word-bank">${item.wordBank.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div><div class="practice-blank-list">${item.items.map((entry, index) => `<label><span>${index + 1}. ${alignedPracticeText(entry.prompt,entry.syllables,entry.pinyin)}</span>${practiceAnswerField(entry.id, entry.answer, item.wordBank)}</label>`).join("")}</div>`;
     }
     if (item.type === "sentenceTransform") {
+      if (isSubItemMode(item)) return `${renderPracticeSupport(item)}${renderSubItemNav(item)}<div class="practice-subitem-panel">${renderSubItemBody(item)}</div>`;
       return `${renderPracticeSupport(item)}<p class="practice-instruction">例：${escapeHtml(item.example.source)} → ${escapeHtml(item.example.answer)}</p><div class="practice-blank-list">${item.items.map((entry, index) => `<label><span>${index + 1}. ${escapeHtml(entry.source)}</span>${practiceAnswerField(entry.id, [entry.answer, ...(entry.acceptedAnswers || [])])}</label>`).join("")}</div>`;
     }
     if (item.type === "questionAnswerTransform") {
@@ -869,6 +1125,7 @@
   }
 
   function renderPracticeBody(item) {
+    if (item.type === "numberGame") return renderNumberGame(item);
     if (["substitutionDialogue", "threeWayMatch", "wordBankFill", "sentenceTransform", "questionAnswerTransform", "digitCards", "guidedFamilyDialogue", "pictureOccupation", "numberReading", "questionFromAnswer", "hanziWordComplete"].includes(item.type)) return renderStructuredPractice(item);
     if (item.type === "guidedDialogue") return renderGuidedDialoguePractice(item);
     if (item.type === "nameSplit") return renderNameSplitPractice(item);
@@ -881,10 +1138,10 @@
     const items = practiceItems();
     const item = currentPracticeItem();
     if (!item) return `<p class="load-error">本课练习数据尚未准备好。</p>`;
-    return `<article class="beginner-practice-stage">
+    return `<article class="beginner-practice-stage lesson-${escapeHtml(state.model.lessonId)}">
       <header class="beginner-practice-heading"><span>${escapeHtml(localize(item.sectionTitle, "zh-CN"))}<small>${escapeHtml(localize(item.sectionTitle, "en"))}</small></span><h2>${escapeHtml(localize(item.title, "zh-CN"))}</h2><p>${escapeHtml(localize(item.title, "en"))}</p></header>
       <div class="beginner-practice-body">${renderPracticeBody(item)}</div>
-      <footer class="beginner-practice-actions"><button type="button" class="pron-action primary" data-practice-submit>✓ ${bilingual(["openResponse", "guidedDialogue", "substitutionDialogue"].includes(item.type) ? "保存练习" : "确认答案", ["openResponse", "guidedDialogue", "substitutionDialogue"].includes(item.type) ? "Save" : "Check answers")}</button><p id="practiceResult" aria-live="polite"></p></footer>
+      <footer class="beginner-practice-actions">${item.type === "numberGame" ? `<p class="number-game-footer-hint">${bilingual("选择拼音后立即判题，可一直玩下去。", "Pick a pinyin for instant feedback — keep playing.")}</p>` : `<button type="button" class="pron-action primary" data-practice-submit>✓ ${bilingual(["openResponse", "guidedDialogue", "substitutionDialogue"].includes(item.type) ? "保存练习" : "确认答案", ["openResponse", "guidedDialogue", "substitutionDialogue"].includes(item.type) ? "Save" : "Check answers")}</button><p id="practiceResult" aria-live="polite"></p>`}</footer>
       <nav class="beginner-item-strip practice-item-strip" aria-label="选择练习">${items.map((entry, index) => `<button type="button" class="${index === state.practiceIndex ? "active" : ""}" data-practice-item="${index}"><strong>${String(index + 1).padStart(2, "0")}</strong><small>${escapeHtml(localize(entry.title, "zh-CN"))}</small></button>`).join("")}</nav>
     </article>`;
   }
@@ -912,6 +1169,44 @@
     }
     let correct = 0;
     let total = 0;
+    if (isSubItemMode(item)) {
+      saveCurrentSubAnswers(item);
+      const saved = state.practiceAnswers[item.id] || {};
+      state.practiceCheck[item.id] = state.practiceCheck[item.id] || {};
+      if (item.type === "dialogueFill") {
+        (item.dialogues || []).forEach((dialogue, sub) => {
+          const per = state.practiceCheck[item.id][sub] = state.practiceCheck[item.id][sub] || {};
+          let subCorrect = 0;
+          dialogue.blanks.forEach((blank) => {
+            const value = saved[sub]?.[blank.id] || "";
+            const ok = blank.answers.some((answer) => normalizePracticeAnswer(answer) === normalizePracticeAnswer(value));
+            per[blank.id] = ok;
+            correct += Number(ok); total += 1; subCorrect += Number(ok);
+          });
+          per.allOk = subCorrect === dialogue.blanks.length;
+        });
+      } else {
+        (item.items || []).forEach((entry, sub) => {
+          const per = state.practiceCheck[item.id][sub] = state.practiceCheck[item.id][sub] || {};
+          const keys = fieldKeysForItem(item, entry);
+          let subCorrect = 0;
+          keys.forEach((key) => {
+            const value = saved[sub]?.[key] || "";
+            const ok = expectedAnswersFor(item, entry, key).some((answer) => normalizePracticeAnswer(answer) === normalizePracticeAnswer(value));
+            per[key] = ok;
+            correct += Number(ok); total += 1; subCorrect += Number(ok);
+          });
+          per.allOk = subCorrect === keys.length;
+        });
+      }
+      renderPracticeWorkspace();
+      const freshResult = document.querySelector("#practiceResult");
+      if (freshResult) {
+        freshResult.textContent = `完成 ${correct} / ${total}。${correct === total ? " 全部正确！" : " 请根据标记修改后再试。"} / ${correct} of ${total} correct.`;
+        freshResult.className = correct === total ? "is-correct" : "is-error";
+      }
+      return;
+    }
     if (["threeWayMatch", "wordBankFill", "sentenceTransform", "questionAnswerTransform", "digitCards", "guidedFamilyDialogue", "pictureOccupation", "questionFromAnswer", "hanziWordComplete"].includes(item.type)) {
       elements.unitContent.querySelectorAll("[data-generic-answers]").forEach((field) => {
         const answers = String(field.dataset.genericAnswers || "").split("||").filter(Boolean);
@@ -1063,7 +1358,7 @@
   async function ensureAudio() {
     if (elements.audio.readyState >= HTMLMediaElement.HAVE_METADATA) return true;
     if (state.audioReadyPromise) return state.audioReadyPromise;
-    const source = elements.audio.getAttribute("src") || state.model.audio.cos || state.model.audio.local;
+    const source = elements.audio.getAttribute("src") || state.pendingAudioSource || state.model.audio.cos || state.model.audio.local;
     if (!source) return false;
     state.audioReadyPromise = new Promise((resolve) => {
       const finish = (ready) => {
@@ -1104,6 +1399,10 @@
   }
 
   async function playCue(cueId, keepQueue = false) {
+    if (String(cueId).includes(",")) {
+      playQueue(String(cueId).split(",").map((id) => id.trim()).filter(Boolean));
+      return;
+    }
     const target = cueFor(cueId);
     if (!target || !(await ensureAudio())) return;
     if (!keepQueue) state.audioQueue = [];
@@ -1234,6 +1533,22 @@
       choice: tone,
       correct,
       revealed: correct || previous.attempts + 1 >= 2,
+    };
+    render();
+    if (correct) setTimeout(() => void playCue(item.cueId), 300);
+  }
+
+  function answerInitial(choice) {
+    const item = selectedItem();
+    if (!item?.expectedInitial) return;
+    const previous = state.initialAnswers[item.id] || { attempts: 0 };
+    const correct = choice === item.expectedInitial;
+    const attempts = previous.attempts + 1;
+    state.initialAnswers[item.id] = {
+      attempts,
+      choice,
+      correct,
+      revealed: correct || attempts >= 2,
     };
     render();
     if (correct) setTimeout(() => void playCue(item.cueId), 300);
@@ -1706,6 +2021,21 @@
       }
       const practiceItem = event.target.closest("[data-practice-item]")?.dataset.practiceItem;
       if (practiceItem !== undefined) { state.practiceIndex = Number(practiceItem); render(); resetLearningScroll(); return; }
+      const subItem = event.target.closest("[data-practice-subitem]");
+      if (subItem) {
+        const subItemCurrent = currentPracticeItem();
+        if (subItemCurrent) {
+          saveCurrentSubAnswers(subItemCurrent);
+          state.practiceSubIndex[subItemCurrent.id] = Number(subItem.dataset.practiceSubitem);
+          renderPracticeWorkspace();
+        }
+        return;
+      }
+      if (event.target.closest("[data-number-game-start]")) { state.numberGame.started = true; numberGameNewRound(); render(); resetLearningScroll(); return; }
+      const numberGamePickBtn = event.target.closest("[data-number-game-pick]");
+      if (numberGamePickBtn) { numberGamePick(Number(numberGamePickBtn.dataset.numberGamePick)); return; }
+      if (event.target.closest("[data-number-game-next]")) { numberGameNewRound(); render(); return; }
+      if (event.target.closest("[data-number-game-restart]")) { state.numberGame.correct = 0; state.numberGame.total = 0; numberGameNewRound(); render(); return; }
       const practiceMode = event.target.closest("[data-practice-mode]");
       if (practiceMode) { state.practiceModes[practiceMode.dataset.practiceModeItem] = practiceMode.dataset.practiceMode; render(); return; }
       const toneChoice = event.target.closest("[data-tone-choice]");
@@ -1784,6 +2114,8 @@
       if (challengeAnswer) return answerChallenge(challengeAnswer);
       const tone = event.target.closest("[data-pron-tone-answer]")?.dataset.pronToneAnswer;
       if (tone) return answerTone(Number(tone));
+      const initialAnswer = event.target.closest("[data-pron-initial-answer]")?.dataset.pronInitialAnswer;
+      if (initialAnswer) return answerInitial(initialAnswer);
       const comparison = event.target.closest("[data-pron-comparison]")?.dataset.pronComparison;
       if (comparison) openComparison(comparison);
     });
@@ -1956,11 +2288,7 @@
         if (sharedComparisons?.concepts) state.model.comparisonConcepts = sharedComparisons.concepts;
       }
       const audioSource = state.model.audio.cos || state.model.audio.local;
-      if (audioSource) {
-        elements.audio.preload = "auto";
-        elements.audio.src = audioSource;
-        elements.audio.load();
-      }
+      if (audioSource) state.pendingAudioSource = new URL(audioSource, window.location.href).href;
       state.cues = new Map(state.model.cues.map((cue) => [cue.id, cue]));
       state.textCues = new Map((state.contentModel?.cues || []).map((cue) => [cue.id, cue]));
       state.units = state.model.chapters.flatMap((chapter) => chapter.units.map((unit) => ({

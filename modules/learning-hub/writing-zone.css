@@ -65,6 +65,7 @@
 .writing-setup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .writing-setup-shell > footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
 
+.writing-setup-hint { margin: -2px 0 0; padding: 8px 10px; color: #8a5a12; border: 1px solid #f0d49a; border-radius: 6px; background: #fff6e3; font-size: 11px; line-height: 1.6; }
 .writing-assist-shell > nav { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-top: 14px; padding: 3px; border: 1px solid var(--line); border-radius: 6px; background: #edf2f0; }
 .writing-assist-shell > nav button { min-height: 38px; color: var(--muted); border: 0; border-radius: 4px; background: transparent; font-size: 11px; font-weight: 800; }
 .writing-assist-shell > nav button.active { color: #fff; background: var(--teal); }
@@ -229,7 +230,7 @@
   .writing-review-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
-  .mobile-navigation { grid-template-columns: repeat(5, 1fr); }
+  .mobile-navigation { grid-template-columns: repeat(6, 1fr); }
   .writing-page-heading { min-height: 68px; }
   .writing-page-heading p { display: none; }
   .compact-action { min-height: 36px; padding-inline: 10px; font-size: 10px; }
@@ -273,3 +274,7 @@
   .punctuation-row { grid-template-columns: repeat(6, 30px); }
   .punctuation-row button { width: 30px; }
 }
+
+/* ---- bilingual button subtitles ---- */
+.writing-toolbar button small { margin-left: 4px; font-size: 8px; font-weight: 700; opacity: .75; }
+.writing-assist-shell > nav button small { margin-left: 4px; font-size: 9px; font-weight: 650; opacity: .75; }

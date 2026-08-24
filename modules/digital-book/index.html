@@ -8,8 +8,8 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260823-1">
-  <link rel="stylesheet" href="pronunciation.css?v=20260822-2">
+  <link rel="stylesheet" href="styles.css?v=20260824-1">
+  <link rel="stylesheet" href="pronunciation.css?v=20260824-1">
 </head>
 <body>
   <div class="book-app">
@@ -57,7 +57,7 @@
             <article class="learning-unit" id="unitContent" aria-live="polite"></article>
 
             <section class="audio-dock" aria-label="课程音频播放器">
-              <audio id="lessonAudio" preload="metadata"></audio>
+              <audio id="lessonAudio" preload="none"></audio>
               <button class="audio-main-button" id="playButton" type="button" aria-label="播放当前内容 / Play current item" title="播放当前内容 / Play current item">▶</button>
               <div class="audio-current">
                 <span id="audioStatus">准备播放</span>
@@ -114,9 +114,15 @@
   <aside class="ai-work-indicator" id="aiWorkIndicator" hidden aria-label="AI 工作状态 / AI work status"></aside>
   <script src="../../vendor/hanzi-writer.min.js?v=20260731-16"></script>
   <script src="../shared/voice-orb.js?v=20260801-1"></script>
-  <script src="../../config.js?v=20260822-3"></script>
-  <script src="../shared/learning-api-client.js?v=20260811-7"></script>
-  <script src="pronunciation.js?v=20260822-8"></script>
-  <script src="app.js?v=20260823-2" defer></script>
+  <script src="../../config.js?v=20260823-1"></script>
+  <script src="../shared/learning-api-client.js?v=20260824-3"></script>
+  <script src="../shared/draggable.js?v=20260823-1"></script>
+  <script src="pronunciation.js?v=20260824-1"></script>
+  <script src="app.js?v=20260824-1" defer></script>
+
+  <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
+    <span><strong>发现新版本</strong><small>点击刷新以更新到最新内容 / New version ready, tap to refresh</small></span>
+    <button class="pwa-install-action" type="button" data-pwa-refresh>刷新 / Refresh</button>
+  </section>
 </body>
 </html>

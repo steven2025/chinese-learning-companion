@@ -8,8 +8,8 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260811-1">
-  <link rel="stylesheet" href="writing-zone.css?v=20260811-3">
+  <link rel="stylesheet" href="styles.css?v=20260824-4">
+  <link rel="stylesheet" href="writing-zone.css?v=20260811-6">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
 <body>
@@ -34,17 +34,22 @@
         <span><strong id="profileName">邀请码登录</strong><small id="profileRole">访客</small></span>
         <i aria-hidden="true">⌄</i>
       </button>
+      <button class="logout-button" id="logoutButton" type="button" hidden title="退出登录 / Sign out">
+        <span aria-hidden="true">↪</span><b>退出<small>Sign out</small></b>
+      </button>
     </header>
 
     <aside class="sidebar" aria-label="主导航">
       <nav class="primary-navigation">
-        <button class="active" type="button" data-view="home"><span aria-hidden="true">⌂</span><b>首页</b></button>
-        <button type="button" data-view="courses"><span aria-hidden="true">册</span><b>我的课程</b></button>
-        <button type="button" data-view="writing"><span aria-hidden="true">写</span><b>写作专区</b></button>
-        <button type="button" data-view="games"><span aria-hidden="true">趣</span><b>趣味游戏</b></button>
-        <button type="button" data-view="progress"><span aria-hidden="true">记</span><b>学习记录</b></button>
-        <button type="button" data-view="teacher" data-role-nav="teacher" hidden><span aria-hidden="true">教</span><b>教学工作台</b></button>
-        <button type="button" data-view="admin" data-role-nav="admin" hidden><span aria-hidden="true">管</span><b>系统管理</b></button>
+        <button class="active" type="button" data-view="home"><span aria-hidden="true">⌂</span><b>首页<small>Home</small></b></button>
+        <button type="button" data-view="courses"><span aria-hidden="true">册</span><b>我的课程<small>My courses</small></b></button>
+        <button type="button" data-view="writing"><span aria-hidden="true">写</span><b>写作专区<small>Writing</small></b></button>
+        <button type="button" data-view="games"><span aria-hidden="true">趣</span><b>趣味游戏<small>Games</small></b></button>
+        <button type="button" data-view="tools"><span aria-hidden="true">工</span><b>学习工具<small>Tools</small></b></button>
+        <button type="button" data-view="progress"><span aria-hidden="true">记</span><b>学习记录<small>Progress</small></b></button>
+        <button type="button" data-view="about"><span aria-hidden="true">点</span><b>关于点点<small>About DianDian</small></b></button>
+        <button type="button" data-view="teacher" data-role-nav="teacher" hidden><span aria-hidden="true">教</span><b>教学工作台<small>Teaching</small></b></button>
+        <button type="button" data-view="admin" data-role-nav="admin" hidden><span aria-hidden="true">管</span><b>系统管理<small>Admin</small></b></button>
       </nav>
     </aside>
 
@@ -52,7 +57,7 @@
       <section class="app-view active" id="homeView" data-view-panel="home">
         <header class="page-heading">
           <div><span>学习中心</span><h1>下午好，继续今天的学习</h1></div>
-          <button class="quiet-button" type="button" data-action="open-role-dialog">切换身份视图</button>
+          <button class="quiet-button" type="button" data-action="open-role-dialog">切换身份视图 <small>Switch view</small></button>
         </header>
 
         <section class="continue-panel" aria-labelledby="continueTitle">
@@ -61,15 +66,15 @@
             <span>上次学习</span>
             <h2 id="continueTitle">第1课 · 你咋不早说</h2>
             <p id="continueMeta">发展汉语 · 中级综合1</p>
-            <div class="progress-line"><i style="width: 42%"></i></div>
-            <small>已完成 42% · 第42 / 99个学习单元</small>
+            <div class="progress-line"><i id="homeProgressBar" style="width: 0%"></i></div>
+            <small id="homeProgressText">加载学习记录…</small>
           </div>
-          <a class="primary-button" id="continueLink" href="../digital-book/?lesson=zjzh-1-1">继续学习 <span>›</span></a>
+          <a class="primary-button" id="continueLink" href="../digital-book/?lesson=zjzh-1-1">继续学习 <small>Continue</small> <span>›</span></a>
         </section>
 
         <div class="dashboard-grid">
           <section class="dashboard-section">
-            <header><div><span>本周安排</span><h2>学习任务</h2></div><button type="button" data-view="courses">全部课程</button></header>
+            <header><div><span>本周安排</span><h2>学习任务</h2></div><button type="button" data-view="courses">全部课程 <small>All courses</small></button></header>
             <div class="task-list">
               <a id="primaryTaskLink" href="../digital-book/?lesson=zjzh-1-1"><span class="task-number">01</span><span><strong>词汇与课文学习</strong><small id="primaryTaskMeta">中级综合1 · 第1课</small></span><b>继续</b></a>
               <a id="secondaryTaskLink" href="../digital-book/?lesson=zjzh-1-1#practice"><span class="task-number coral">02</span><span><strong id="secondaryTaskTitle">完成课后练习</strong><small id="secondaryTaskMeta">第41—48题</small></span><b>开始</b></a>
@@ -80,11 +85,11 @@
           <section class="dashboard-section compact-section">
             <header><div><span>学习概况</span><h2>本周记录</h2></div></header>
             <dl class="stat-list">
-              <div><dt>学习天数</dt><dd>3<small>天</small></dd></div>
-              <div><dt>已学词语</dt><dd>18<small>个</small></dd></div>
-              <div><dt>完成练习</dt><dd>12<small>题</small></dd></div>
+              <div><dt>学习天数</dt><dd id="statStudyDays">—<small>天</small></dd></div>
+              <div><dt>已学词语</dt><dd id="statWords">—<small>个</small></dd></div>
+              <div><dt>完成练习</dt><dd id="statExercises">—<small>题</small></dd></div>
             </dl>
-            <button class="text-button" type="button" data-view="progress">查看学习记录 ›</button>
+            <button class="text-button" type="button" data-view="progress">查看学习记录 <small>Progress</small> ›</button>
           </section>
         </div>
 
@@ -93,15 +98,15 @@
       <section class="app-view" id="writingView" data-view-panel="writing" hidden>
         <header class="page-heading writing-page-heading">
           <div><span>独立写作</span><h1>写作专区</h1><p>录入题目和要求，在田字格中完成并提交手写作文。</p></div>
-          <button class="primary-button compact-action" id="newEssayButton" type="button"><span aria-hidden="true">＋</span>新建作文</button>
+          <button class="primary-button compact-action" id="newEssayButton" type="button"><span aria-hidden="true">＋</span>新建作文 <small>New essay</small></button>
         </header>
         <section class="writing-toolbar" aria-label="作文筛选">
           <nav id="writingStatusTabs">
-            <button class="active" type="button" data-writing-filter="all">全部</button>
-            <button type="button" data-writing-filter="draft">草稿</button>
-            <button type="button" data-writing-filter="submitted">已提交</button>
-            <button type="button" data-writing-filter="returned">待修改</button>
-            <button type="button" data-writing-filter="completed">已完成</button>
+            <button class="active" type="button" data-writing-filter="all">全部<small>All</small></button>
+            <button type="button" data-writing-filter="draft">草稿<small>Draft</small></button>
+            <button type="button" data-writing-filter="submitted">已提交<small>Submitted</small></button>
+            <button type="button" data-writing-filter="returned">待修改<small>Returned</small></button>
+            <button type="button" data-writing-filter="completed">已完成<small>Completed</small></button>
           </nav>
           <span id="writingItemCount">0篇</span>
         </section>
@@ -119,24 +124,36 @@
         <div class="game-library">
           <a class="game-entry featured" href="../character-hit/">
             <div class="game-entry-visual" aria-hidden="true"><i>门</i><b>+</b><i>耳</i><b>→</b><strong>闻</strong></div>
-            <div><span>初级综合Ⅰ 1—2课 · 中级综合Ⅰ 1—3课</span><h2>开心“打”字</h2><p>射中正确部件组汉字，再击中彩色气球完成拼音和母语词义辨认。</p><small>25个精选教材词语</small></div>
-            <em>开始挑战 ›</em>
+            <div><span>初级综合Ⅰ 1—5课 · 中级综合Ⅰ 1—4课</span><h2>开心“打”字 <small>Character Hit</small></h2><p>射中正确部件组汉字，再击中彩色气球完成拼音和母语词义辨认。 · Shoot components to build characters, then pop balloons to match pinyin and meaning.</p><small>45组教材汉字 · 拼音 · 词义</small></div>
+            <em>开始挑战 · Play ›</em>
           </a>
           <a class="game-entry word-link" href="../word-link/">
             <div class="game-entry-mark" aria-hidden="true">连</div>
-            <div><span>初级综合Ⅰ 1—2课 · 中级综合Ⅰ 1—3课</span><h2>单词连连看</h2><p>连接汉字、拼音和母语词义，完成教材词汇的高频回顾。</p><small>156个教材词语 · 多语言匹配</small></div>
-            <em>开始游戏 ›</em>
+            <div><span>初级综合Ⅰ 1—5课 · 中级综合Ⅰ 1—4课</span><h2>单词连连看 <small>Word Link</small></h2><p>连接汉字、拼音和母语词义，完成教材词汇的高频回顾。 · Match characters, pinyin and meanings for high-frequency vocabulary review.</p><small>269个教材词语 · 多语言匹配</small></div>
+            <em>开始游戏 · Play ›</em>
           </a>
           <a class="game-entry hanzi-challenge" href="../hanzi-challenge/">
             <div class="game-entry-mark" aria-hidden="true">闯</div>
-            <div><span>初级综合Ⅰ 1—2课 · 中级综合Ⅰ 1—3课</span><h2>汉字大闯关</h2><p>根据拼音、教材词语和中文提示，从相近汉字中选出正确答案。</p><small>50个教材汉字项目</small></div>
-            <em>开始闯关 ›</em>
+            <div><span>初级综合Ⅰ 1—5课 · 中级综合Ⅰ 1—4课</span><h2>汉字大闯关 <small>Hanzi Challenge</small></h2><p>根据拼音、教材词语和中文提示，从相近汉字中选出正确答案。 · Pick the right character using pinyin, words and Chinese hints.</p><small>90个教材汉字项目 · 汉字辨析</small></div>
+            <em>开始闯关 · Play ›</em>
+          </a>
+        </div>
+      </section>
+
+      <section class="app-view" id="toolsView" data-view-panel="tools" hidden>
+        <header class="page-heading"><div><span>学习工具</span><h1>学习工具 <small>Tools</small></h1><p>拼音、汉字与发音的辅助学习工具，持续更新中。</p></div></header>
+        <div class="game-library">
+          <a class="game-entry" href="../pinyin-generator/">
+            <div class="game-entry-mark" aria-hidden="true">拼</div>
+            <div><span>拼音工具 · Pinyin tool</span><h2>拼音声调生成器 <small>Pinyin Tone Generator</small></h2><p>输入拼音，点选声调，一键得到带调拼音和 IPA 国际音标。</p><small>拼音 · 声调 · IPA</small></div>
+            <em>打开工具 ›</em>
           </a>
         </div>
       </section>
 
       <section class="app-view" id="coursesView" data-view-panel="courses" hidden>
-        <header class="page-heading"><div><span>课程</span><h1>我的课程</h1><p>按教材系列、阶段和册别查找课程。</p></div></header>
+        <header class="page-heading"><div><span>课程</span><h1>我的课程</h1><p id="coursePageIntro">按教材系列、阶段和册别查找课程。</p></div></header>
+        <section class="student-course-list" id="studentCourseList" hidden></section>
         <section class="course-overview">
           <header class="course-overview-header">
             <div><span>当前教材</span><h2 id="lessonDirectoryTitle">中级综合（Ⅰ）</h2></div>
@@ -152,9 +169,8 @@
       <section class="app-view" id="progressView" data-view-panel="progress" hidden>
         <header class="page-heading"><div><span>学习记录</span><h1>我的学习</h1><p>正式登录接入后，这里将汇总跨设备学习记录。</p></div></header>
         <section class="record-table">
-          <header><span>最近学习</span><strong>本地原型数据</strong></header>
-          <div class="record-row"><time>今天 14:20</time><span><strong>第1课 · 课文学习</strong><small>完成句子41</small></span><b>已完成</b></div>
-          <div class="record-row"><time>昨天 19:10</time><span><strong>第1课 · 词汇学习</strong><small>学习18个词语</small></span><b>已记录</b></div>
+          <header><span>最近学习</span><strong id="progressTableTitle">我的学习记录</strong></header>
+          <div id="progressRows"><p class="empty-approval">正在加载学习记录…</p></div>
         </section>
       </section>
 
@@ -165,16 +181,44 @@
           <label><span>教材</span><select id="teacherBookSelect"></select></label>
           <div><span>任课教师</span><strong id="teacherContextName">—</strong></div>
         </section>
+        <nav class="teacher-tabs" aria-label="教学工作台功能">
+          <button class="active" type="button" data-teacher-tab="courses">课程管理 <small>Courses</small></button>
+          <button type="button" data-teacher-tab="writing">写作设置 <small>Writing</small></button>
+          <button type="button" data-teacher-tab="insights">班级学情 <small>Insights</small></button>
+          <button type="button" data-teacher-tab="inbox">作文收件箱 <small>Inbox</small></button>
+        </nav>
+        <section class="teacher-tab-panel" data-teacher-panel="courses">
+        <section class="teacher-course-panel" id="teacherCoursePanel">
+          <header class="teacher-course-head">
+            <div><span>课程管理</span><h2>我的课程 <small>My courses</small></h2><p>按“学期 + 教材”建立课程，再在课程中添加学生并发放邀请码。</p></div>
+            <button class="primary-button" type="button" data-action="open-new-course">＋ 新建课程 <small>New course</small></button>
+          </header>
+          <div class="teacher-course-list" id="teacherCourseList"><p class="empty-approval">还没有课程，点击“＋新建课程”。</p></div>
+          <section class="course-student-panel" id="courseStudentPanel" hidden>
+            <header class="course-student-head">
+              <button class="quiet-button" type="button" data-action="back-course-list">← 返回课程列表 <small>Back</small></button>
+              <div class="course-student-title"><strong id="courseStudentTitle">—</strong><small id="courseStudentMeta">—</small></div>
+              <button class="quiet-button" type="button" data-action="copy-all-invites">复制全部邀请信息 <small>Copy all</small></button>
+            </header>
+            <div class="course-student-toolbar">
+              <button class="quiet-button" type="button" data-action="open-add-student">＋ 新增学生 <small>Add student</small></button>
+              <a class="quiet-button" href="templates/student-import-template.xlsx" download="学生导入模板.xlsx" data-action="download-student-template">下载 Excel 模板 <small>Template</small></a>
+              <label class="file-import-label"><span>导入 Excel</span><input type="file" id="studentExcelInput" accept=".xlsx,.xls,.csv" hidden></label>
+            </div>
+            <p class="course-import-result" id="courseImportResult" role="status" hidden></p>
+            <div class="course-student-table" id="courseStudentTable"></div>
+          </section>
+        </section>
+        </section>
+        <section class="teacher-tab-panel" data-teacher-panel="writing" hidden>
         <section class="writing-policy-panel" aria-labelledby="writingPolicyTitle">
           <div><span>47、48题</span><h2 id="writingPolicyTitle">写作作答方式 <small>Writing input mode</small></h2><p>此设置对当前学期、教材和班级生效。</p></div>
           <label><span>学生可使用</span><select id="writingInputModeSelect"><option value="both">键盘输入和手写作答</option><option value="handwriting-only">仅手写作答</option><option value="keyboard-only">仅键盘输入</option></select></label>
           <button class="primary-button" id="saveWritingPolicyButton" type="button">保存设置 <small>Save</small></button>
           <p id="writingPolicyStatus" role="status"></p>
         </section>
-        <section class="approval-panel">
-          <header><div><span>课程成员</span><h2>本班学生</h2></div><strong id="classStudentCount">0人</strong></header>
-          <div id="classStudentList"></div>
         </section>
+        <section class="teacher-tab-panel" data-teacher-panel="insights" hidden>
         <section class="teacher-practice-panel" id="teacherPracticePanel" aria-labelledby="teacherPracticeTitle">
           <header>
             <div><span>课程学情</span><h2 id="teacherPracticeTitle">班级学习简报 <small>Learning insights</small></h2><p>快速定位全班的词汇、课文和练习薄弱点。</p></div>
@@ -188,72 +232,256 @@
           <p class="practice-report-status" id="practiceReportStatus" role="status">选择课次后查看班级学习情况。</p>
           <div id="practiceReportContent"></div>
         </section>
+        </section>
+        <section class="teacher-tab-panel" data-teacher-panel="inbox" hidden>
         <section class="teacher-writing-summary">
           <div><span>写作专区</span><h2>作文收件箱</h2><p>查看学生手写作文、AI评价和待批阅记录。</p></div>
           <strong id="teacherWritingPending">0篇待批阅</strong>
-          <button class="quiet-button" type="button" data-view="writing">打开收件箱</button>
+          <button class="quiet-button" type="button" data-view="writing">打开收件箱 <small>Inbox</small></button>
         </section>
-        <div class="management-list"><button>课文学习进度 <span>下一阶段</span></button><button>布置课程与作业 <span>待接入</span></button><a href="../digital-book/">以学生视图预览第1课 <span>打开 ›</span></a></div>
+        </section>
       </section>
 
       <section class="app-view" id="adminView" data-view-panel="admin" hidden>
-        <header class="page-heading"><div><span>管理员身份</span><h1>系统管理</h1><p>此处只定义未来管理入口，不接入云端操作。</p></div></header>
-        <div class="management-list"><button>教材与课程发布 <span>待接入</span></button><button>多语言内容审核 <span>待接入</span></button><button>用户与角色管理 <span>待接入</span></button><button>系统配置 <span>待接入</span></button></div>
+        <header class="page-heading"><div><span>管理员身份</span><h1>系统管理</h1><p>管理教师账号、教材开放与多语言内容审核。</p></div></header>
+        <nav class="admin-tabs" aria-label="系统管理功能">
+          <button class="active" type="button" data-admin-tab="users">用户与角色管理<small>Users &amp; roles</small></button>
+          <button type="button" data-admin-tab="publishing">教材与课程发布<small>Publishing</small></button>
+          <button type="button" data-admin-tab="review">多语言内容审核<small>Review</small></button>
+        </nav>
+        <section class="admin-panel" data-admin-panel="users">
+          <div class="admin-panel-heading"><div><span>角色</span><h2>用户与角色管理</h2><p>教师负责本班学生名单；管理员负责教师账号的开通、停用与删除。</p></div></div>
+          <form class="admin-inline-form" id="addTeacherForm" hidden>
+            <label><span>教师姓名 / Name</span><input name="teacherName" required maxlength="40" placeholder="教师中文姓名或英文名"></label>
+            <label><span>教师邀请码 / Invite（必填）</span><input name="teacherInviteCode" required maxlength="12" placeholder="教师登录用邀请码，自行设置"></label>
+            <button class="primary-button" type="submit">添加教师 <small>Add teacher</small></button>
+            <button class="quiet-button" type="button" data-action="cancel-add-teacher">取消 <small>Cancel</small></button>
+          </form>
+          <div class="admin-toolbar"><strong>教师账号 <span id="teacherCount">0</span></strong><button class="quiet-button" type="button" data-action="open-add-teacher">＋ 新增教师 <small>Add teacher</small></button></div>
+          <div class="admin-list" id="adminTeacherList"></div>
+        </section>
+        <section class="admin-panel" data-admin-panel="publishing" hidden>
+          <div class="admin-panel-heading"><div><span>课程</span><h2>教材与课程发布</h2><p>控制教材是否开放给学生，以及已开放课次数量，学生端实时生效。</p></div></div>
+          <div class="admin-list" id="adminPublishingList"></div>
+        </section>
+        <section class="admin-panel" data-admin-panel="review" hidden>
+          <div class="admin-panel-heading"><div><span>语种</span><h2>多语言内容审核</h2><p>从云端数据统计已开放课次的语种覆盖，并标记审核状态。</p></div></div>
+          <div class="admin-toolbar"><strong>覆盖语种：中文 · 拼音 · 英 · 西 · 法 · 印尼 · 日 · 韩 · 老挝 · 马来 · 缅 · 俄 · 泰</strong><button class="quiet-button" type="button" data-action="review-refresh-all">全部刷新统计 <small>Refresh all</small></button></div>
+          <div class="admin-list" id="adminReviewList"></div>
+        </section>
+        <div class="management-list"><button>系统配置 <small>Settings</small> <span>待接入</span></button></div>
+      </section>
+
+      <section class="app-view about-view" id="aboutView" data-view-panel="about" hidden>
+        <header class="about-hero">
+          <div class="about-hero-mark" aria-hidden="true">点</div>
+          <div><span>关于系统 / About the Platform</span><h1>关于点点汉语 <small>About DianDian Chinese</small></h1><p>连接课堂教学、语言实践与智能伴学的国际中文教育辅助平台。<br><small>An international Chinese learning companion connecting classroom teaching, language practice, and AI-assisted learning.</small></p></div>
+        </header>
+
+        <nav class="about-tabs" aria-label="关于点点页面导航 / About DianDian navigation">
+          <button class="active" type="button" data-about-tab="developer"><span aria-hidden="true">开</span><b>开发者信息<small>Developer Information</small></b></button>
+          <button type="button" data-about-tab="teachers"><span aria-hidden="true">师</span><b>授课教师<small>Instructors</small></b></button>
+          <button type="button" data-about-tab="guide"><span aria-hidden="true">册</span><b>平台使用手册<small>User Guide</small></b></button>
+          <button type="button" data-about-tab="activities"><span aria-hidden="true">影</span><b>课程活动<small>Course Activities</small></b></button>
+          <button type="button" data-about-tab="feedback"><span aria-hidden="true">言</span><b>讨论与反馈<small>Discussion & Feedback</small></b></button>
+        </nav>
+
+        <section class="about-panel" data-about-panel="developer">
+          <div class="about-card about-developer-card">
+            <span class="about-card-kicker">程序开发 / Developer</span>
+            <h2>鄢清华 <small>Yan Qinghua</small></h2>
+            <p>重庆工商大学<br><small>Chongqing Technology and Business University</small></p>
+          </div>
+          <div class="about-card">
+            <span class="about-card-icon" aria-hidden="true">谢</span>
+            <h2>鸣谢 <small>Acknowledgements</small></h2>
+            <p>感谢重庆工商大学对外汉语教研室对本平台建设给予的大力支持。</p>
+            <p class="about-en">Special thanks to the Teaching and Research Section of Chinese as a Foreign Language at Chongqing Technology and Business University for its strong support.</p>
+          </div>
+          <aside class="about-notice">
+            <strong>使用声明 <small>Usage Notice</small></strong>
+            <p>本学习平台目前仅用于重庆工商大学国际中文教育教学辅助与相关教学实践，不作对外商业用途。</p>
+            <p>This learning platform is currently intended solely for supporting international Chinese language education and related teaching practices at Chongqing Technology and Business University. It is not used for external commercial purposes.</p>
+          </aside>
+        </section>
+
+        <section class="about-panel instructor-panel" data-about-panel="teachers" hidden>
+          <header class="about-section-heading"><span>教师团队 / Teaching Team</span><h2>授课教师 <small>Instructors</small></h2><p>点击姓名查看教师资料。 / Select a name to view the instructor profile.</p></header>
+          <nav class="instructor-name-tabs" id="aboutTeacherTabs" aria-label="授课教师 / Instructors"><button class="active" type="button" disabled>曹丹丹</button><button type="button" disabled>李进</button><button type="button" disabled>袁玥</button></nav>
+          <section class="instructor-profile" id="aboutTeacherProfile"><div class="instructor-photo-placeholder" aria-hidden="true">师</div><div><p class="empty-approval">正在读取教师资料… / Loading instructor profiles…</p></div></section>
+          <section class="about-management-panel instructor-management" id="aboutTeacherManagement" hidden>
+            <header><div><strong>教师资料管理 <small>Instructor Profile Management</small></strong><p>教师只能编辑本人资料；管理员可新增、审核和发布。</p></div><button class="primary-button" type="button" data-action="open-about-teacher">＋ 新增教师 <small>Add instructor</small></button></header>
+            <div id="aboutTeacherManageList"></div>
+          </section>
+        </section>
+
+        <section class="about-panel" data-about-panel="guide" hidden>
+          <header class="about-section-heading"><span>快速上手 / Getting Started</span><h2>平台使用手册 <small>User Guide</small></h2><p>选择相应身份和功能，查看简要操作说明。 / Choose a role or feature for a concise guide.</p></header>
+          <div class="guide-grid">
+            <article class="guide-card"><i>01</i><h3>学生使用指南 <small>Student Guide</small></h3><ol><li>使用邀请码登录。<small>Sign in with an invitation code.</small></li><li>选择教材、课程和辅助语言。<small>Select a textbook, lesson, and support language.</small></li><li>进入学习并查看个人记录。<small>Start learning and review your progress.</small></li></ol></article>
+            <article class="guide-card"><i>02</i><h3>教师使用指南 <small>Teacher Guide</small></h3><ol><li>进入教学工作台。<small>Open the Teaching Workspace.</small></li><li>建立课程并管理学生。<small>Create courses and manage students.</small></li><li>查看写作与班级学情。<small>Review writing and class insights.</small></li></ol></article>
+            <article class="guide-card"><i>03</i><h3>课程学习 <small>Course Learning</small></h3><ol><li>按课程结构切换学习部分。<small>Move through each lesson section.</small></li><li>使用播放、跟读和练习功能。<small>Use playback, repetition, and exercises.</small></li><li>需要时开启母语辅助。<small>Enable native-language aid when needed.</small></li></ol></article>
+            <article class="guide-card"><i>04</i><h3>AI伴学功能 <small>AI Learning Assistance</small></h3><ol><li>在当前学习内容中打开AI辅助。<small>Open AI support in the current activity.</small></li><li>提交语音、书写或练习答案。<small>Submit speech, writing, or exercise answers.</small></li><li>根据反馈再次练习。<small>Practice again using the feedback.</small></li></ol></article>
+            <article class="guide-card guide-faq"><i>?</i><h3>常见问题 <small>Frequently Asked Questions</small></h3><p><b>听不到声音？ / No audio?</b><br>请检查设备音量、网络连接和浏览器播放权限。<br><small>Check device volume, network access, and browser playback permission.</small></p><p><b>页面没有更新？ / Page not updated?</b><br>请刷新页面；已安装PWA时可在更新提示中点击“刷新”。<br><small>Refresh the page, or use Refresh when the installed app shows an update notice.</small></p></article>
+          </div>
+        </section>
+
+        <section class="about-panel" data-about-panel="activities" hidden>
+          <header class="about-section-heading"><span>课堂内外 / In and Beyond the Classroom</span><h2>课程活动 <small>Course Activities</small></h2><p>记录语言实践、文化体验和课程交流活动。 / Highlights from language practice, cultural experiences, and course exchanges.</p></header>
+          <div class="activity-public-list" id="aboutActivityList"><p class="empty-approval">正在读取课程活动… / Loading course activities…</p></div>
+          <section class="about-management-panel" id="aboutActivityManagement" hidden>
+            <header><div><strong>活动内容管理 <small>Activity Management</small></strong><p>教师可上传草稿并提交审核；管理员负责发布、下架和删除。</p></div><button class="primary-button" type="button" data-action="open-about-activity">＋ 新建活动 <small>New activity</small></button></header>
+            <div id="aboutActivityManageList"></div>
+          </section>
+        </section>
+
+        <section class="about-panel" data-about-panel="feedback" hidden>
+          <header class="about-section-heading"><span>共同完善 / Help Us Improve</span><h2>讨论与反馈 <small>Discussion & Feedback</small></h2><p>仅支持中文或英文。学生发言经管理员审核后公开。 / Chinese or English only. Student posts are published after administrator review.</p></header>
+          <form class="feedback-preview" id="aboutFeedbackForm">
+            <label><span>发言语言 / Language</span><select name="language" required><option value="zh">中文 / Chinese</option><option value="en">英文 / English</option></select></label>
+            <label><span>反馈类型 / Feedback Type</span><select name="type"><option value="suggestion">功能建议 / Feature Suggestion</option><option value="issue">功能问题 / Technical Issue</option><option value="content-error">内容错误 / Content Error</option><option value="evaluation">使用评价 / Evaluation</option><option value="other">其他 / Other</option></select></label>
+            <label><span>所属课程 / Related Course</span><input name="courseId" type="text" maxlength="80" placeholder="例如：初级综合1 第5课 / e.g. Elementary Comprehensive 1, Lesson 5"></label>
+            <label><span>联系方式（选填，不公开）/ Contact (Optional, private)</span><input name="contact" type="text" maxlength="160" placeholder="Email or other contact"></label>
+            <label class="feedback-wide"><span>发言内容 / Post</span><textarea name="content" rows="6" minlength="10" maxlength="1000" required placeholder="仅限中文或英文，请勿填写隐私或敏感信息。 / Chinese or English only. Do not include private or sensitive information."></textarea><small>10—1000字符；禁止外部链接。 / 10–1000 characters; external links are not allowed.</small></label>
+            <details class="community-guidelines feedback-wide">
+              <summary>发言规范与法律声明 <small>Community Guidelines & Legal Notice</small></summary>
+              <div><strong>用户发表的所有内容必须遵守中华人民共和国法律法规。</strong><p>严禁发布违法违规、危害国家安全、扰乱社会秩序、侵犯他人合法权益或其他法律法规禁止的内容。</p><p><b>All content must comply with the laws and regulations of the People’s Republic of China.</b> Content that violates laws and regulations, endangers national security, disrupts public order, infringes upon the lawful rights of others, or is otherwise prohibited is strictly forbidden.</p><ol><li>仅使用中文或英文。 / Chinese or English only.</li><li>文明交流，禁止侮辱、歧视、骚扰、威胁和人身攻击。 / Communicate respectfully. No abuse, discrimination, harassment, threats, or personal attacks.</li><li>不得发布违法、不当、虚假、有害或扰乱教学秩序的内容。 / No illegal, inappropriate, misleading, harmful, or disruptive content.</li><li>不得泄露本人或他人的隐私、联系方式、账号及身份信息。 / Do not disclose private information, contact details, credentials, or identity information.</li><li>未经授权，不得发布他人的姓名、照片、视频或个人资料。 / Do not share another person’s name, photos, videos, or personal information without permission.</li><li>禁止广告、垃圾信息、重复内容和无关链接。 / No advertising, spam, duplicate content, or unrelated links.</li><li>管理员有权审核、隐藏或删除违规内容。 / Administrators may review, hide, or remove content that violates these rules.</li></ol></div>
+            </details>
+            <label class="guidelines-consent feedback-wide"><input name="guidelinesAccepted" type="checkbox" required><span>我已阅读并同意遵守发言规范及中华人民共和国法律法规。<small>I have read and agree to follow the Community Guidelines and the laws and regulations of the People’s Republic of China.</small></span></label>
+            <p class="feedback-login-note" id="aboutFeedbackLoginNote">请先登录后发言。 / Please sign in before posting.</p>
+            <button class="primary-button" type="submit">提交 <small>Submit</small></button>
+          </form>
+          <section class="about-comment-section feedback-wide"><header><strong>讨论区 <small>Discussion</small></strong><button class="text-button" type="button" data-action="refresh-about-feedback">刷新 / Refresh</button></header><div class="about-comment-list" id="aboutCommentList"><p class="empty-approval">正在读取讨论内容… / Loading discussion…</p></div></section>
+          <section class="about-management-panel feedback-wide" id="aboutFeedbackManagement" hidden><header><div><strong>评论审核 <small>Comment Moderation</small></strong><p>管理员可以审核、隐藏、回复或删除评论。</p></div></header><div id="aboutFeedbackManageList"></div></section>
+        </section>
       </section>
     </main>
 
     <nav class="mobile-navigation" aria-label="移动端导航">
-      <button class="active" type="button" data-view="home"><span>⌂</span><b>首页</b></button>
-      <button type="button" data-view="courses"><span>册</span><b>课程</b></button>
-      <button type="button" data-view="writing"><span>写</span><b>写作</b></button>
-      <button type="button" data-view="games"><span>趣</span><b>游戏</b></button>
-      <button type="button" data-view="progress"><span>记</span><b>记录</b></button>
+      <button class="active" type="button" data-view="home"><span>⌂</span><b>首页<small>Home</small></b></button>
+      <button type="button" data-view="courses"><span>册</span><b>课程<small>Courses</small></b></button>
+      <button type="button" data-view="writing"><span>写</span><b>写作<small>Writing</small></b></button>
+      <button type="button" data-view="games"><span>趣</span><b>游戏<small>Games</small></b></button>
+      <button type="button" data-view="tools"><span>工</span><b>工具<small>Tools</small></b></button>
+      <button type="button" data-view="progress"><span>记</span><b>记录<small>Records</small></b></button>
+      <button type="button" data-view="about"><span>点</span><b>关于<small>About</small></b></button>
     </nav>
   </div>
 
   <section class="pwa-install-banner" id="pwaInstallBanner" aria-live="polite" hidden>
     <img src="../../icons/icon-96.png" alt="">
-    <span><strong>安装点点汉语</strong><small id="pwaInstallMessage">添加到桌面，像应用一样打开 / Install this app</small></span>
+    <span><strong>安装点点汉语 / Install Diandian Chinese</strong><small id="pwaInstallMessage">添加到桌面，像应用一样打开 / Install this app</small></span>
     <button class="pwa-install-action" type="button" data-pwa-install>安装 / Install</button>
     <button class="pwa-install-dismiss" type="button" data-pwa-dismiss aria-label="暂不安装 / Not now">×</button>
   </section>
+
+  <dialog class="role-dialog about-teacher-dialog" id="aboutTeacherDialog" aria-labelledby="aboutTeacherDialogTitle">
+    <form class="auth-dialog-shell" id="aboutTeacherForm">
+      <header><div><span>授课教师 / Instructor</span><h2 id="aboutTeacherDialogTitle">教师资料 <small>Instructor profile</small></h2></div><button type="button" data-about-teacher-close aria-label="关闭">×</button></header>
+      <input name="id" type="hidden">
+      <div class="form-grid two-columns">
+        <label class="admin-teacher-binding"><span>绑定教师账号ID / Teacher Account ID</span><input name="teacherUserId" maxlength="100"><small>必须与教师登录账号的 userId 完全一致。</small></label>
+        <label class="admin-teacher-binding"><span>显示顺序 / Display Order</span><input name="displayOrder" type="number" min="0" max="9999" value="999"></label>
+        <label><span>中文姓名 / Chinese Name</span><input name="nameZh" maxlength="80" required></label>
+        <label><span>英文姓名 / English Name</span><input name="nameEn" maxlength="120" required></label>
+        <label><span>教师身份 / Teaching Role</span><input name="roleZh" maxlength="80" value="专业教师" required></label>
+        <label><span>Teaching Role</span><input name="roleEn" maxlength="120" value="Chinese Language Instructor" required></label>
+        <label><span>所属单位 / Affiliation</span><input name="affiliationZh" maxlength="160" value="重庆工商大学"></label>
+        <label><span>Affiliation</span><input name="affiliationEn" maxlength="220" value="Chongqing Technology and Business University"></label>
+        <label class="wide-field"><span>教学方向 / Teaching Areas（中文）</span><textarea name="teachingZh" maxlength="600"></textarea></label>
+        <label class="wide-field"><span>Teaching Areas (English)</span><textarea name="teachingEn" maxlength="900"></textarea></label>
+        <label class="wide-field"><span>教师简介 / Biography（中文）</span><textarea name="biographyZh" maxlength="1600"></textarea></label>
+        <label class="wide-field"><span>Biography (English)</span><textarea name="biographyEn" maxlength="2400"></textarea></label>
+        <label><span>教授课程 / Courses（中文）</span><textarea name="coursesZh" maxlength="600"></textarea></label>
+        <label><span>Courses (English)</span><textarea name="coursesEn" maxlength="900"></textarea></label>
+        <label class="wide-field"><span>教师照片 / Photo</span><input name="photo" type="file" accept="image/jpeg,image/png,image/webp"><small>请确认已获得教师本人同意；JPEG、PNG、WebP，单张≤5MB，页面按4:5展示。</small></label>
+      </div>
+      <p class="course-import-result" id="aboutTeacherUploadStatus" role="status" hidden></p>
+      <button class="primary-button" type="submit">保存教师资料 <small>Save profile</small></button>
+    </form>
+  </dialog>
+
+  <dialog class="role-dialog about-activity-dialog" id="aboutActivityDialog" aria-labelledby="aboutActivityDialogTitle">
+    <form class="auth-dialog-shell" id="aboutActivityForm">
+      <header><div><span>课程活动 / Course Activity</span><h2 id="aboutActivityDialogTitle">新建活动 <small>New activity</small></h2></div><button type="button" data-about-activity-close aria-label="关闭">×</button></header>
+      <input name="id" type="hidden">
+      <div class="form-grid two-columns">
+        <label><span>活动日期 / Date</span><input name="date" type="date" required></label>
+        <label><span>课程或班级（选填）/ Course or Class</span><input name="className" maxlength="100"></label>
+        <label><span>中文标题 / Chinese Title</span><input name="titleZh" maxlength="120" required></label>
+        <label><span>英文标题 / English Title</span><input name="titleEn" maxlength="180" required></label>
+        <label class="wide-field"><span>中文简介 / Chinese Introduction</span><textarea name="summaryZh" rows="4" maxlength="1200" required></textarea></label>
+        <label class="wide-field"><span>英文简介 / English Introduction</span><textarea name="summaryEn" rows="4" maxlength="1800" required></textarea></label>
+        <label><span>照片 / Photos</span><input name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><small>JPEG、PNG、WebP；单张≤8MB；每项活动最多20张。</small></label>
+        <label><span>视频 / Videos</span><input name="videos" type="file" accept="video/mp4" multiple><small>仅MP4（H.264 + AAC）；单个≤50MB；每项活动最多3个。</small></label>
+      </div>
+      <p class="course-import-result" id="aboutActivityUploadStatus" role="status" hidden></p>
+      <button class="primary-button" type="submit">保存活动与上传媒体 <small>Save & Upload</small></button>
+    </form>
+  </dialog>
 
   <dialog class="role-dialog" id="roleDialog" aria-labelledby="roleDialogTitle">
     <div class="auth-dialog-shell">
       <header><div><span>账号原型</span><h2 id="roleDialogTitle">邀请码登录</h2></div><button type="button" data-auth-close aria-label="关闭">×</button></header>
       <nav class="auth-tabs" aria-label="登录身份">
-        <button class="active" type="button" data-auth-tab="student-login">学生登录</button>
-        <button type="button" data-auth-tab="teacher-login">教师登录</button>
-        <button type="button" data-auth-tab="admin-login">管理员</button>
+        <button class="active" type="button" data-auth-tab="student-login">学生登录<small>Student</small></button>
+        <button type="button" data-auth-tab="teacher-login">教师登录<small>Teacher</small></button>
+        <button type="button" data-auth-tab="admin-login">管理员<small>Admin</small></button>
       </nav>
 
       <form class="auth-panel active" id="studentLoginForm" data-auth-panel="student-login">
         <div class="form-grid two-columns">
-          <label><span>学生账号 / Account</span><input name="studentAccount" value="test" required autocomplete="username"></label>
-          <label><span>邀请码 / Invite code</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
-          <label class="wide-field" data-auth-context hidden><span>选择班级与教材 / Class and textbook</span><select name="contextId"></select></label>
+          <label><span>学号 / Student ID</span><input name="studentAccount" required autocomplete="username" placeholder="请输入学号"></label>
+          <label><span>邀请码 / Invitation code</span><input name="inviteCode" required autocomplete="one-time-code" placeholder="教师发放的个人邀请码"></label>
         </div>
-        <button class="primary-button" type="submit" data-auth-submit>验证并进入课程</button>
-        <p>账号验证后，系统会自动读取班级、学期、教师和可用教材。</p>
+        <button class="primary-button" type="submit" data-auth-submit>验证并进入课程 <small>Continue</small></button>
+        <p>使用教师发放的“学号 + 个人邀请码”登录；登录后可查看名下所有课程。</p>
       </form>
 
       <form class="auth-panel" id="teacherLoginForm" data-auth-panel="teacher-login" hidden>
         <div class="form-grid two-columns">
-          <label><span>教师姓名或账号</span><input name="teacherAccount" value="曹丹丹" required autocomplete="username"></label>
-          <label><span>教师邀请码</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
+          <label><span>教师姓名或账号</span><input name="teacherAccount" required autocomplete="username" placeholder="请输入教师姓名"></label>
+          <label><span>教师邀请码</span><input name="inviteCode" required autocomplete="one-time-code" placeholder="管理员发放的邀请码"></label>
           <label class="wide-field" data-auth-context hidden><span>选择班级与教材 / Class and textbook</span><select name="contextId"></select></label>
         </div>
-        <button class="primary-button" type="submit" data-auth-submit>验证并进入工作台</button>
-        <p>登录后可进入已分配的学期、班级和教材。</p>
+        <button class="primary-button" type="submit" data-auth-submit>验证并进入工作台 <small>Continue</small></button>
+        <p>教师账号由管理员开通（姓名＋邀请码）；登录后可自行新建课程并管理学生。</p>
       </form>
 
       <form class="auth-panel" id="adminLoginForm" data-auth-panel="admin-login" hidden>
-        <label><span>管理员姓名</span><input name="administrator" value="鄢清华" readonly></label>
-        <label><span>管理员邀请码</span><input name="inviteCode" value="123456" required autocomplete="one-time-code"></label>
-        <button class="primary-button" type="submit">进入系统管理</button>
-        <p>当前管理员为鄢清华，测试邀请码为 123456。</p>
+        <label><span>管理员姓名</span><input name="administrator" required autocomplete="username" placeholder="请输入管理员姓名"></label>
+        <label><span>管理员邀请码</span><input name="inviteCode" required autocomplete="one-time-code" placeholder="请输入管理员邀请码"></label>
+        <button class="primary-button" type="submit">进入系统管理 <small>Enter</small></button>
+        <p>管理员账号与邀请码由系统初始化，仅管理员本人持有，请勿泄露。</p>
       </form>
     </div>
+  </dialog>
+
+  <dialog class="role-dialog" id="addStudentDialog" aria-labelledby="addStudentDialogTitle">
+    <form class="auth-dialog-shell" id="addStudentForm">
+      <header><div><span>教学工作台</span><h2 id="addStudentDialogTitle">新增学生 <small>Add student</small></h2></div><button type="button" data-add-student-close aria-label="关闭">×</button></header>
+      <div class="form-grid two-columns">
+        <label><span>姓名 / Name</span><input name="chineseName" required maxlength="40" placeholder="学生中文姓名"></label>
+        <label><span>学号 / Student ID</span><input name="studentId" required maxlength="40" placeholder="唯一学号，用于登录"></label>
+        <label><span>英文名 / English name（可选）</span><input name="englishName" maxlength="40" placeholder="English name"></label>
+        <label><span>邀请码 / Invitation code（可选）</span><input name="inviteCode" maxlength="12" placeholder="留空则自动生成"></label>
+      </div>
+      <p>添加后将立即确认加入：<strong id="addStudentContextLabel"></strong></p>
+      <button class="primary-button" type="submit">添加并确认 <small>Add</small></button>
+    </form>
+  </dialog>
+
+  <dialog class="role-dialog" id="newCourseDialog" aria-labelledby="newCourseTitle">
+    <form class="auth-dialog-shell" id="newCourseForm">
+      <header><div><span>教学工作台</span><h2 id="newCourseTitle">新建课程 <small>Create course</small></h2></div><button type="button" data-new-course-close aria-label="关闭">×</button></header>
+      <div class="form-grid two-columns">
+        <label><span>学期 / Term</span><select name="term" data-term-options required></select></label>
+        <label><span>教材 / Textbook</span><select name="bookId" data-book-options required></select></label>
+        <label class="wide-field"><span>班级名称 / Class name（选填）</span><input name="className" maxlength="40" placeholder="如：初级综合1班"></label>
+      </div>
+      <p>课程按“学期 + 教材”建立，创建后可在课程中添加学生并发放个人邀请码。</p>
+      <button class="primary-button" type="submit">创建课程 <small>Create</small></button>
+    </form>
   </dialog>
 
   <dialog class="writing-setup-dialog" id="writingSetupDialog" aria-labelledby="writingSetupTitle">
@@ -265,7 +493,8 @@
         <label><span>提交给</span><select id="essayTeacherSelect" name="teacher" required></select></label>
         <label><span>AI反馈语言</span><select id="essayLocaleSelect" name="locale"></select></label>
       </div>
-      <footer><button class="quiet-button" type="button" data-writing-close="setup">取消</button><button class="primary-button" type="submit">建立作文并开始手写</button></footer>
+      <p class="writing-setup-hint" id="writingSetupHint" hidden>尚未绑定教师：作文将保存在本机，教师端暂不可见。请先请教师提供课程邀请码并加入课程后再提交。</p>
+      <footer><button class="quiet-button" type="button" data-writing-close="setup">取消 <small>Cancel</small></button><button class="primary-button" type="submit">建立作文并开始手写 <small>Start writing</small></button></footer>
     </form>
   </dialog>
 
@@ -273,9 +502,9 @@
     <div class="writing-assist-shell">
       <header><div><span>多语言辅助</span><h2 id="writingAssistTitle">AI写作准备</h2></div><button type="button" data-writing-close="assist" aria-label="关闭">×</button></header>
       <nav id="writingAssistTabs" aria-label="AI辅助类型">
-        <button class="active" type="button" data-assist-tab="understand">理解题目</button>
-        <button type="button" data-assist-tab="outline">写作结构</button>
-        <button type="button" data-assist-tab="expressions">参考表达</button>
+        <button class="active" type="button" data-assist-tab="understand">理解题目<small>Understand</small></button>
+        <button type="button" data-assist-tab="outline">写作结构<small>Outline</small></button>
+        <button type="button" data-assist-tab="expressions">参考表达<small>Expressions</small></button>
       </nav>
       <section id="writingAssistContent" class="writing-assist-content"></section>
     </div>
@@ -287,12 +516,12 @@
         <div><span id="essayWritingMeta">手写作文</span><h2 id="essayWritingTitle">田字格作文稿</h2></div>
         <div class="essay-window-actions"><button type="button" data-essay-action="toggle-fullscreen" title="全屏 / Full screen" aria-label="全屏">⛶</button><button type="button" data-writing-close="canvas" title="关闭 / Close" aria-label="关闭">×</button></div>
       </header>
-      <section class="essay-task-strip"><div><strong id="essayPromptTitle"></strong><p id="essayPromptRequirements"></p></div><button class="quiet-button" type="button" data-essay-action="assist">AI辅助</button></section>
+      <section class="essay-task-strip"><div><strong id="essayPromptTitle"></strong><p id="essayPromptRequirements"></p></div><button class="quiet-button" type="button" data-essay-action="assist">AI辅助 <small>AI assist</small></button></section>
       <div class="essay-writing-body">
         <section class="active-writing-column">
           <div class="column-heading"><span>当前一格</span><strong id="activeCellLabel">写下第1个字</strong></div>
           <div class="tian-writing-board"><i></i><i></i><i></i><i></i><canvas id="essayHandwritingCanvas" width="600" height="600" aria-label="单字手写田字格"></canvas></div>
-          <div class="cell-actions"><button class="quiet-button" type="button" data-essay-action="clear-cell">清空</button><button class="primary-button" type="button" data-essay-action="confirm-cell">确认此字</button></div>
+          <div class="cell-actions"><button class="quiet-button" type="button" data-essay-action="clear-cell">清空 <small>Clear</small></button><button class="primary-button" type="button" data-essay-action="confirm-cell">确认此字 <small>Confirm</small></button></div>
           <div class="punctuation-row" aria-label="添加标点"><button type="button" data-essay-punctuation="，">，</button><button type="button" data-essay-punctuation="。">。</button><button type="button" data-essay-punctuation="？">？</button><button type="button" data-essay-punctuation="！">！</button><button type="button" data-essay-punctuation="；">；</button><button type="button" data-essay-punctuation="：">：</button></div>
         </section>
         <section class="manuscript-column">
@@ -301,7 +530,7 @@
           <footer class="manuscript-pagination"><button type="button" data-essay-action="previous-page" aria-label="上一页">‹</button><span id="essayPageLabel">第1页</span><button type="button" data-essay-action="next-page" aria-label="下一页">›</button></footer>
         </section>
       </div>
-      <footer class="essay-writing-footer"><button class="quiet-button" type="button" data-essay-action="undo-cell">撤销上一格</button><span id="essaySaveStatus">尚未保存</span><button class="quiet-button" type="button" data-essay-action="save-draft">保存草稿</button><button class="primary-button submit-essay-button" type="button" data-essay-action="submit">提交作文</button></footer>
+      <footer class="essay-writing-footer"><button class="quiet-button" type="button" data-essay-action="undo-cell">撤销上一格 <small>Undo</small></button><span id="essaySaveStatus">尚未保存</span><button class="quiet-button" type="button" data-essay-action="save-draft">保存草稿 <small>Save draft</small></button><button class="primary-button submit-essay-button" type="button" data-essay-action="submit">提交作文 <small>Submit</small></button></footer>
     </div>
   </dialog>
 
@@ -333,7 +562,7 @@
         <button type="button" data-course-close aria-label="关闭">×</button>
       </header>
       <nav class="course-level-tabs" aria-label="学习阶段">
-        <button type="button" data-course-level="beginner">初级 <small>Beginner</small></button>
+        <button type="button" data-course-level="beginner">初级 <small>Elementary</small></button>
         <button class="active" type="button" data-course-level="intermediate">中级 <small>Intermediate</small></button>
         <button type="button" data-course-level="advanced">高级 <small>Advanced</small></button>
       </nav>
@@ -343,11 +572,29 @@
     </div>
   </dialog>
 
+  <dialog class="role-dialog" id="confirmDialog" aria-labelledby="confirmDialogTitle">
+    <form class="auth-dialog-shell" id="confirmDialogForm">
+      <header><div><span>提示</span><h2 id="confirmDialogTitle">请确认</h2></div><button type="button" data-confirm-cancel aria-label="关闭">×</button></header>
+      <p class="confirm-dialog-message" id="confirmDialogMessage"></p>
+      <footer class="confirm-dialog-actions">
+        <button class="quiet-button" type="button" data-confirm-cancel>取消 <small>Cancel</small></button>
+        <button class="danger-button" type="button" data-confirm-ok>确认 <small>Confirm</small></button>
+      </footer>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status" hidden></div>
-  <script src="../../config.js?v=20260818-2"></script>
-  <script src="../shared/learning-api-client.js?v=20260811-7"></script>
-  <script src="practice-analytics.js?v=20260823-1"></script>
-  <script src="app.js?v=20260823-1" defer></script>
-  <script src="writing-zone.js?v=20260811-3" defer></script>
+  <script src="../../vendor/xlsx.full.min.js"></script>
+  <script src="../../config.js?v=20260823-1"></script>
+  <script src="../shared/learning-api-client.js?v=20260824-3"></script>
+  <script src="../shared/draggable.js?v=20260823-1"></script>
+  <script src="practice-analytics.js?v=20260823-2"></script>
+  <script src="app.js?v=20260824-3" defer></script>
+  <script src="writing-zone.js?v=20260823-4" defer></script>
+
+  <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
+    <span><strong>发现新版本</strong><small>点击刷新以更新到最新内容 / New version ready, tap to refresh</small></span>
+    <button class="pwa-install-action" type="button" data-pwa-refresh>刷新 / Refresh</button>
+  </section>
 </body>
 </html>

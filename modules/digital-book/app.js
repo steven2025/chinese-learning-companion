@@ -139,6 +139,8 @@ const state = {
   activeClozeBlank: "",
   answerModes: {},
   keyboardAssessments: {},
+  activityStepIndex: {},
+  referenceExampleIndex: {},
   classSettings: { writingInputMode: "both" },
   feedbackPreference: localStorage.getItem("digitalBookFeedbackLanguage") || "native",
   handwriting: {},
@@ -152,6 +154,7 @@ const state = {
   quizResult: null,
   audioSource: "",
   audioUrls: {},
+  audioUrlPromises: {},
   audioMessage: "",
   audioMode: "single",
   audioSegment: null,
@@ -1045,6 +1048,14 @@ function renderPracticeUnit(item, index) {
     renderChoiceUnit(item);
     return;
   }
+  if (item.answer?.groups?.length) {
+    renderHanziChainUnit(item);
+    return;
+  }
+  if (item.answer?.slots?.length) {
+    renderPolyphonicUnit(item);
+    return;
+  }
   if (["substitutionDialogue", "threeWayMatch", "wordBankFill", "sentenceTransform", "questionAnswerTransform", "dialogueFill", "guidedDialogue", "digitCards", "guidedFamilyDialogue", "pictureOccupation", "numberReading", "questionFromAnswer", "hanziWordComplete"].includes(item.type)) {
     renderInteractivePracticeUnit(item);
     return;
@@ -1064,13 +1075,14 @@ function renderPracticeUnit(item, index) {
   const preferredMode = state.answerModes[item.id] || allowedModes[0];
   const answerMode = allowedModes.includes(preferredMode) ? preferredMode : allowedModes[0];
   state.answerModes[item.id] = answerMode;
+  const hasReferenceExamples = Array.isArray(item.referenceExamples) && item.referenceExamples.length;
   elements.unitContent.innerHTML = `
     <div class="practice-unit">
       <span class="practice-target">第 ${item.questionNumber} 题 · ${escapeHtml(item.target || item.groupTitle || item.sectionTitle)}</span>
-      <h2 class="practice-prompt">${escapeHtml(item.prompt)}</h2>
+      <h2 class="practice-prompt${hasReferenceExamples ? " is-compact" : ""}">${escapeHtml(item.prompt)}</h2>
       ${choices.length ? `<div class="word-bank">${choices.map((choice) => `<span>${escapeHtml(choice)}</span>`).join("")}</div>` : ""}
       ${requiredVocabulary.length ? `<div class="required-vocabulary"><strong>参考词组</strong><div class="word-bank">${requiredVocabulary.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div></div>` : ""}
-      ${item.referenceText ? `<details class="reference-text-panel"><summary>${escapeHtml(item.referenceTitle || "参考材料")}</summary><div>${escapeHtml(item.referenceText)}</div></details>` : ""}
+      ${hasReferenceExamples ? renderReferenceExamples(item) : item.referenceText ? `<details class="reference-text-panel"><summary>${escapeHtml(item.referenceTitle || "参考材料")}</summary><div>${escapeHtml(item.referenceText)}</div></details>` : ""}
       ${renderContextualAssistButtons()}
       ${supportsHandwriting ? `<div class="answer-mode-tabs" role="group" aria-label="作答方式">
         ${allowedModes.includes("keyboard") ? `<button type="button" data-answer-mode="keyboard" class="${answerMode === "keyboard" ? "active" : ""}">键盘输入</button>` : ""}
@@ -1114,6 +1126,186 @@ function renderChoiceUnit(item) {
     </div>`;
 }
 
+function chainSource(item) {
+  return String(item.prompt || "").replace(/[—\-–\s]+$/g, "").trim();
+}
+
+function renderHanziChainUnit(item) {
+  const charKey = `${item.id}:char`;
+  const wordKey = `${item.id}:word`;
+  const source = chainSource(item);
+  const submitted = state.submitted[item.id];
+  elements.unitContent.innerHTML = `
+    <div class="practice-unit structured-fill-unit">
+      <span class="practice-target">第 ${item.questionNumber} 题 · ${escapeHtml(item.groupTitle || item.sectionTitle)}</span>
+      <h2 class="practice-prompt">${escapeHtml(item.prompt)}</h2>
+      <p class="structured-slot-intro">先写一个与“${escapeHtml(source)}”相关的新字，再用它组词。</p>
+      <div class="hanzi-chain-row">
+        <b class="hanzi-chain-source">${escapeHtml(source)}</b>
+        <span class="hanzi-chain-arrow">→</span>
+        <input data-structured-slot="${escapeAttribute(charKey)}" value="${escapeAttribute(state.answers[charKey] || "")}" placeholder="新字" autocomplete="off" maxlength="2">
+        <span class="hanzi-chain-arrow">→</span>
+        <input data-structured-slot="${escapeAttribute(wordKey)}" value="${escapeAttribute(state.answers[wordKey] || "")}" placeholder="组词" autocomplete="off">
+      </div>
+      ${renderContextualAssistButtons()}
+      <div class="answer-box">
+        <div class="answer-actions">
+          <button class="quiet-button" type="button" data-command="clear-answer">清空</button>
+          <button class="command-button" type="button" data-command="submit-answer">提交作答</button>
+        </div>
+        ${submitted ? structuredFillFeedback(item) : ""}
+      </div>
+    </div>`;
+}
+
+function renderPolyphonicUnit(item) {
+  const submitted = state.submitted[item.id];
+  const slots = item.answer?.slots || [];
+  const head = String(item.prompt || "").split("\n")[0].trim();
+  elements.unitContent.innerHTML = `
+    <div class="practice-unit structured-fill-unit">
+      <span class="practice-target">第 ${item.questionNumber} 题 · ${escapeHtml(item.groupTitle || item.sectionTitle)}</span>
+      <h2 class="practice-prompt">${escapeHtml(item.prompt)}</h2>
+      <p class="structured-slot-intro">为“${escapeHtml(head)}”的每个读音各填一个词。</p>
+      <div class="structured-slot-list">
+        ${slots.map((slot) => {
+          const key = `${item.id}:${slot.key}`;
+          return `<label class="structured-slot">
+            <span class="structured-slot-label">${escapeHtml(slot.label)}（${escapeHtml(slot.reference || "")}）</span>
+            <input data-structured-slot="${escapeAttribute(key)}" value="${escapeAttribute(state.answers[key] || "")}" placeholder="组一个词" autocomplete="off">
+          </label>`;
+        }).join("")}
+      </div>
+      ${renderContextualAssistButtons()}
+      <div class="answer-box">
+        <div class="answer-actions">
+          <button class="quiet-button" type="button" data-command="clear-answer">清空</button>
+          <button class="command-button" type="button" data-command="submit-answer">提交作答</button>
+        </div>
+        ${submitted ? structuredFillFeedback(item) : ""}
+      </div>
+    </div>`;
+}
+
+function structuredFillKeys(item) {
+  if (item.answer?.groups?.length) return [`${item.id}:char`, `${item.id}:word`];
+  if (item.answer?.slots?.length) return item.answer.slots.map((slot) => `${item.id}:${slot.key}`);
+  return [];
+}
+
+function structuredFillScore(item) {
+  if (item.answer?.groups?.length) {
+    const charValue = String(state.answers[`${item.id}:char`] || "").trim();
+    const wordValue = String(state.answers[`${item.id}:word`] || "").trim();
+    const matched = item.answer.groups.some(([character, word]) => normalizeAnswer(charValue) === normalizeAnswer(character) && normalizeAnswer(wordValue) === normalizeAnswer(word));
+    if (matched) return 100;
+    return charValue && wordValue ? 50 : 0;
+  }
+  const slots = item.answer?.slots || [];
+  if (!slots.length) return 0;
+  let matched = 0;
+  slots.forEach((slot) => {
+    const value = String(state.answers[`${item.id}:${slot.key}`] || "").trim();
+    if (value && (slot.accepted || []).some((accepted) => normalizeAnswer(value) === normalizeAnswer(accepted))) matched += 1;
+  });
+  return Math.round((matched / slots.length) * 100);
+}
+
+function structuredFillSummary(item) {
+  if (item.answer?.groups?.length) {
+    return `${String(state.answers[`${item.id}:char`] || "").trim()} — ${String(state.answers[`${item.id}:word`] || "").trim()}`;
+  }
+  const slots = item.answer?.slots || [];
+  return slots.map((slot) => `${slot.label}：${String(state.answers[`${item.id}:${slot.key}`] || "").trim()}`).join(" / ");
+}
+
+function structuredFillFeedback(item) {
+  if (item.answer?.groups?.length) return hanziChainFeedback(item);
+  if (item.answer?.slots?.length) return polyphonicFeedback(item);
+  return "";
+}
+
+function hanziChainFeedback(item) {
+  const source = chainSource(item);
+  const charValue = String(state.answers[`${item.id}:char`] || "").trim();
+  const wordValue = String(state.answers[`${item.id}:word`] || "").trim();
+  const referenceText = item.answer.groups.map(([character, word]) => `${character} — ${word}`).join(" ／ ");
+  const matched = item.answer.groups.some(([character, word]) => normalizeAnswer(charValue) === normalizeAnswer(character) && normalizeAnswer(wordValue) === normalizeAnswer(word));
+  let heading;
+  let message;
+  if (matched) {
+    heading = "作答符合要求";
+    message = `正确：${escapeHtml(source)} → ${escapeHtml(charValue)} → ${escapeHtml(wordValue)}。还可写：${escapeHtml(referenceText)}。`;
+  } else if (charValue && wordValue) {
+    heading = "已作答，请对照参考自查";
+    message = `你的答案是“${escapeHtml(charValue)} — ${escapeHtml(wordValue)}”。参考答案：${escapeHtml(referenceText)}。新字只要与“${escapeHtml(source)}”相关、词中含该字即可。`;
+  } else if (charValue || wordValue) {
+    heading = "请根据提示再检查";
+    message = charValue ? "还差“组词”一格。" : "还差“新字”一格。";
+  } else {
+    heading = "请根据提示再检查";
+    message = "先填一个新字，再用它组词。";
+  }
+  return `<div class="answer-feedback${matched ? "" : " needs-work"}"><strong>${escapeHtml(heading)}</strong><br>${message}</div>`;
+}
+
+function polyphonicFeedback(item) {
+  const slots = item.answer?.slots || [];
+  const lines = [];
+  let filled = 0;
+  let matched = 0;
+  slots.forEach((slot) => {
+    const value = String(state.answers[`${item.id}:${slot.key}`] || "").trim();
+    const referenceText = (slot.accepted || []).join(" / ");
+    if (!value) {
+      lines.push(`${escapeHtml(slot.label)}：未填写`);
+      return;
+    }
+    filled += 1;
+    const ok = (slot.accepted || []).some((accepted) => normalizeAnswer(value) === normalizeAnswer(accepted));
+    if (ok) {
+      matched += 1;
+      lines.push(`${escapeHtml(slot.label)}：✓ “${escapeHtml(value)}”（还可：${escapeHtml(referenceText)}）`);
+    } else {
+      lines.push(`${escapeHtml(slot.label)}：“${escapeHtml(value)}”不在参考内。参考答案：${escapeHtml(referenceText)}，请自查读音是否对应`);
+    }
+  });
+  const total = slots.length;
+  let heading;
+  if (filled === total && matched === total) heading = "本组题已完成";
+  else if (filled === total) heading = "已作答，请对照参考自查";
+  else heading = "请根据提示再检查";
+  return `<div class="answer-feedback${matched === total && filled === total ? "" : " needs-work"}"><strong>${escapeHtml(heading)}</strong><br>${lines.join("<br>")}</div>`;
+}
+
+function submitStructuredFill(item) {
+  elements.unitContent.querySelectorAll("[data-structured-slot]").forEach((field) => {
+    state.answers[field.dataset.structuredSlot] = field.value;
+  });
+  state.answers[item.id] = structuredFillSummary(item);
+  state.submitted[item.id] = true;
+  localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+  localStorage.setItem(storageKeys.practiceSubmitted, JSON.stringify(state.submitted));
+  recordObjectivePractice(item, structuredFillScore(item));
+  renderPracticeUnit(item, currentIndex());
+  bilingualizeButtons(elements.unitContent);
+}
+
+function renderReferenceExamples(item) {
+  const examples = item.referenceExamples || [];
+  if (!examples.length) return "";
+  if (!Number.isInteger(state.referenceExampleIndex[item.id])) state.referenceExampleIndex[item.id] = 0;
+  const index = Math.min(state.referenceExampleIndex[item.id], examples.length - 1);
+  const example = examples[index];
+  return `
+    <section class="reference-examples">
+      <div class="reference-example-tabs" role="group" aria-label="参考范文">
+        ${examples.map((ex, i) => `<button type="button" class="reference-example-tab${i === index ? " is-active" : ""}" data-reference-example="${i}" aria-pressed="${i === index}">${escapeHtml(ex.title || `范文 ${i + 1}`)}</button>`).join("")}
+      </div>
+      <div class="reference-example-body">${escapeHtml(example.text || "")}</div>
+    </section>`;
+}
+
 function groupPracticeActivities(items) {
   if (!Array.isArray(items) || items.length < 2) return null;
   if (!items.every((item) => /-t\d+-i\d+$/.test(item.id) && item.type === "guidedProduction")) return null;
@@ -1155,12 +1347,25 @@ function groupPracticeActivities(items) {
 function renderPracticeActivity(item) {
   const submitted = state.submitted[item.id];
   const feedback = buildActivityFeedback(item);
+  const steps = item.steps || [];
+  if (!Number.isInteger(state.activityStepIndex[item.id])) state.activityStepIndex[item.id] = 0;
+  const activeIndex = steps.length ? Math.min(state.activityStepIndex[item.id], steps.length - 1) : 0;
+  const activeStep = steps[activeIndex];
   elements.unitContent.innerHTML = `
     <div class="practice-unit practice-activity-unit">
       <span class="practice-target">第 ${escapeHtml(item.questionRange)} 题 · ${escapeHtml(item.groupTitle || item.sectionTitle)}</span>
       <h2 class="practice-activity-prompt">${escapeHtml(item.prompt)}</h2>
+      ${steps.length > 1 ? `<div class="activity-step-tabs" role="group" aria-label="小题切换">
+        ${steps.map((step, index) => {
+          const keys = activityStepKeys(step);
+          const filledCount = keys.filter((key) => String(state.answers[key] || "").trim()).length;
+          const complete = filledCount === keys.length;
+          const partial = filledCount > 0 && !complete;
+          return `<button type="button" class="activity-step-tab${index === activeIndex ? " is-active" : ""}${complete ? " is-filled" : ""}${partial ? " is-partial" : ""}" data-activity-step="${index}" aria-pressed="${index === activeIndex}">第 ${step.stepNumber} 小题${complete ? " ✓" : ""}</button>`;
+        }).join("")}
+      </div>` : ""}
       <div class="practice-activity-steps">
-        ${item.steps.map((step) => renderActivityStep(item, step)).join("")}
+        ${activeStep ? renderActivityStep(item, activeStep) : ""}
       </div>
       ${renderContextualAssistButtons()}
       <div class="answer-actions">
@@ -2502,6 +2707,12 @@ function renderWordQuiz(word) {
     </div>`;
 }
 
+function activePracticeStep(item) {
+  if (item.unitType !== "practiceActivity" || !Array.isArray(item.steps)) return null;
+  const index = Number.isInteger(state.activityStepIndex[item.id]) ? state.activityStepIndex[item.id] : 0;
+  return item.steps[Math.min(index, item.steps.length - 1)] || null;
+}
+
 function renderPracticeAssist() {
   const item = currentItem();
   if (item.unitType === "practiceIntro") {
@@ -2516,14 +2727,15 @@ function renderPracticeAssist() {
       ${renderDeepAssistPanel({ unitType: "practice-intro", unitId: item.groupId, assistType: "deep-explain" })}`;
     return;
   }
-  const support = localizedPracticeSupport(item);
+  const assistItem = activePracticeStep(item) || item;
+  const support = localizedPracticeSupport(assistItem);
   if (state.assistTab === "understand") {
     elements.assistContent.innerHTML = `
       <div class="assist-block">
         <span class="assist-label">题目要求</span>
         <p class="translation-large">${escapeHtml(support.promptMeaning || "先确认题目要求你补充、改写还是解释什么内容。")}</p>
       </div>
-      ${renderDeepAssistPanel({ unitType: "practice", unitId: item.id, assistType: "prompt-meaning" })}`;
+      ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "prompt-meaning" })}`;
     return;
   }
   if (state.assistTab === "hint") {
@@ -2534,7 +2746,7 @@ function renderPracticeAssist() {
         ${support.writingStructure?.length ? `<strong>参考结构</strong><ol>${support.writingStructure.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ol>` : ""}
         ${support.keywordGuidance?.length ? `<strong>关键词语</strong><div class="word-bank">${support.keywordGuidance.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div>` : ""}
       </div>
-      ${renderDeepAssistPanel({ unitType: "practice", unitId: item.id, assistType: "thinking-hint" })}`;
+      ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "thinking-hint" })}`;
     return;
   }
   const example = support.similarExample;
@@ -2546,7 +2758,7 @@ function renderPracticeAssist() {
       </div>
       ${example ? `<div class="assist-block"><span class="assist-label">实例解析</span><p>${escapeHtml(example.answer)}\n${escapeHtml(example.explanation)}</p></div>` : ""}
     </div>
-    ${renderDeepAssistPanel({ unitType: "practice", unitId: item.id, assistType: "similar-example" })}`;
+    ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "similar-example" })}`;
 }
 
 function localizedPracticeSupport(item) {
@@ -2787,11 +2999,12 @@ async function ensureAudioSource(source) {
   let audioUrl = state.audioUrls[source] || "";
   try {
     if (!audioUrl) {
-      const result = await window.LearningApi.mediaUrl({
-        lessonId: LESSON_ID,
-        mediaType: source,
-      });
-      audioUrl = String(result?.url || "");
+      if (!state.audioUrlPromises[source]) {
+        state.audioUrlPromises[source] = window.LearningApi.mediaUrl({ lessonId: LESSON_ID, mediaType: source })
+          .then((result) => String(result?.url || ""))
+          .finally(() => { delete state.audioUrlPromises[source]; });
+      }
+      audioUrl = await state.audioUrlPromises[source];
       if (!audioUrl) throw new Error("云端未返回音频地址");
       state.audioUrls[source] = audioUrl;
     }
@@ -3091,6 +3304,10 @@ function submitPractice() {
   const item = currentItem();
   if (item.unitType === "practiceActivity") {
     submitPracticeActivity(item);
+    return;
+  }
+  if (item.answer?.groups?.length || item.answer?.slots?.length) {
+    submitStructuredFill(item);
     return;
   }
   const textarea = document.querySelector("#practiceAnswer");
@@ -3741,6 +3958,7 @@ function handleCommand(command) {
     if (item.unitType === "practiceActivity") {
       clearPracticeActivity(item);
     } else {
+      structuredFillKeys(item).forEach((key) => delete state.answers[key]);
       state.answers[item.id] = "";
       delete state.submitted[item.id];
       localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
@@ -3855,6 +4073,27 @@ function bindEvents() {
       openAssistWindow(assistTab);
       return;
     }
+    const activityStepTab = event.target.closest("[data-activity-step]")?.dataset.activityStep;
+    if (activityStepTab !== undefined) {
+      const item = currentItem();
+      state.activityStepIndex[item.id] = Number(activityStepTab);
+      closePracticeWritingPanel();
+      renderPracticeUnit(item, currentIndex());
+      bilingualizeButtons(elements.unitContent);
+      if (state.assistOpen) {
+        renderAssistContext();
+        renderAssistContent();
+      }
+      return;
+    }
+    const referenceExample = event.target.closest("[data-reference-example]")?.dataset.referenceExample;
+    if (referenceExample !== undefined) {
+      const item = currentItem();
+      state.referenceExampleIndex[item.id] = Number(referenceExample);
+      renderPracticeUnit(item, currentIndex());
+      bilingualizeButtons(elements.unitContent);
+      return;
+    }
     const command = event.target.closest("[data-command]")?.dataset.command;
     if (command === "open-activity-writing" || command === "clear-activity-writing") {
       const writingKey = event.target.closest("[data-writing-key]")?.dataset.writingKey;
@@ -3868,6 +4107,12 @@ function bindEvents() {
     const activityInput = event.target.dataset.activityInput;
     if (activityInput) {
       state.answers[activityInput] = event.target.value;
+      localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+      return;
+    }
+    const structuredSlot = event.target.dataset.structuredSlot;
+    if (structuredSlot) {
+      state.answers[structuredSlot] = event.target.value;
       localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
       return;
     }
@@ -4081,6 +4326,11 @@ function bindEvents() {
     if (event.key === "ArrowLeft") moveUnit(-1);
     if (event.key === "ArrowRight") moveUnit(1);
   });
+  window.attachDraggable?.({
+    element: elements.writingDialog,
+    handle: ".writing-dialog-header",
+  });
+
   window.addEventListener("beforeunload", () => {
     stopRecordedAudio();
     destroyVoiceOrbs();
@@ -4137,3 +4387,25 @@ if (LESSON.renderer === "pronunciation" && window.PronunciationRenderer) {
 } else {
   start();
 }
+
+if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("../../sw.js", { scope: "../../" })
+      .then((registration) => {
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              const banner = document.querySelector("#pwaUpdateBanner");
+              if (banner) banner.hidden = false;
+            }
+          });
+        });
+      })
+      .catch(() => {});
+  });
+}
+document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-pwa-refresh]")) { window.location.reload(); return; }
+});

@@ -46,13 +46,29 @@
     sessionStorage.removeItem(PROFILE_KEY);
   }
 
+  function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+  function pollingDelay(attempt, base = 2000) {
+    const delay = attempt < 3 ? base : attempt < 8 ? Math.max(base, 3000) : attempt < 18 ? Math.max(base, 5000) : Math.max(base, 8000);
+    return delay + Math.floor(Math.random() * 350);
+  }
+
+  async function readJobStatus(jobId, attempt, baseInterval) {
+    await sleep(pollingDelay(attempt, baseInterval));
+    try {
+      return await request("/jobs/status", { jobId });
+    } catch (error) {
+      if (/过于频繁|429|503|繁忙/.test(error.message || "") && attempt < 5) return null;
+      throw error;
+    }
+  }
+
   async function resolveAssist(input) {
     const result = await request("/assist/resolve", input);
     if (result.status === "ready") return result;
     if (!result.jobId) throw new Error("云服务没有返回任务编号");
     for (let attempt = 0; attempt < 20; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      const status = await request("/jobs/status", { jobId: result.jobId });
+      const status = await readJobStatus(result.jobId, attempt, 2000);
+      if (!status) continue;
       if (status.status === "completed") return { status: "ready", source: "job", content: status.result };
       if (status.status === "failed") throw new Error(status.message || "深度解释生成失败");
     }
@@ -61,11 +77,11 @@
 
   async function waitForJob(jobId, options = {}) {
     const attempts = Number(options.attempts || 60);
-    const interval = Number(options.interval || 2000);
+    const interval = Math.max(2000, Number(options.interval || 2000));
     for (let attempt = 0; attempt < attempts; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, interval));
       options.onProgress?.(attempt < 3 ? "assessing" : "advising", { attempt });
-      const status = await request("/jobs/status", { jobId });
+      const status = await readJobStatus(jobId, attempt, interval);
+      if (!status) continue;
       if (status.status === "completed") return status.result;
       if (status.status === "failed") throw new Error(status.message || "AI测评失败");
     }
@@ -137,8 +153,37 @@
     mediaUrl: (input) => request("/media/url", input),
     uploadTicket: (input) => request("/uploads/ticket", input),
     assessmentHistory: () => request("/assessments/history", {}),
-    classStudents: () => request("/classes/students", {}),
-    classSettings: () => request("/classes/settings", {}),
+    classStudents: (input) => request("/classes/students", input || {}),
+    teacherCourses: () => request("/teacher/courses", {}),
+    createTeacherCourse: (input) => request("/teacher/courses/create", input),
+    updateTeacherCourse: (input) => request("/teacher/courses/update", input),
+    courseStudents: (input) => request("/teacher/courses/students", input),
+    addCourseStudents: (input) => request("/teacher/courses/students/add", input),
+    updateCourseStudent: (input) => request("/teacher/courses/students/update", input),
+    removeCourseStudent: (input) => request("/teacher/courses/students/remove", input),
+    resetCourseStudentInvite: (input) => request("/teacher/courses/students/reset-invite", input),
+    adminTeachers: () => request("/admin/teachers", {}),
+    createAdminTeacher: (input) => request("/admin/teachers/create", input),
+    updateAdminTeacher: (input) => request("/admin/teachers/update", input),
+    removeAdminTeacher: (input) => request("/admin/teachers/remove", input),
+    resetAdminTeacherInvite: (input) => request("/admin/teachers/reset-invite", input),
+    publicAboutTeachers: () => request("/about/teachers/public", {}, { auth: false }),
+    manageAboutTeachers: () => request("/about/teachers/manage", {}),
+    saveAboutTeacher: (input) => request("/about/teachers/save", input),
+    aboutTeacherPhotoTicket: (input) => request("/about/teachers/photo-ticket", input),
+    commitAboutTeacherPhoto: (input) => request("/about/teachers/photo-commit", input),
+    moderateAboutTeacher: (input) => request("/about/teachers/moderate", input),
+    publicAboutActivities: () => request("/about/activities/public", {}, { auth: false }),
+    manageAboutActivities: () => request("/about/activities/manage", {}),
+    saveAboutActivity: (input) => request("/about/activities/save", input),
+    aboutActivityMediaTicket: (input) => request("/about/activities/media-ticket", input),
+    commitAboutActivityMedia: (input) => request("/about/activities/media-commit", input),
+    moderateAboutActivity: (input) => request("/about/activities/moderate", input),
+    publicAboutFeedback: () => request("/about/feedback/public", {}, { auth: false }),
+    createAboutFeedback: (input) => request("/about/feedback/create", input),
+    manageAboutFeedback: () => request("/about/feedback/manage", {}),
+    moderateAboutFeedback: (input) => request("/about/feedback/moderate", input),
+    classSettings: (input) => request("/classes/settings", input || {}),
     updateClassSettings: (input) => request("/classes/settings/update", input),
     practiceRecord: (input) => request("/practice/record", input),
     practiceReport: (input) => request("/practice/report", input),
@@ -148,6 +193,7 @@
     vocabularyReport: (input) => request("/vocabulary/report", input),
     textRecord: (input) => request("/text/record", input),
     textReport: (input) => request("/text/report", input),
+    progressSummary: (input) => request("/progress/summary", input || {}),
     uploadJson,
     writingAssist,
     writingSave: (input) => request("/writing/save", input),
