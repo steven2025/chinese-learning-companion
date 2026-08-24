@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v74";
+const CACHE_VERSION = "diandian-chinese-v75";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -18,10 +18,10 @@ const APP_SHELL = [
   "./modules/shared/draggable.js?v=20260823-1",
   "./modules/learning-hub/index.html",
   "./modules/learning-hub/templates/student-import-template.xlsx",
-  "./modules/learning-hub/styles.css?v=20260823-9",
+  "./modules/learning-hub/styles.css?v=20260823-10",
   "./modules/learning-hub/writing-zone.css?v=20260811-6",
   "./modules/learning-hub/practice-analytics.css?v=20260811-6",
-  "./modules/learning-hub/app.js?v=20260823-17",
+  "./modules/learning-hub/app.js?v=20260823-18",
   "./modules/learning-hub/writing-zone.js?v=20260823-4",
   "./modules/learning-hub/practice-analytics.js?v=20260823-2",
   "./modules/character-hit/index.html",
