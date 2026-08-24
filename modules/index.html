@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="creative-medium" content="interactive-prototype">
+<title>拼音声调生成器</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica,
+                 Arial, sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 35%, #ede9fe 100%);
+    color: #0f172a;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 16px 80px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 680px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 8px 24px rgba(37, 99, 235, 0.08),
+      0 20px 40px rgba(124, 58, 237, 0.06);
+  }
+
+  /* 输入区 */
+  .input-row {
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .input-row label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+  }
+
+  #pinyinInput {
+    width: 100%;
+    padding: 16px 18px;
+    font-size: 20px;
+    font-weight: 500;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+    background: #f8fafc;
+    color: #0f172a;
+    letter-spacing: 0.5px;
+  }
+
+  #pinyinInput:focus {
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  }
+
+  .input-hint {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 6px;
+  }
+
+  /* 声调卡片 */
+  .tones-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .tone-card {
+    background: linear-gradient(145deg, #f8fafc, #ffffff);
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    position: relative;
+  }
+
+  .tone-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 8px 20px rgba(59, 130, 246, 0.18),
+      0 4px 8px rgba(15, 23, 42, 0.06);
+    border-color: #93c5fd;
+  }
+
+  .tone-card:active {
+    transform: translateY(-1px);
+  }
+
+  .tone-card.active {
+    background: linear-gradient(145deg, #3b82f6, #2563eb);
+    border-color: #2563eb;
+    color: #ffffff;
+    box-shadow:
+      0 8px 20px rgba(37, 99, 235, 0.4),
+      0 0 0 4px rgba(59, 130, 246, 0.2);
+  }
+
+  .tone-label {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.7;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+
+  .tone-mark {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    min-height: 36px;
+    word-break: break-all;
+  }
+
+  .tone-number {
+    font-size: 11px;
+    opacity: 0.5;
+    margin-top: 4px;
+  }
+
+  /* 结果区 */
+  .results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .result-box {
+    border-radius: 14px;
+    padding: 18px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 1.5px solid transparent;
+  }
+
+  .result-pinyin {
+    background: linear-gradient(145deg, #eff6ff, #dbeafe);
+    border-color: #bfdbfe;
+  }
+
+  .result-ipa {
+    background: linear-gradient(145deg, #f5f3ff, #ede9fe);
+    border-color: #ddd6fe;
+  }
+
+  .result-label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .result-pinyin .result-label { color: #1d4ed8; }
+  .result-ipa .result-label { color: #7c3aed; }
+
+  .result-value {
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    word-break: break-all;
+    min-height: 40px;
+    line-height: 1.2;
+  }
+
+  .result-pinyin .result-value { color: #1e40af; }
+  .result-ipa .result-value { color: #6d28d9; }
+
+  .result-placeholder {
+    font-size: 16px;
+    font-weight: 400;
+    opacity: 0.4;
+  }
+
+  /* 复制按钮 */
+  .copy-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .btn {
+    padding: 14px 20px;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    color: #ffffff;
+  }
+
+  .btn-pinyin {
+    background: linear-gradient(145deg, #3b82f6, #2563eb);
+    box-shadow:
+      0 4px 0 #1d4ed8,
+      0 8px 16px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-pinyin:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 0 #1d4ed8,
+      0 12px 24px rgba(37, 99, 235, 0.4);
+  }
+
+  .btn-pinyin:active {
+    transform: translateY(2px);
+    box-shadow:
+      0 2px 0 #1d4ed8,
+      0 4px 8px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-ipa {
+    background: linear-gradient(145deg, #a855f7, #7c3aed);
+    box-shadow:
+      0 4px 0 #6d28d9,
+      0 8px 16px rgba(124, 58, 237, 0.3);
+  }
+
+  .btn-ipa:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 0 #6d28d9,
+      0 12px 24px rgba(124, 58, 237, 0.4);
+  }
+
+  .btn-ipa:active {
+    transform: translateY(2px);
+    box-shadow:
+      0 2px 0 #6d28d9,
+      0 4px 8px rgba(124, 58, 237, 0.3);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .btn-icon {
+    font-size: 18px;
+  }
+
+  .btn.copied {
+    background: linear-gradient(145deg, #10b981, #059669) !important;
+    box-shadow:
+      0 4px 0 #047857,
+      0 8px 16px rgba(16, 185, 129, 0.3) !important;
+  }
+
+  /* 规则提示浮层 */
+  .rule-banner {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translate(-50%, -120%);
+    width: calc(100% - 32px);
+    max-width: 620px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+    border-radius: 18px;
+    padding: 22px 52px 22px 24px;
+    box-shadow:
+      0 10px 40px rgba(234, 179, 8, 0.35),
+      0 4px 12px rgba(234, 179, 8, 0.2);
+    z-index: 1000;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 2px solid rgba(251, 191, 36, 0.6);
+  }
+
+  .rule-banner.show {
+    transform: translate(-50%, 0);
+  }
+
+  .rule-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #92400e;
+    font-weight: 700;
+    transition: all 0.2s;
+  }
+
+  .rule-close:hover {
+    background: #ffffff;
+    transform: rotate(90deg);
+  }
+
+  .rule-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 8px;
+  }
+
+  .rule-content {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #78350f;
+    margin-bottom: 10px;
+  }
+
+  .rule-mnemonic {
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #92400e;
+    font-weight: 500;
+    font-style: italic;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .rule-mnemonic::before {
+    content: "💡";
+    font-style: normal;
+    flex-shrink: 0;
+  }
+
+  /* 语言切换 */
+  .lang-switch {
+    position: absolute;
+    top: 12px;
+    right: 52px;
+  }
+
+  .lang-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1.5px solid rgba(217, 119, 6, 0.3);
+    border-radius: 8px;
+    color: #92400e;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+  }
+
+  .lang-btn:hover {
+    background: #ffffff;
+    border-color: #d97706;
+  }
+
+  .lang-arrow {
+    font-size: 10px;
+    opacity: 0.6;
+  }
+
+  .lang-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    padding: 6px;
+    min-width: 160px;
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 1001;
+    display: none;
+  }
+
+  .lang-dropdown.show { display: block; }
+
+  .lang-option {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #334155;
+    transition: all 0.15s;
+  }
+
+  .lang-option:hover {
+    background: #f1f5f9;
+  }
+
+  .lang-option.active {
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 600;
+  }
+
+  /* 页脚 */
+  .footer {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 12px;
+    margin-top: 24px;
+  }
+
+  /* 响应式 */
+  @media (max-width: 520px) {
+    body { padding: 24px 12px 60px; }
+    h1 { font-size: 22px; }
+    .card { padding: 20px 16px; }
+    .tone-card { padding: 14px 4px; }
+    .tone-mark { font-size: 22px; min-height: 30px; }
+    .tone-label { font-size: 10px; }
+    .result-value { font-size: 22px; }
+    .results { grid-template-columns: 1fr; }
+    .result-box { min-height: 80px; padding: 14px; }
+    .btn { padding: 12px 16px; font-size: 14px; }
+    .rule-banner { padding: 18px 46px 18px 18px; }
+    .rule-title { font-size: 15px; }
+    .rule-content { font-size: 13px; }
+    .rule-mnemonic { font-size: 12px; }
+    .lang-switch { right: 44px; }
+    .lang-btn { padding: 5px 10px; font-size: 12px; }
+  }
+
+  /* ---- 学习中心集成 & 双语美化 ---- */
+  .back-home { position: fixed; top: 16px; left: 16px; z-index: 30; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: rgba(255,255,255,.9); backdrop-filter: blur(8px); border: 1px solid #e2e8f0; border-radius: 999px; color: #334155; text-decoration: none; font-size: 13px; font-weight: 600; box-shadow: 0 6px 18px rgba(15,23,42,.1); }
+  .back-home small { font-size: 10px; font-weight: 600; opacity: .65; }
+  .back-home:hover { color: #2563eb; border-color: #bfdbfe; }
+  h1 small { display: block; margin-top: 6px; font-size: 15px; font-weight: 600; letter-spacing: 0; background: none; -webkit-background-clip: initial; background-clip: initial; -webkit-text-fill-color: #64748b; }
+  .input-row label small { font-size: 10px; font-weight: 600; opacity: .6; margin-left: 6px; }
+  .tone-label small { display: block; margin: 3px 0 0; font-size: 10px; font-weight: 600; opacity: .6; letter-spacing: 0; }
+  .result-label small { font-size: 10px; font-weight: 600; opacity: .6; margin-left: 4px; letter-spacing: 0; }
+  .btn-text small { font-size: 10px; font-weight: 600; opacity: .7; margin-left: 4px; }
+  @media (max-width: 600px) {
+    .back-home { top: 10px; left: 10px; padding: 6px 10px; font-size: 12px; }
+  }
+
+</style>
+</head>
+<body>
+  <a class="back-home" href="../learning-hub/">← 返回学习中心<small>Back to hub</small></a>
+  <div class="app">
+    <h1>拼音声调生成器<small>Pinyin Tone Generator</small></h1>
+    <p class="subtitle">输入拼音，点击声调，一键复制带调拼音和 IPA 国际音标 · Enter pinyin, pick a tone, copy toned pinyin &amp; IPA</p>
+
+    <div class="card">
+      <div class="input-row">
+        <label for="pinyinInput">输入拼音 <small>Enter pinyin</small></label>
+        <input id="pinyinInput" type="text" placeholder="例如：zhongguo，可用 v 代替 ü" autocomplete="off" spellcheck="false">
+        <div class="input-hint">支持声母、韵母、完整音节；输入 v 代表 ü · Supports initials, finals &amp; full syllables; use v for ü</div>
+      </div>
+
+      <div class="tones-row" id="tonesRow">
+        <div class="tone-card" data-tone="0">
+          <div class="tone-label">轻声<small>Neutral</small></div>
+          <div class="tone-mark" id="tone0">—</div>
+          <div class="tone-number">˙</div>
+        </div>
+        <div class="tone-card" data-tone="1">
+          <div class="tone-label">一声<small>1st</small></div>
+          <div class="tone-mark" id="tone1">—</div>
+          <div class="tone-number">¯</div>
+        </div>
+        <div class="tone-card" data-tone="2">
+          <div class="tone-label">二声<small>2nd</small></div>
+          <div class="tone-mark" id="tone2">—</div>
+          <div class="tone-number">ˊ</div>
+        </div>
+        <div class="tone-card" data-tone="3">
+          <div class="tone-label">三声<small>3rd</small></div>
+          <div class="tone-mark" id="tone3">—</div>
+          <div class="tone-number">ˇ</div>
+        </div>
+        <div class="tone-card" data-tone="4">
+          <div class="tone-label">四声<small>4th</small></div>
+          <div class="tone-mark" id="tone4">—</div>
+          <div class="tone-number">ˋ</div>
+        </div>
+      </div>
+
+      <div class="results">
+        <div class="result-box result-pinyin">
+          <div class="result-label">拼音结果 <small>Pinyin</small></div>
+          <div class="result-value" id="pinyinResult"><span class="result-placeholder">点击声调卡片</span></div>
+        </div>
+        <div class="result-box result-ipa">
+          <div class="result-label">IPA 音标 <small>IPA</small></div>
+          <div class="result-value" id="ipaResult"><span class="result-placeholder">点击声调卡片</span></div>
+        </div>
+      </div>
+
+      <div class="copy-row">
+        <button class="btn btn-pinyin" id="copyPinyinBtn" disabled>
+          <span class="btn-icon">📋</span>
+          <span class="btn-text">复制拼音 <small>Copy pinyin</small></span>
+        </button>
+        <button class="btn btn-ipa" id="copyIpaBtn" disabled>
+          <span class="btn-icon">📋</span>
+          <span class="btn-text">复制 IPA <small>Copy IPA</small></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="footer">汉语拼音声调与 IPA 国际音标转换工具 · Chinese pinyin tone &amp; IPA conversion tool</div>
+  </div>
+
+  <!-- 规则提示浮层 -->
+  <div class="rule-banner" id="ruleBanner">
+    <button class="rule-close" id="ruleClose">×</button>
+    <div class="lang-switch">
+      <button class="lang-btn" id="langBtn">中文 <span class="lang-arrow">▼</span></button>
+      <div class="lang-dropdown" id="langDropdown"></div>
+    </div>
+    <div class="rule-title" id="ruleTitle">规则提示</div>
+    <div class="rule-content" id="ruleContent"></div>
+    <div class="rule-mnemonic" id="ruleMnemonic"></div>
+  </div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ============== 拼音声调数据 ==============
+  // 带调字符映射：原字符 -> [轻声, 一声, 二声, 三声, 四声]
+  const TONE_MAP = {
+    'a': ['a', 'ā', 'á', 'ǎ', 'à'],
+    'o': ['o', 'ō', 'ó', 'ǒ', 'ò'],
+    'e': ['e', 'ē', 'é', 'ě', 'è'],
+    'i': ['i', 'ī', 'í', 'ǐ', 'ì'],
+    'u': ['u', 'ū', 'ú', 'ǔ', 'ù'],
+    'ü': ['ü', 'ǖ', 'ǘ', 'ǚ', 'ǜ'],
+    'v': ['ü', 'ǖ', 'ǘ', 'ǚ', 'ǜ'],
+    'A': ['A', 'Ā', 'Á', 'Ǎ', 'À'],
+    'O': ['O', 'Ō', 'Ó', 'Ǒ', 'Ò'],
+    'E': ['E', 'Ē', 'É', 'Ě', 'È'],
+    'I': ['I', 'Ī', 'Í', 'Ǐ', 'Ì'],
+    'U': ['U', 'Ū', 'Ú', 'Ǔ', 'Ù'],
+    'Ü': ['Ü', 'Ǖ', 'Ǘ', 'Ǚ', 'Ǜ'],
+    'V': ['Ü', 'Ǖ', 'Ǘ', 'Ǚ', 'Ǜ'],
+  };
+
+  // IPA 调值上标数字
+  const IPA_TONE = ['', '⁵⁵', '³⁵', '²¹⁴', '⁵¹'];
+
+  // ============== 标调规则 ==============
+  // 找到应标调的元音位置
+  function findToneVowel(pinyin) {
+    // pinyin 是不带调的拼音字符串（小写，v 已转 ü）
+    // 规则：有 a 标 a，无 a 找 o/e，i/u 并列标在后，i 上标调去点
+    const vowels = 'aeoiuü';
+    // 特殊：er
+    if (pinyin === 'er') return 0;
+
+    let aIdx = pinyin.indexOf('a');
+    if (aIdx >= 0) return aIdx;
+
+    let oIdx = pinyin.indexOf('o');
+    let eIdx = pinyin.indexOf('e');
+    if (oIdx >= 0 && eIdx >= 0) return Math.min(oIdx, eIdx);
+    if (oIdx >= 0) return oIdx;
+    if (eIdx >= 0) return eIdx;
+
+    // i / u / ü 找最后一个出现的
+    let lastVowelIdx = -1;
+    for (let i = pinyin.length - 1; i >= 0; i--) {
+      if (vowels.indexOf(pinyin[i]) >= 0) {
+        lastVowelIdx = i;
+        break;
+      }
+    }
+    return lastVowelIdx;
+  }
+
+  // 在给定拼音上标声调
+  function applyTone(pinyin, tone) {
+    if (!pinyin) return '';
+    if (tone === 0) return pinyin; // 轻声不标调
+
+    // 先处理 ü 的省写：j/q/x/y 后的 ü 写成 u（带调也带 u 的调号）
+    // 但我们在标调时保持原始 ü，输出时再按规则转换
+    const toneIdx = findToneVowel(pinyin);
+    if (toneIdx < 0) return pinyin;
+
+    const vowel = pinyin[toneIdx];
+    const toneChar = TONE_MAP[vowel];
+    if (!toneChar) return pinyin;
+
+    return pinyin.slice(0, toneIdx) + toneChar[tone] + pinyin.slice(toneIdx + 1);
+  }
+
+  // 应用 ü 省写规则：j/q/x/y 后的 ü 写成 u
+  function applyUmLautRule(pinyin) {
+    // pinyin 可以带调或不带调
+    // j/q/x/y + ü/ǖ/ǘ/ǚ/ǜ -> u/ū/ú/ǔ/ù
+    const umlautToU = {
+      'ü': 'u', 'ǖ': 'ū', 'ǘ': 'ú', 'ǚ': 'ǔ', 'ǜ': 'ù',
+      'Ü': 'U', 'Ǖ': 'Ū', 'Ǘ': 'Ú', 'Ǚ': 'Ǔ', 'Ǜ': 'Ù',
+    };
+
+    let result = '';
+    for (let i = 0; i < pinyin.length; i++) {
+      const ch = pinyin[i];
+      if (umlautToU[ch]) {
+        // 看前面的声母是否是 j q x y
+        const initial = pinyin.slice(0, i);
+        if (/[jqx]$/.test(initial) || initial === 'y') {
+          result += umlautToU[ch];
+          continue;
+        }
+      }
+      result += ch;
+    }
+    return result;
+  }
+
+  // ============== 拼音解析 ==============
+  // 声母表
+  const INITIALS = ['zh', 'ch', 'sh', 'b', 'p', 'm', 'f', 'd', 't', 'n', 'l',
+                    'g', 'k', 'h', 'j', 'q', 'x', 'r', 'z', 'c', 's', 'y', 'w'];
+
+  // 韵母表（按长度降序，便于匹配）
+  const FINALS = [
+    'iang', 'iong', 'uang', 'ueng',
+    'iao', 'iou', 'ian', 'ing', 'ang', 'eng', 'ong',
+    'uai', 'uei', 'uan', 'uen',
+    'ai', 'ei', 'ao', 'ou', 'an', 'en',
+    'ia', 'ie', 'in',
+    'ua', 'uo', 'üe', 'ün',
+    'üan',
+    'a', 'o', 'e', 'i', 'u', 'ü', 'er'
+  ];
+
+  // 解析拼音为 [声母, 韵母]
+  function parsePinyin(input) {
+    if (!input) return { initial: '', final: '', original: '' };
+
+    let s = input.trim().toLowerCase();
+    // v -> ü
+    s = s.replace(/v/g, 'ü').replace(/V/g, 'Ü');
+
+    const original = s;
+
+    // 先找声母
+    let initial = '';
+    let rest = s;
+
+    // 零声母 y/w 规范化
+    // yi -> i, yu -> ü, ye -> ie, yue -> üe, yuan -> üan, yun -> ün
+    // y + 其他 -> i + 韵母
+    // wu -> u, w + 其他 -> u + 韵母
+    let isZeroInitial = false;
+
+    if (s.startsWith('y')) {
+      isZeroInitial = true;
+      if (s === 'yi') { rest = 'i'; }
+      else if (s === 'yu') { rest = 'ü'; }
+      else if (s === 'ye') { rest = 'ie'; }
+      else if (s === 'yue') { rest = 'üe'; }
+      else if (s === 'yuan') { rest = 'üan'; }
+      else if (s === 'yun') { rest = 'ün'; }
+      else if (s.startsWith('y')) { rest = 'i' + s.slice(1); }
+      initial = 'y';
+    } else if (s.startsWith('w')) {
+      isZeroInitial = true;
+      if (s === 'wu') { rest = 'u'; }
+      else if (s.startsWith('w')) { rest = 'u' + s.slice(1); }
+      initial = 'w';
+    } else {
+      // 正常声母匹配（双字母优先）
+      for (const init of ['zh', 'ch', 'sh']) {
+        if (s.startsWith(init)) {
+          initial = init;
+          rest = s.slice(init.length);
+          break;
+        }
+      }
+      if (!initial) {
+        for (const init of INITIALS) {
+          if (s.startsWith(init) && init !== 'y' && init !== 'w') {
+            initial = init;
+            rest = s.slice(init.length);
+            break;
+          }
+        }
+      }
+      // 如果没找到声母，可能是零声母（直接是韵母）
+      if (!initial) {
+        isZeroInitial = true;
+        rest = s;
+      }
+    }
+
+    // 匹配韵母
+    let final = '';
+    for (const f of FINALS) {
+      if (rest === f) {
+        final = f;
+        break;
+      }
+    }
+
+    // 如果没匹配到韵母，整个 rest 当作韵母（可能是部分输入）
+    if (!final) {
+      final = rest;
+    }
+
+    return {
+      initial: initial,
+      final: final,
+      original: original,
+      isZeroInitial: isZeroInitial
+    };
+  }
+
+  // ============== IPA 转写 ==============
+  const IPA_INITIALS = {
+    'b': 'p', 'p': 'pʰ', 'm': 'm', 'f': 'f',
+    'd': 't', 't': 'tʰ', 'n': 'n', 'l': 'l',
+    'g': 'k', 'k': 'kʰ', 'h': 'x',
+    'j': 'tɕ', 'q': 'tɕʰ', 'x': 'ɕ',
+    'zh': 'ʈʂ', 'ch': 'ʈʂʰ', 'sh': 'ʂ', 'r': 'ʐ',
+    'z': 'ts', 'c': 'tsʰ', 's': 's',
+  };
+
+  const IPA_FINALS = {
+    'a': 'a', 'o': 'o', 'e': 'ɤ',
+    'i': 'i', 'u': 'u', 'ü': 'y',
+    'ai': 'ai', 'ei': 'ei', 'ao': 'au', 'ou': 'ou',
+    'an': 'an', 'en': 'ən', 'ang': 'aŋ', 'eng': 'əŋ', 'ong': 'ʊŋ',
+    'ia': 'ia', 'ie': 'iɛ', 'iao': 'iau', 'iou': 'iou',
+    'ian': 'iɛn', 'in': 'in', 'iang': 'iaŋ', 'ing': 'iŋ', 'iong': 'iʊŋ',
+    'ua': 'ua', 'uo': 'uo', 'uai': 'uai', 'uei': 'uei',
+    'uan': 'uan', 'uen': 'uən', 'uang': 'uaŋ', 'ueng': 'uəŋ',
+    'üe': 'yɛ', 'üan': 'yɛn', 'ün': 'yn',
+    'er': 'ɐɻ',
+  };
+
+  function toIPA(parsed, tone) {
+    let { initial, final } = parsed;
+    if (!initial && !final) return '';
+
+    let ipaInitial = '';
+    let ipaFinal = '';
+
+    // 声母
+    if (initial && initial !== 'y' && initial !== 'w') {
+      ipaInitial = IPA_INITIALS[initial] || initial;
+    }
+
+    // 韵母 - 特殊情况
+    // zhi/chi/shi/ri 的 i -> ʅ
+    // zi/ci/si 的 i -> ɿ
+    if (['zh', 'ch', 'sh', 'r'].indexOf(initial) >= 0 && final === 'i') {
+      ipaFinal = 'ʅ';
+    } else if (['z', 'c', 's'].indexOf(initial) >= 0 && final === 'i') {
+      ipaFinal = 'ɿ';
+    } else {
+      ipaFinal = IPA_FINALS[final] || final;
+    }
+
+    // bo/po/mo/fo 的 o -> [uo]
+    if (['b', 'p', 'm', 'f'].indexOf(initial) >= 0 && final === 'o') {
+      ipaFinal = 'uo';
+    }
+
+    const toneMark = IPA_TONE[tone] || '';
+    const result = ipaInitial + ipaFinal + toneMark;
+    return result ? '[' + result + ']' : '';
+  }
+
+  // ============== 规则提示 ==============
+  const RULES = {
+    'jqx_uv': {
+      zh: {
+        title: 'ü 省写规则',
+        content: 'j / q / x 与 ü 相拼时，ü 上两点省略，写作 u（带调也写作 ū ú ǔ ù），但读音仍为 ü [y]。',
+        mnemonic: 'j q x y 真淘气，见到鱼眼就挖去；只有 n l 不敢惹，鱼眼保留才清晰。'
+      },
+      en: {
+        title: 'Ü Omission Rule',
+        content: 'When j/q/x are followed by ü, the two dots on ü are omitted and written as u (with tone marks as ū ú ǔ ù), but the pronunciation is still ü [y].',
+        mnemonic: 'j q x y are naughty, they dig out the fish eyes; only n l dare not, keep the dots clear.'
+      },
+      fr: {
+        title: "Règle d'omission du ü",
+        content: "Quand j/q/x sont suivis de ü, les deux points de ü sont omis et s'écrivent u (avec les tons comme ū ú ǔ ù), mais la prononciation reste ü [y].",
+        mnemonic: "j q x y sont méchants, ils enlèvent les yeux du poisson ; seuls n l n'osent pas, gardent les points clairs."
+      },
+      th: {
+        title: 'กฎการละไว้ของ ü',
+        content: 'เมื่อ j/q/x ตามด้วย ü จุดสองจุดบน ü จะถูกละไว้และเขียนเป็น u (มีเครื่องหมายวรรณยุกต์เป็น ū ú ǔ ù) แต่การออกยังคงเป็น ü [y]',
+        mnemonic: 'j q x y ซนมาก ขุดตาปลาออก; เฉพาะ n l ที่ไม่กล้า เก็บจุดไว้ให้ชัดเจน'
+      },
+      lo: {
+        title: 'ກົດລະບຽບການລະບາຍ ü',
+        content: 'ເມື່ອ j/q/x ຕິດຕາມດ້ວຍ ü ຈຸດສອງຈຸດເທິງ ü ຈະຖືກລະບາຍ ແລະ ຂຽນເປັນ u (ມີເຄື່ອງໝາຍວັນນະຍຸດເປັນ ū ú ǔ ù) ແຕ່ການອອກຍັງຄື ü [y]',
+        mnemonic: 'j q x y ສະຫຼາດຫຼາຍ, ຂຸນຕາປາອອກ; ພຽງແຕ່ n l ທີ່ບໍ່ກ້າ, ເກັບຈຸດໄວ້ໃຫ້ຊັດເຈນ'
+      },
+      vi: {
+        title: 'Quy tắc lược dấu ü',
+        content: 'Khi j/q/x đi kèm với ü, hai dấu chấm trên ü bị lược bỏ và viết thành u (có dấu thanh là ū ú ǔ ù), nhưng cách phát âm vẫn là ü [y].',
+        mnemonic: 'j q x y nghịch ngợm, móc mắt cá ra; chỉ có n l không dám, giữ dấu rõ ràng.'
+      },
+      id: {
+        title: 'Aturan Penghilangan ü',
+        content: 'Ketika j/q/x diikuti oleh ü, dua titik pada ü dihilangkan dan ditulis sebagai u (dengan nada ū ú ǔ ù), tetapi pengucapannya tetap ü [y].',
+        mnemonic: 'j q x y nakal, gali mata ikan; hanya n l yang tidak berani, simpan titik dengan jelas.'
+      },
+      ms: {
+        title: 'Peraturan Penghapusan ü',
+        content: 'Apabila j/q/x diikuti oleh ü, dua titik pada ü dipadamkan dan ditulis sebagai u (dengan nada ū ú ǔ ù), tetapi sebutan masih ü [y].',
+        mnemonic: 'j q x y nakal, gali mata ikan; hanya n l yang tidak berani, simpan titik dengan jelas.'
+      },
+      ru: {
+        title: 'Правило опускания ü',
+        content: 'Когда j/q/x сопровождаются ü, две точки на ü опускаются и пишутся как u (с тонами ū ú ǔ ù), но произношение остаётся ü [y].',
+        mnemonic: 'j q x y озорные, выкапывают глаза рыбе; только n l не смеют, точки сохраняют ясными.'
+      },
+      es: {
+        title: 'Regla de omisión de ü',
+        content: 'Cuando j/q/x van seguidos de ü, los dos puntos de ü se omiten y se escriben como u (con tonos ū ú ǔ ù), pero la pronunciación sigue siendo ü [y].',
+        mnemonic: 'j q x y son traviesos, le sacan los ojos al pez; solo n l no se atreven, mantienen los puntos claros.'
+      },
+      ja: {
+        title: 'ü 省略の規則',
+        content: 'j/q/x の後に ü が続く場合、ü の2つの点は省略され u（声付きで ū ú ǔ ù）と書かれますが、発音は依然として ü [y] です。',
+        mnemonic: 'j q x y はいたずら者、魚の目を掘り出す；n l だけは怖くて、点をはっきり残す。'
+      },
+      ko: {
+        title: 'ü 생략 규칙',
+        content: 'j/q/x 뒤에 ü가 올 때 ü의 두 점을 생략하고 u(성조 붙은 건 ū ú ǔ ù)로 쓰지만, 발음은 여전히 ü [y]입니다.',
+        mnemonic: 'j q x y는 장난꾸러기, 물고기 눈을 파내요; n l만은 감히 못해, 점을 선명하게 남겨요.'
+      }
+    },
+    'nl_uv': {
+      zh: {
+        title: 'ü 不省写规则',
+        content: 'n / l 与 ü 相拼时，ü 上两点不能省略。因为 n / l 既可以拼 u 也可以拼 ü，省略后会混淆。',
+        mnemonic: 'j q x y 真淘气，见到鱼眼就挖去；只有 n l 不敢惹，鱼眼保留才清晰。'
+      },
+      en: {
+        title: 'Ü Non-Omission Rule',
+        content: 'When n/l are followed by ü, the two dots on ü cannot be omitted. Because n/l can combine with both u and ü, omitting would cause confusion.',
+        mnemonic: 'j q x y are naughty, they dig out the fish eyes; only n l dare not, keep the dots clear.'
+      },
+      fr: {
+        title: "Règle de non-omission du ü",
+        content: "Quand n/l sont suivis de ü, les deux points de ü ne peuvent pas être omis. Comme n/l peuvent se combiner avec u et ü, l'omission causerait de la confusion.",
+        mnemonic: "j q x y sont méchants, ils enlèvent les yeux du poisson ; seuls n l n'osent pas, gardent les points clairs."
+      },
+      th: {
+        title: 'กฎการไม่ละไว้ของ ü',
+        content: 'เมื่อ n/l ตามด้วย ü จุดสองจุดบน ü ไม่สามารถละไว้ได้ เนื่องจาก n/l สามารถรวมกับ u และ ü ได้ การละไว้จะทำให้สับสน',
+        mnemonic: 'j q x y ซนมาก ขุดตาปลาออก; เฉพาะ n l ที่ไม่กล้า เก็บจุดไว้ให้ชัดเจน'
+      },
+      lo: {
+        title: 'ກົດລະບຽບການບໍ່ລະບາຍ ü',
+        content: 'ເມື່ອ n/l ຕິດຕາມດ້ວຍ ü ຈຸດສອງຈຸດເທິງ ü ບໍ່ສາມາດລະບາຍໄດ້ ເພາະ n/l ສາມາດສົມທົບກັບ u ແລະ ü ໄດ້ ການລະບາຍຈະເຮັດໃຫ້ສັບສົນ',
+        mnemonic: 'j q x y ສະຫຼາດຫຼາຍ, ຂຸນຕາປາອອກ; ພຽງແຕ່ n l ທີ່ບໍ່ກ້າ, ເກັບຈຸດໄວ້ໃຫ້ຊັດເຈນ'
+      },
+      vi: {
+        title: 'Quy tắc không lược dấu ü',
+        content: 'Khi n/l đi kèm với ü, hai dấu chấm trên ü không được lược bỏ. Vì n/l có thể kết hợp với cả u và ü, lược bỏ sẽ gây nhầm lẫn.',
+        mnemonic: 'j q x y nghịch ngợm, móc mắt cá ra; chỉ có n l không dám, giữ dấu rõ ràng.'
+      },
+      id: {
+        title: 'Aturan Tidak Menghilangkan ü',
+        content: 'Ketika n/l diikuti oleh ü, dua titik pada ü tidak dapat dihilangkan. Karena n/l dapat bergabung dengan u dan ü, penghilangan akan menyebabkan kebingungan.',
+        mnemonic: 'j q x y nakal, gali mata ikan; hanya n l yang tidak berani, simpan titik dengan jelas.'
+      },
+      ms: {
+        title: 'Peraturan Tidak Memadamkan ü',
+        content: 'Apabila n/l diikuti oleh ü, dua titik pada ü tidak boleh dipadamkan. Oleh kerana n/l boleh bergabung dengan u dan ü, pemadaman akan menyebabkan kekeliruan.',
+        mnemonic: 'j q x y nakal, gali mata ikan; hanya n l yang tidak berani, simpan titik dengan jelas.'
+      },
+      ru: {
+        title: 'Правило неопускания ü',
+        content: 'Когда n/l сопровождаются ü, две точки на ü нельзя опускать. Поскольку n/l могут сочетаться и с u, и с ü, опущение вызовет путаницу.',
+        mnemonic: 'j q x y озорные, выкапывают глаза рыбе; только n l не смеют, точки сохраняют ясными.'
+      },
+      es: {
+        title: 'Regla de no omisión de ü',
+        content: 'Cuando n/l van seguidos de ü, los dos puntos de ü no se pueden omitir. Como n/l pueden combinarse tanto con u como con ü, la omisión causaría confusión.',
+        mnemonic: 'j q x y son traviesos, le sacan los ojos al pez; solo n l no se atreven, mantienen los puntos claros.'
+      },
+      ja: {
+        title: 'ü 非省略の規則',
+        content: 'n/l の後に ü が続く場合、ü の2つの点は省略できません。n/l は u とも ü とも組み合わせ可能なため、省略すると混同されます。',
+        mnemonic: 'j q x y はいたずら者、魚の目を掘り出す；n l だけは怖くて、点をはっきり残す。'
+      },
+      ko: {
+        title: 'ü 비생략 규칙',
+        content: 'n/l 뒤에 ü가 올 때 ü의 두 점을 생략할 수 없습니다. n/l은 u와도 ü와도 결합할 수 있기 때문에 생략하면 혼란이 생깁니다.',
+        mnemonic: 'j q x y는 장난꾸러기, 물고기 눈을 파내요; n l만은 감히 못해, 점을 선명하게 남겨요.'
+      }
+    },
+    'iou_uei': {
+      zh: {
+        title: '省写规则：iou / uei / uen',
+        content: 'iou、uei、uen 三个韵母在声母前时，中间的元音字母省略，分别写作 iu、ui、un。零声母（y / w 开头）不省略，仍写完整形式。',
+        mnemonic: 'iou、uei、uen，声母在前省中间。'
+      },
+      en: {
+        title: 'Omission Rule: iou / uei / uen',
+        content: 'When the finals iou, uei, uen are preceded by an initial consonant, the middle vowel letter is omitted, written as iu, ui, un respectively. Zero initial (starting with y/w) is not omitted.',
+        mnemonic: 'iou, uei, uen, with initial consonant, omit the middle.'
+      },
+      fr: {
+        title: "Règle d'omission : iou / uei / uen",
+        content: "Quand les finales iou, uei, uen sont précédées d'une initiale consonantique, la voyelle du milieu est omise, écrites respectivement iu, ui, un. L'initiale zéro (commençant par y/w) n'est pas omise.",
+        mnemonic: "iou, uei, uen, avec initiale, omet le milieu."
+      },
+      th: {
+        title: 'กฎการละไว้: iou / uei / uen',
+        content: 'เมื่อสระ iou, uei, uen มีพยัญชนะต้นนำหน้า สระตัวกลางจะถูกละไว้ เขียนเป็น iu, ui, un ตามลำดับ พยัญชนะต้นศูนย์ (ขึ้นต้นด้วย y/w) ไม่ถูกละไว้',
+        mnemonic: 'iou, uei, uen, มีต้นพยัญชนะ ละตัวกลาง'
+      },
+      lo: {
+        title: 'ກົດລະບຽບການລະບາຍ: iou / uei / uen',
+        content: 'ເມື່ອຕົວສະ iou, uei, uen ມີພະຍັນຊະນະຕົ້ນນໍາຫນ້າ ສະຕົວກາງຈະຖືກລະບາຍ ຂຽນເປັນ iu, ui, un ຕາມລໍາດັບ ພະຍັນຊະນະຕົ້ນສູນ (ເລີ່ມຕົ້ນດ້ວຍ y/w) ບໍ່ຖືກລະບາຍ',
+        mnemonic: 'iou, uei, uen, ມີຕົ້ນພະຍັນຊະນະ, ລະຕົວກາງ'
+      },
+      vi: {
+        title: 'Quy tắc lược bỏ: iou / uei / uen',
+        content: 'Khi các vần iou, uei, uen đứng sau phụ âm đầu, nguyên âm ở giữa bị lược bỏ, viết thành iu, ui, un tương ứng. Vần không có phụ âm đầu (bắt đầu bằng y/w) không bị lược bỏ.',
+        mnemonic: 'iou, uei, uen, có phụ âm đầu thì lược ở giữa.'
+      },
+      id: {
+        title: 'Aturan Penghilangan: iou / uei / uen',
+        content: 'Ketika kata akhir iou, uei, uen didahului oleh konsonan awal, vokal tengah dihilangkan, ditulis sebagai iu, ui, un. Awal nol (dimulai dengan y/w) tidak dihilangkan.',
+        mnemonic: 'iou, uei, uen, dengan awal konsonan, hilangkan yang tengah.'
+      },
+      ms: {
+        title: 'Peraturan Pemadaman: iou / uei / uen',
+        content: 'Apabila akhiran iou, uei, uen didahului oleh konsonan awal, vokal tengah dipadamkan, ditulis sebagai iu, ui, un. Awal sifar (bermula dengan y/w) tidak dipadamkan.',
+        mnemonic: 'iou, uei, uen, dengan awal konsonan, padam yang tengah.'
+      },
+      ru: {
+        title: 'Правило опускания: iou / uei / uen',
+        content: 'Когда финали iou, uei, uen предшествует начальный согласный, средняя гласная опускается, пишутся как iu, ui, un соответственно. Нулевой начальный (начинающийся с y/w) не опускается.',
+        mnemonic: 'iou, uei, uen, с начальным согласным — опускай середину.'
+      },
+      es: {
+        title: 'Regla de omisión: iou / uei / uen',
+        content: 'Cuando las finales iou, uei, uen van precedidas de una consonante inicial, la vocal del medio se omite, escribiéndose como iu, ui, un respectivamente. La inicial cero (que empieza por y/w) no se omite.',
+        mnemonic: 'iou, uei, uen, con inicial consonante, omite la del medio.'
+      },
+      ja: {
+        title: '省略規則：iou / uei / uen',
+        content: '韵母 iou、uei、uen の前に声母がある場合、中間の母音字を省略し、それぞれ iu、ui、un と書きます。零声母（y/w で始まる）は省略されません。',
+        mnemonic: 'iou、uei、uen、声母ありは途中を省略。'
+      },
+      ko: {
+        title: '생략 규칙: iou / uei / uen',
+        content: '운모 iou, uei, uen 앞에 성모가 올 때 가운데 모음 글자를 생략하고 각각 iu, ui, un으로 씁니다. 영성모(y/w로 시작)는 생략하지 않습니다.',
+        mnemonic: 'iou, uei, uen, 성모 앞이면 가운데를 생략해요.'
+      }
+    },
+    'whole_read': {
+      zh: {
+        title: '整体认读音节：舌尖元音',
+        content: 'zhi / chi / shi / ri / zi / ci / si 是整体认读音节。其中的 i 不读普通的 [i]，zh / ch / sh / r 后的 i 读舌尖后元音 [ʅ]，z / c / s 后的 i 读舌尖前元音 [ɿ]。',
+        mnemonic: 'i 不读 [i]，舌尖元音要牢记。'
+      },
+      en: {
+        title: 'Whole-Read Syllables: Apical Vowels',
+        content: 'zhi / chi / shi / ri / zi / ci / si are whole-read syllables. The i in them is not pronounced as the regular [i]. After zh/ch/sh/r, i is the retroflex apical vowel [ʅ]; after z/c/s, i is the dental apical vowel [ɿ].',
+        mnemonic: "i doesn't read [i], remember the apical vowels."
+      },
+      fr: {
+        title: "Syllabes à lecture globale : voyelles apicales",
+        content: "zhi / chi / shi / ri / zi / ci / si sont des syllabes à lecture globale. Le i qu'elles contiennent ne se prononce pas comme le [i] ordinaire. Après zh/ch/sh/r, i est la voyelle apicale rétrofléchie [ʅ] ; après z/c/s, i est la voyelle apicale dentale [ɿ].",
+        mnemonic: "i ne se lit pas [i], souvenez-vous des voyelles apicales."
+      },
+      th: {
+        title: 'พยางค์อ่านทั้งหมด: สระปลายลิ้น',
+        content: 'zhi / chi / shi / ri / zi / ci / si เป็นพยางค์อ่านทั้งหมด i ในนั้นไม่ออกเสียงเป็น [i] ปกติ หลัง zh/ch/sh/r i เป็นสระปลายลิ้นหงาย [ʅ]; หลัง z/c/s i เป็นสระปลายลิ้นฟัน [ɿ]',
+        mnemonic: 'i ไม่อ่าน [i], จำสระปลายลิ้นไว้'
+      },
+      lo: {
+        title: 'ພະຍາງຄະນະອ່ານທັງໝົດ: ສະປາຍລີ້ນ',
+        content: 'zhi / chi / shi / ri / zi / ci / si ເປັນພະຍາງຄະນະອ່ານທັງໝົດ i ໃນນັ້ນບໍ່ອອກສຽງເປັນ [i] ປົກກະຕິ ຫຼັງ zh/ch/sh/r i ເປັນສະປາຍລີ້ນເງື່ອຍ [ʅ]; ຫຼັງ z/c/s i ເປັນສະປາຍລີ້ນແຂ້ວ [ɿ]',
+        mnemonic: 'i ບໍ່ອ່ານ [i], ຈໍາສະປາຍລີ້ນໄວ້'
+      },
+      vi: {
+        title: 'Tiết đọc nguyên khối: nguyên âm đỉnh lưỡi',
+        content: 'zhi / chi / shi / ri / zi / ci / si là các tiết đọc nguyên khối. Chữ i trong đó không đọc là [i] thông thường. Sau zh/ch/sh/r, i là nguyên âm đỉnh lưỡi gập [ʅ]; sau z/c/s, i là nguyên âm đỉnh lưỡi răng [ɿ].',
+        mnemonic: 'i không đọc [i], hãy nhớ nguyên âm đỉnh lưỡi.'
+      },
+      id: {
+        title: 'Suku Kata Baca Utuh: Vokal Apikal',
+        content: 'zhi / chi / shi / ri / zi / ci / si adalah suku kata baca utuh. i di dalamnya tidak diucapkan sebagai [i] biasa. Setelah zh/ch/sh/r, i adalah vokal apikal retrofleks [ʅ]; setelah z/c/s, i adalah vokal apikal dental [ɿ].',
+        mnemonic: 'i tidak dibaca [i], ingat vokal apikal.'
+      },
+      ms: {
+        title: 'Suku Kata Baca Penuh: Vokal Apikal',
+        content: 'zhi / chi / shi / ri / zi / ci / si adalah suku kata baca penuh. i di dalamnya tidak disebut sebagai [i] biasa. Selepas zh/ch/sh/r, i ialah vokal apikal retrofleks [ʅ]; selepas z/c/s, i ialah vokal apikal dental [ɿ].',
+        mnemonic: 'i tidak dibaca [i], ingat vokal apikal.'
+      },
+      ru: {
+        title: 'Цельночитаемые слоги: апикальные гласные',
+        content: 'zhi / chi / shi / ri / zi / ci / si — цельночитаемые слоги. i в них не произносится как обычное [i]. После zh/ch/sh/r i — ретрофлексная апикальная гласная [ʅ]; после z/c/s i — зубная апикальная гласная [ɿ].',
+        mnemonic: 'i не читается как [i], помни апикальные гласные.'
+      },
+      es: {
+        title: 'Sílabas de lectura completa: vocales apicales',
+        content: 'zhi / chi / shi / ri / zi / ci / si son sílabas de lectura completa. La i que contienen no se pronuncia como la [i] ordinaria. Después de zh/ch/sh/r, i es la vocal apical retrofleja [ʅ]; después de z/c/s, i es la vocal apical dental [ɿ].',
+        mnemonic: 'i no se lee [i], recuerda las vocales apicales.'
+      },
+      ja: {
+        title: '全体認読音節：舌尖母音',
+        content: 'zhi / chi / shi / ri / zi / ci / si は全体認読音節です。これらの i は普通の [i] とは読みません。zh / ch / sh / r の後の i は舌尖後母音 [ʅ]、z / c / s の後の i は舌尖前母音 [ɿ] と読みます。',
+        mnemonic: 'i は [i] と読まず、舌尖母音を忘れずに。'
+      },
+      ko: {
+        title: '정체인독 음절: 설첨 모음',
+        content: 'zhi / chi / shi / ri / zi / ci / si는 정체인독 음절입니다. 그 안의 i는 보통 [i]로 읽지 않습니다. zh/ch/sh/r 뒤의 i는 설첨후 모음 [ʅ]이고, z/c/s 뒤의 i는 설첨전 모음 [ɿ]입니다.',
+        mnemonic: 'i는 [i]로 안 읽어요, 설첨 모음을 기억하세요.'
+      }
+    },
+    'bo_po': {
+      zh: {
+        title: 'o 的实际读音',
+        content: 'bo / po / mo / fo 这四个音节中，拼写的 o 实际读音为 [uo]。这是汉语拼音的一个拼写约定。',
+        mnemonic: 'o 拼作 o，读成 [uo] 不会错。'
+      },
+      en: {
+        title: 'Actual Pronunciation of o',
+        content: 'In the four syllables bo / po / mo / fo, the written o is actually pronounced as [uo]. This is a spelling convention in Chinese pinyin.',
+        mnemonic: 'o spelled as o, read as [uo], never wrong.'
+      },
+      fr: {
+        title: "Prononciation réelle de o",
+        content: "Dans les quatre syllabes bo / po / mo / fo, le o écrit se prononce en réalité [uo]. C'est une convention orthographique du pinyin chinois.",
+        mnemonic: "o s'écrit o, se lit [uo], jamais faux."
+      },
+      th: {
+        title: 'การออกเสียงจริงของ o',
+        content: 'ในสี่พยางค์ bo / po / mo / fo o ที่เขียนนั้นจริงๆ แล้วออกเสียงเป็น [uo] นี่คือข้อตกลงการสะกดในพินอินจีน',
+        mnemonic: 'o สะกด o อ่าน [uo] ไม่ผิดแน่นอน'
+      },
+      lo: {
+        title: 'ການອອກສຽງທີ່ແທ້ຈິງຂອງ o',
+        content: 'ໃນສີ່ພະຍາງຄະນະ bo / po / mo / fo o ທີ່ຂຽນນັ້ນຈິງໆແລ້ວອອກສຽງເປັນ [uo] ນີ້ແມ່ນຂໍ້ຕົກລົງການສະກົດໃນພິນຈີນຈີນ',
+        mnemonic: 'o ສະກົດ o ອ່ານ [uo] ບໍ່ຜິດແນ່ນອນ'
+      },
+      vi: {
+        title: 'Cách đọc thực tế của o',
+        content: 'Trong bốn tiết bo / po / mo / fo, chữ o viết ra thực tế được đọc là [uo]. Đây là một quy ước chính tả trong pinyin tiếng Trung.',
+        mnemonic: 'o viết là o, đọc là [uo], không bao giờ sai.'
+      },
+      id: {
+        title: 'Pengucapan Sebenarnya dari o',
+        content: 'Dalam empat suku kata bo / po / mo / fo, o yang tertulis sebenarnya diucapkan sebagai [uo]. Ini adalah konvensi ejaan dalam pinyin Tiongkok.',
+        mnemonic: 'o dieja o, dibaca [uo], tidak pernah salah.'
+      },
+      ms: {
+        title: 'Sebutan Sebenarnya o',
+        content: 'Dalam empat suku kata bo / po / mo / fo, o yang tertulis sebenarnya disebut sebagai [uo]. Ini adalah konvensi ejaan dalam pinyin Cina.',
+        mnemonic: 'o dieja o, dibaca [uo], tidak pernah salah.'
+      },
+      ru: {
+        title: 'Фактическое произношение o',
+        content: 'В четырёх слогах bo / po / mo / fo написанное o фактически произносится как [uo]. Это орфографическое соглашение в китайском пиньине.',
+        mnemonic: 'o пишется как o, читается как [uo] — никогда не ошибешься.'
+      },
+      es: {
+        title: 'Pronunciación real de o',
+        content: 'En las cuatro sílabas bo / po / mo / fo, la o escrita se pronuncia en realidad como [uo]. Esta es una convención ortográfica del pinyin chino.',
+        mnemonic: 'o se escribe o, se lee [uo], nunca te equivocas.'
+      },
+      ja: {
+        title: 'o の実際の読み方',
+        content: 'bo / po / mo / fo の4つの音節では、綴りの o は実際には [uo] と発音されます。これは中国語ピンインの綴りの慣習です。',
+        mnemonic: 'o は o と綴り、[uo] と読む、間違いなし。'
+      },
+      ko: {
+        title: 'o의 실제 발음',
+        content: 'bo / po / mo / fo 네 음절에서, 쓰인 o는 실제로 [uo]로 발음됩니다. 이것은 중국 병음의 철자 관행입니다.',
+        mnemonic: 'o는 o로 쓰고 [uo]로 읽어요, 절대 틀리지 않아요.'
+      }
+    }
+  };
+
+  const LANG_NAMES = {
+    zh: '中文',
+    en: 'English',
+    fr: 'Français',
+    th: 'ไทย',
+    lo: 'ລາວ',
+    vi: 'Tiếng Việt',
+    id: 'Indonesia',
+    ms: 'Melayu',
+    ru: 'Русский',
+    es: 'Español',
+    ja: '日本語',
+    ko: '한국어'
+  };
+
+  const LANG_ORDER = ['zh', 'en', 'fr', 'th', 'lo', 'vi', 'id', 'ms', 'ru', 'es', 'ja', 'ko'];
+
+  // ============== 状态 ==============
+  let currentLang = 'zh';
+  let currentRuleKey = null;
+  let selectedTone = null;
+  let currentPinyin = '';
+  let currentIPA = '';
+
+  // ============== DOM ==============
+  const input = document.getElementById('pinyinInput');
+  const toneEls = [
+    document.getElementById('tone0'),
+    document.getElementById('tone1'),
+    document.getElementById('tone2'),
+    document.getElementById('tone3'),
+    document.getElementById('tone4'),
+  ];
+  const toneCards = document.querySelectorAll('.tone-card');
+  const pinyinResult = document.getElementById('pinyinResult');
+  const ipaResult = document.getElementById('ipaResult');
+  const copyPinyinBtn = document.getElementById('copyPinyinBtn');
+  const copyIpaBtn = document.getElementById('copyIpaBtn');
+  const ruleBanner = document.getElementById('ruleBanner');
+  const ruleClose = document.getElementById('ruleClose');
+  const ruleTitle = document.getElementById('ruleTitle');
+  const ruleContent = document.getElementById('ruleContent');
+  const ruleMnemonic = document.getElementById('ruleMnemonic');
+  const langBtn = document.getElementById('langBtn');
+  const langDropdown = document.getElementById('langDropdown');
+
+  // ============== 初始化语言选择器 ==============
+  function initLangDropdown() {
+    langDropdown.innerHTML = '';
+    LANG_ORDER.forEach(code => {
+      const opt = document.createElement('div');
+      opt.className = 'lang-option' + (code === currentLang ? ' active' : '');
+      opt.textContent = LANG_NAMES[code];
+      opt.dataset.lang = code;
+      opt.addEventListener('click', function(e) {
+        e.stopPropagation();
+        setLang(code);
+        langDropdown.classList.remove('show');
+      });
+      langDropdown.appendChild(opt);
+    });
+  }
+
+  function setLang(code) {
+    currentLang = code;
+    langBtn.innerHTML = LANG_NAMES[code] + ' <span class="lang-arrow">▼</span>';
+    try { localStorage.setItem('pinyin_tone_lang', code); } catch(e) {}
+    // 更新下拉高亮
+    document.querySelectorAll('.lang-option').forEach(opt => {
+      opt.classList.toggle('active', opt.dataset.lang === code);
+    });
+    // 更新当前显示的规则
+    if (currentRuleKey) {
+      showRule(currentRuleKey);
+    }
+  }
+
+  function loadLang() {
+    try {
+      const saved = localStorage.getItem('pinyin_tone_lang');
+      if (saved && LANG_NAMES[saved]) {
+        setLang(saved);
+      }
+    } catch(e) {}
+  }
+
+  // ============== 规则检测 ==============
+  function detectRule(parsed) {
+    const { initial, final, original } = parsed;
+    const s = original.toLowerCase();
+
+    // 1. j/q/x + v/ü
+    if (/^[jqx].*[vü]/.test(s)) return 'jqx_uv';
+
+    // 2. n/l + v/ü
+    if (/^[nl].*[vü]/.test(s)) return 'nl_uv';
+
+    // 3. 整体认读 zhi/chi/shi/ri/zi/ci/si
+    const wholeRead = ['zhi', 'chi', 'shi', 'ri', 'zi', 'ci', 'si'];
+    if (wholeRead.indexOf(s) >= 0) return 'whole_read';
+
+    // 4. bo/po/mo/fo
+    const boSet = ['bo', 'po', 'mo', 'fo'];
+    if (boSet.indexOf(s) >= 0) return 'bo_po';
+
+    // 5. iou/uei/uen 省写（注意：拼写可能已经是 iu/ui/un 形式，
+    //    我们也检测原始拼写中是否是完整形式加声母的情况）
+    // 检测用户输入的是 iou/uei/uen 且前面有声母（非零声母）
+    if (initial && initial !== 'y' && initial !== 'w') {
+      if (final === 'iou' || final === 'uei' || final === 'uen') return 'iou_uei';
+    }
+    // 如果用户输入的是 iu/ui/un（即已经省写的形式），前面有声母时也提示
+    if (initial && initial !== 'y' && initial !== 'w') {
+      if (final === 'iu' || final === 'ui' || final === 'un') return 'iou_uei';
+    }
+
+    return null;
+  }
+
+  function showRule(ruleKey) {
+    currentRuleKey = ruleKey;
+    const rule = RULES[ruleKey];
+    if (!rule) return;
+    const data = rule[currentLang] || rule['zh'];
+    ruleTitle.textContent = data.title;
+    ruleContent.textContent = data.content;
+    ruleMnemonic.textContent = data.mnemonic;
+    ruleBanner.classList.add('show');
+  }
+
+  function hideRule() {
+    ruleBanner.classList.remove('show');
+    currentRuleKey = null;
+  }
+
+  // ============== 主更新逻辑 ==============
+  function update() {
+    const raw = input.value.trim();
+    if (!raw) {
+      toneEls.forEach(el => el.textContent = '—');
+      pinyinResult.innerHTML = '<span class="result-placeholder">点击声调卡片</span>';
+      ipaResult.innerHTML = '<span class="result-placeholder">点击声调卡片</span>';
+      copyPinyinBtn.disabled = true;
+      copyIpaBtn.disabled = true;
+      selectedTone = null;
+      toneCards.forEach(c => c.classList.remove('active'));
+      hideRule();
+      return;
+    }
+
+    const parsed = parsePinyin(raw);
+
+    // 生成五个声调
+    for (let t = 0; t <= 4; t++) {
+      const toned = applyTone(parsed.original, t);
+      const displayToned = applyUmLautRule(toned);
+      toneEls[t].textContent = displayToned || '—';
+    }
+
+    // 检测规则
+    const ruleKey = detectRule(parsed);
+    if (ruleKey && ruleKey !== currentRuleKey) {
+      showRule(ruleKey);
+    } else if (!ruleKey && currentRuleKey) {
+      hideRule();
+    }
+
+    // 如果已有选中声调，更新结果
+    if (selectedTone !== null) {
+      updateResult(selectedTone);
+    }
+  }
+
+  function updateResult(tone) {
+    const raw = input.value.trim();
+    if (!raw) return;
+
+    const parsed = parsePinyin(raw);
+    const toned = applyTone(parsed.original, tone);
+    const displayPinyin = applyUmLautRule(toned);
+
+    currentPinyin = displayPinyin;
+    currentIPA = toIPA(parsed, tone);
+
+    pinyinResult.textContent = displayPinyin;
+    ipaResult.textContent = currentIPA || '—';
+
+    copyPinyinBtn.disabled = !displayPinyin;
+    copyIpaBtn.disabled = !currentIPA;
+
+    // 更新卡片激活态
+    toneCards.forEach((card, idx) => {
+      card.classList.toggle('active', idx === tone);
+    });
+  }
+
+  // ============== 事件绑定 ==============
+  input.addEventListener('input', function() {
+    selectedTone = null;
+    toneCards.forEach(c => c.classList.remove('active'));
+    pinyinResult.innerHTML = '<span class="result-placeholder">点击声调卡片</span>';
+    ipaResult.innerHTML = '<span class="result-placeholder">点击声调卡片</span>';
+    copyPinyinBtn.disabled = true;
+    copyIpaBtn.disabled = true;
+    update();
+  });
+
+  toneCards.forEach((card, idx) => {
+    card.addEventListener('click', function() {
+      if (!input.value.trim()) return;
+      selectedTone = idx;
+      updateResult(idx);
+    });
+  });
+
+  function copyText(text, btn, originalHtml, label) {
+    // 尝试 Clipboard API
+    const doFallback = function() {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+      } catch(e) {}
+      document.body.removeChild(ta);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(doFallback);
+    } else {
+      doFallback();
+    }
+
+    btn.classList.add('copied');
+    btn.querySelector('.btn-text').textContent = label + '已复制✓';
+    btn.querySelector('.btn-icon').textContent = '✓';
+
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.querySelector('.btn-text').textContent = label;
+      btn.querySelector('.btn-icon').textContent = '📋';
+    }, 1800);
+  }
+
+  copyPinyinBtn.addEventListener('click', function() {
+    if (!currentPinyin) return;
+    copyText(currentPinyin, copyPinyinBtn, copyPinyinBtn.innerHTML, '复制拼音');
+  });
+
+  copyIpaBtn.addEventListener('click', function() {
+    if (!currentIPA) return;
+    copyText(currentIPA, copyIpaBtn, copyIpaBtn.innerHTML, '复制 IPA');
+  });
+
+  ruleClose.addEventListener('click', hideRule);
+
+  langBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    langDropdown.classList.toggle('show');
+  });
+
+  document.addEventListener('click', function() {
+    langDropdown.classList.remove('show');
+  });
+
+  // ============== 初始化 ==============
+  initLangDropdown();
+  loadLang();
+
+  // 键盘快捷键：数字键 1-4 选声调，0 轻声
+  document.addEventListener('keydown', function(e) {
+    if (document.activeElement === input && input.value.trim()) {
+      if (e.key >= '0' && e.key <= '4') {
+        e.preventDefault();
+        const tone = parseInt(e.key, 10);
+        selectedTone = tone;
+        updateResult(tone);
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>
