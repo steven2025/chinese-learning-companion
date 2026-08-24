@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v75";
+const CACHE_VERSION = "diandian-chinese-v76";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -34,8 +34,8 @@ const APP_SHELL = [
   "./modules/hanzi-challenge/index.html",
   "./modules/pinyin-generator/index.html",
   "./modules/digital-book/index.html",
-  "./modules/digital-book/styles.css?v=20260823-6",
-  "./modules/digital-book/pronunciation.css?v=20260823-8",
+  "./modules/digital-book/styles.css?v=20260824-1",
+  "./modules/digital-book/pronunciation.css?v=20260824-1",
   "./modules/digital-book/app.js?v=20260823-6",
   "./modules/digital-book/pronunciation.js?v=20260823-9"
 ];
