@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260824-1">
+  <link rel="stylesheet" href="styles.css?v=20260824-2">
   <link rel="stylesheet" href="writing-zone.css?v=20260811-6">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
@@ -47,6 +47,7 @@
         <button type="button" data-view="games"><span aria-hidden="true">趣</span><b>趣味游戏<small>Games</small></b></button>
         <button type="button" data-view="tools"><span aria-hidden="true">工</span><b>学习工具<small>Tools</small></b></button>
         <button type="button" data-view="progress"><span aria-hidden="true">记</span><b>学习记录<small>Progress</small></b></button>
+        <button type="button" data-view="about"><span aria-hidden="true">点</span><b>关于点点<small>About DianDian</small></b></button>
         <button type="button" data-view="teacher" data-role-nav="teacher" hidden><span aria-hidden="true">教</span><b>教学工作台<small>Teaching</small></b></button>
         <button type="button" data-view="admin" data-role-nav="admin" hidden><span aria-hidden="true">管</span><b>系统管理<small>Admin</small></b></button>
       </nav>
@@ -270,6 +271,69 @@
         </section>
         <div class="management-list"><button>系统配置 <small>Settings</small> <span>待接入</span></button></div>
       </section>
+
+      <section class="app-view about-view" id="aboutView" data-view-panel="about" hidden>
+        <header class="about-hero">
+          <div class="about-hero-mark" aria-hidden="true">点</div>
+          <div><span>关于系统 / About the Platform</span><h1>关于点点汉语 <small>About DianDian Chinese</small></h1><p>连接课堂教学、语言实践与智能伴学的国际中文教育辅助平台。<br><small>An international Chinese learning companion connecting classroom teaching, language practice, and AI-assisted learning.</small></p></div>
+        </header>
+
+        <nav class="about-tabs" aria-label="关于点点页面导航 / About DianDian navigation">
+          <button class="active" type="button" data-about-tab="developer"><span aria-hidden="true">开</span><b>开发者信息<small>Developer Information</small></b></button>
+          <button type="button" data-about-tab="guide"><span aria-hidden="true">册</span><b>平台使用手册<small>User Guide</small></b></button>
+          <button type="button" data-about-tab="activities"><span aria-hidden="true">影</span><b>课程活动<small>Course Activities</small></b></button>
+          <button type="button" data-about-tab="feedback"><span aria-hidden="true">言</span><b>讨论与反馈<small>Discussion & Feedback</small></b></button>
+        </nav>
+
+        <section class="about-panel" data-about-panel="developer">
+          <div class="about-card about-developer-card">
+            <span class="about-card-kicker">程序开发 / Developer</span>
+            <h2>鄢清华 <small>Yan Qinghua</small></h2>
+            <p>重庆工商大学<br><small>Chongqing Technology and Business University</small></p>
+          </div>
+          <div class="about-card">
+            <span class="about-card-icon" aria-hidden="true">谢</span>
+            <h2>鸣谢 <small>Acknowledgements</small></h2>
+            <p>感谢重庆工商大学对外汉语教研室对本平台建设给予的大力支持。</p>
+            <p class="about-en">Special thanks to the Teaching and Research Section of Chinese as a Foreign Language at Chongqing Technology and Business University for its strong support.</p>
+          </div>
+          <aside class="about-notice">
+            <strong>使用声明 <small>Usage Notice</small></strong>
+            <p>本学习平台目前仅用于重庆工商大学国际中文教育教学辅助与相关教学实践，不作对外商业用途。</p>
+            <p>This learning platform is currently intended solely for supporting international Chinese language education and related teaching practices at Chongqing Technology and Business University. It is not used for external commercial purposes.</p>
+          </aside>
+        </section>
+
+        <section class="about-panel" data-about-panel="guide" hidden>
+          <header class="about-section-heading"><span>快速上手 / Getting Started</span><h2>平台使用手册 <small>User Guide</small></h2><p>选择相应身份和功能，查看简要操作说明。 / Choose a role or feature for a concise guide.</p></header>
+          <div class="guide-grid">
+            <article class="guide-card"><i>01</i><h3>学生使用指南 <small>Student Guide</small></h3><ol><li>使用邀请码登录。<small>Sign in with an invitation code.</small></li><li>选择教材、课程和辅助语言。<small>Select a textbook, lesson, and support language.</small></li><li>进入学习并查看个人记录。<small>Start learning and review your progress.</small></li></ol></article>
+            <article class="guide-card"><i>02</i><h3>教师使用指南 <small>Teacher Guide</small></h3><ol><li>进入教学工作台。<small>Open the Teaching Workspace.</small></li><li>建立课程并管理学生。<small>Create courses and manage students.</small></li><li>查看写作与班级学情。<small>Review writing and class insights.</small></li></ol></article>
+            <article class="guide-card"><i>03</i><h3>课程学习 <small>Course Learning</small></h3><ol><li>按课程结构切换学习部分。<small>Move through each lesson section.</small></li><li>使用播放、跟读和练习功能。<small>Use playback, repetition, and exercises.</small></li><li>需要时开启母语辅助。<small>Enable native-language aid when needed.</small></li></ol></article>
+            <article class="guide-card"><i>04</i><h3>AI伴学功能 <small>AI Learning Assistance</small></h3><ol><li>在当前学习内容中打开AI辅助。<small>Open AI support in the current activity.</small></li><li>提交语音、书写或练习答案。<small>Submit speech, writing, or exercise answers.</small></li><li>根据反馈再次练习。<small>Practice again using the feedback.</small></li></ol></article>
+            <article class="guide-card guide-faq"><i>?</i><h3>常见问题 <small>Frequently Asked Questions</small></h3><p><b>听不到声音？ / No audio?</b><br>请检查设备音量、网络连接和浏览器播放权限。<br><small>Check device volume, network access, and browser playback permission.</small></p><p><b>页面没有更新？ / Page not updated?</b><br>请刷新页面；已安装PWA时可在更新提示中点击“刷新”。<br><small>Refresh the page, or use Refresh when the installed app shows an update notice.</small></p></article>
+          </div>
+        </section>
+
+        <section class="about-panel" data-about-panel="activities" hidden>
+          <header class="about-section-heading"><span>课堂内外 / In and Beyond the Classroom</span><h2>课程活动 <small>Course Activities</small></h2><p>记录语言实践、文化体验和课程交流活动。 / Highlights from language practice, cultural experiences, and course exchanges.</p></header>
+          <div class="activity-placeholder">
+            <div class="activity-visual" aria-hidden="true"><span>照</span><span>影</span><span>▶</span></div>
+            <div><strong>活动内容正在整理中 <small>Activity content is being prepared</small></strong><p>后续将按活动主题展示活动介绍、日期、课程或班级，以及经授权发布的照片和视频。</p><p class="about-en">Future updates will organize introductions, dates, classes, and authorized photos and videos by activity topic.</p></div>
+          </div>
+        </section>
+
+        <section class="about-panel" data-about-panel="feedback" hidden>
+          <header class="about-section-heading"><span>共同完善 / Help Us Improve</span><h2>讨论与反馈 <small>Discussion & Feedback</small></h2><p>欢迎提出评价、问题和建议。在线提交功能将在后续版本开放。 / Evaluations, questions, and suggestions are welcome. Online submission will be enabled in a future version.</p></header>
+          <form class="feedback-preview" id="aboutFeedbackPreview">
+            <label><span>反馈类型 / Feedback Type</span><select><option>功能建议 / Feature Suggestion</option><option>功能问题 / Technical Issue</option><option>内容错误 / Content Error</option><option>使用评价 / Evaluation</option><option>其他 / Other</option></select></label>
+            <label><span>所属课程 / Related Course</span><input type="text" placeholder="例如：初级综合1 第5课 / e.g. Elementary Comprehensive 1, Lesson 5"></label>
+            <label class="feedback-wide"><span>反馈内容 / Feedback</span><textarea rows="6" placeholder="请描述您的问题或建议 / Describe your question or suggestion"></textarea></label>
+            <label><span>联系方式（选填）/ Contact (Optional)</span><input type="text" placeholder="Email or other contact"></label>
+            <button class="primary-button" type="button" data-action="feedback-coming-soon">提交功能准备中 <small>Submission coming soon</small></button>
+          </form>
+        </section>
+      </section>
     </main>
 
     <nav class="mobile-navigation" aria-label="移动端导航">
@@ -279,6 +343,7 @@
       <button type="button" data-view="games"><span>趣</span><b>游戏<small>Games</small></b></button>
       <button type="button" data-view="tools"><span>工</span><b>工具<small>Tools</small></b></button>
       <button type="button" data-view="progress"><span>记</span><b>记录<small>Records</small></b></button>
+      <button type="button" data-view="about"><span>点</span><b>关于<small>About</small></b></button>
     </nav>
   </div>
 
@@ -458,7 +523,7 @@
   <script src="../shared/learning-api-client.js?v=20260823-6"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260823-2"></script>
-  <script src="app.js?v=20260823-18" defer></script>
+  <script src="app.js?v=20260824-1" defer></script>
   <script src="writing-zone.js?v=20260823-4" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>

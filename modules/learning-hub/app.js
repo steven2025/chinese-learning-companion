@@ -120,7 +120,7 @@ const state = {
 
 let pendingRemoveEnrollment = null;
 
-const viewLabels = { home: "首页", courses: "我的课程", writing: "写作专区", games: "趣味游戏", tools: "学习工具", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
+const viewLabels = { home: "首页", courses: "我的课程", writing: "写作专区", games: "趣味游戏", tools: "学习工具", progress: "学习记录", about: "关于点点", teacher: "教学工作台", admin: "系统管理" };
 const STUDENT_SESSION_KEY = "chineseLearningStudentSession";
 
 if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
@@ -1499,6 +1499,15 @@ function showTeacherTab(tab) {
   });
 }
 
+function showAboutTab(tab) {
+  document.querySelectorAll("[data-about-tab]").forEach((button) => button.classList.toggle("active", button.dataset.aboutTab === tab));
+  document.querySelectorAll("[data-about-panel]").forEach((panel) => {
+    const active = panel.dataset.aboutPanel === tab;
+    panel.hidden = !active;
+    panel.classList.toggle("active", active);
+  });
+}
+
 function showAdminTab(tab) {
   document.querySelectorAll("[data-admin-tab]").forEach((button) => button.classList.toggle("active", button.dataset.adminTab === tab));
   document.querySelectorAll("[data-admin-panel]").forEach((panel) => {
@@ -1858,6 +1867,9 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("[data-confirm-ok]")) { confirmPendingRemoveEnrollment(); return; }
   const teacherTab = event.target.closest("[data-teacher-tab]")?.dataset.teacherTab;
   if (teacherTab) { showTeacherTab(teacherTab); return; }
+  const aboutTab = event.target.closest("[data-about-tab]")?.dataset.aboutTab;
+  if (aboutTab) { showAboutTab(aboutTab); return; }
+  if (event.target.closest("[data-action='feedback-coming-soon']")) { showToast("在线反馈功能将在后续版本开放 / Online feedback is coming soon", 4200); return; }
   const adminTab = event.target.closest("[data-admin-tab]")?.dataset.adminTab;
   if (adminTab) { showAdminTab(adminTab); return; }
   if (event.target.closest("[data-action='open-add-teacher']")) { elements.addTeacherForm.hidden = false; elements.addTeacherForm.querySelector('[name="teacherName"]')?.focus(); return; }
