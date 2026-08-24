@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v78";
+const CACHE_VERSION = "diandian-chinese-v81";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -13,15 +13,15 @@ const APP_SHELL = [
   "./icons/icon-512.png",
   "./icons/maskable-192.png",
   "./icons/maskable-512.png",
-  "./modules/shared/learning-api-client.js?v=20260823-6",
+  "./modules/shared/learning-api-client.js?v=20260824-2",
   "./modules/shared/voice-orb.js?v=20260801-1",
   "./modules/shared/draggable.js?v=20260823-1",
   "./modules/learning-hub/index.html",
   "./modules/learning-hub/templates/student-import-template.xlsx",
-  "./modules/learning-hub/styles.css?v=20260824-1",
+  "./modules/learning-hub/styles.css?v=20260824-4",
   "./modules/learning-hub/writing-zone.css?v=20260811-6",
   "./modules/learning-hub/practice-analytics.css?v=20260811-6",
-  "./modules/learning-hub/app.js?v=20260823-18",
+  "./modules/learning-hub/app.js?v=20260824-3",
   "./modules/learning-hub/writing-zone.js?v=20260823-4",
   "./modules/learning-hub/practice-analytics.js?v=20260823-2",
   "./modules/character-hit/index.html",
