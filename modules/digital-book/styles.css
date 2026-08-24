@@ -1495,3 +1495,45 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
 @media (max-width: 700px) {
   .pwa-update-banner { left: 14px; right: 14px; bottom: 14px; width: auto; grid-template-columns: minmax(0, 1fr) auto; }
 }
+
+/* Tablet course-density layer: 2026-08-24 */
+@media (min-width: 761px) and (max-width: 1440px) and (any-pointer: coarse) {
+  .book-toolbar { gap: 10px; padding: 7px 14px; }
+  .section-tabs button,
+  .assist-switch button { min-height: 44px; padding: 4px 9px; }
+  .toolbar-settings { gap: 7px; }
+  .unit-shell { width: min(1480px, calc(100% - 24px)); padding-block: 10px 14px; }
+  .unit-heading { gap: 18px; padding-bottom: 8px; }
+  .unit-heading h1 { font-size: clamp(27px, 3vw, 34px); }
+  .learning-workspace { gap: 12px; margin-top: 8px; }
+  .learning-unit {
+    min-height: clamp(300px, 42dvh, 430px);
+    padding: clamp(18px, 2.5vw, 30px);
+  }
+  .unit-order { margin-bottom: 11px; }
+  .word-focus-layout { gap: clamp(22px, 3.2vw, 46px); }
+  .word-core .word-hanzi { font-size: clamp(108px, 12vw, 142px); }
+  .word-pinyin { margin-top: 9px; font-size: clamp(29px, 3.2vw, 38px); }
+  .part-of-speech { margin-top: 11px; }
+  .primary-translation { margin-top: 17px; padding-top: 13px; }
+  .unit-actions { margin-top: 18px; }
+  .contextual-assist-tools { gap: 8px; margin-top: 18px; padding-top: 13px; }
+  .sentence-zh { font-size: clamp(46px, 5.2vw, 66px); line-height: 1.35; }
+  .sentence-translation { margin-top: 15px; line-height: 1.5; }
+  .sentence-action-row { margin-top: 18px; }
+  .sentence-neighbors { margin-top: 15px; }
+}
+
+@media (min-width: 761px) and (max-width: 1440px) and (any-pointer: coarse) and (orientation: landscape) {
+  .learning-unit { min-height: clamp(290px, 39dvh, 390px); }
+  .word-focus-layout { grid-template-columns: minmax(135px, .8fr) minmax(330px, 520px) minmax(135px, .8fr); }
+}
+
+@media (min-width: 761px) and (max-width: 1440px) and (any-pointer: coarse) and (orientation: portrait) {
+  .book-toolbar { grid-template-columns: minmax(190px, .75fr) minmax(0, 1.7fr); }
+  .toolbar-settings { grid-column: 1 / -1; justify-content: center; }
+  .learning-unit { min-height: clamp(330px, 39dvh, 440px); }
+  .word-focus-layout { grid-template-columns: minmax(0, 1fr); gap: 15px; }
+  .word-side-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .word-side-tools .assist-action { min-width: 0; }
+}

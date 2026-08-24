@@ -849,3 +849,126 @@
 .number-game-feedback small { display: block; margin-top: 3px; color: #718684; font-size: 14px; font-weight: 600; }
 .number-game-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .number-game-footer-hint { margin: 0; color: #718684; font-size: 13px; }
+
+/* Tablet course-density layer: 2026-08-24
+   Viewport and input capability are used instead of device-brand detection. */
+@media (min-width: 761px) and (max-width: 1440px) and (any-pointer: coarse) {
+  .pronunciation-book { overflow: visible; }
+  .pronunciation-book .lesson-main {
+    height: auto;
+    min-height: calc(100dvh - 70px);
+    overflow: visible;
+  }
+  .pronunciation-book .unit-shell {
+    height: auto;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto auto auto;
+    padding: 9px 0 12px;
+  }
+  .pronunciation-book .unit-heading { padding-bottom: 7px; }
+  .pronunciation-book .learning-workspace {
+    min-height: 0;
+    margin-top: 8px;
+    overflow: visible;
+  }
+  .pronunciation-book .lesson-column {
+    min-height: 0;
+    grid-template-rows: auto auto;
+    gap: 7px;
+  }
+  .pronunciation-book .learning-unit {
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    overflow: visible;
+  }
+  .pron-learning-map,
+  .pron-unit-tabs,
+  .pron-group-tabs,
+  .pron-exercise-layout { min-width: 0; max-width: 100%; }
+  .pronunciation-book .audio-dock { min-height: 56px; padding-block: 5px; }
+
+  .pronunciation-book .learning-unit:has(> .pron-exercise-layout.pron-workbench) {
+    display: block;
+  }
+  .pron-exercise-layout.pron-workbench {
+    min-height: 0;
+    align-items: start;
+    padding-block: 3px 9px;
+  }
+  .pron-exercise-layout.pron-workbench > .pron-selector-panel {
+    max-height: none;
+    overflow: visible;
+  }
+  .pron-workbench-main { min-height: 0; overflow: visible; }
+  .pron-workbench-main > .pron-focus-stage:not(.tone-marking-stage):not(.initial-writing-stage) {
+    flex: 0 0 auto;
+    min-height: clamp(300px, 39dvh, 420px);
+  }
+  .pron-focus-stage { margin-block: 3px 6px; padding: 10px 16px; }
+  .pron-focus-main { min-height: 230px; }
+  .pron-focus-content h2 {
+    margin-bottom: 8px;
+    font-size: clamp(112px, 12vw, 144px);
+  }
+  .pron-focus-actions { margin-top: 6px; }
+
+  .beginner-text-stage,
+  .beginner-character-stage {
+    min-height: 0;
+    align-content: start;
+    padding: 8px 22px 12px;
+  }
+  .beginner-section-tabs { margin-bottom: 6px; }
+  .beginner-text-focus {
+    min-height: clamp(260px, 34dvh, 360px);
+    margin: 5px auto;
+    padding: 14px 24px;
+  }
+  .beginner-text-focus h2 { font-size: clamp(104px, 12vw, 150px); }
+  .beginner-pinyin { margin: 8px 0 5px; font-size: clamp(30px, 3.4vw, 40px); }
+  .beginner-meaning { margin-top: 9px; font-size: clamp(22px, 2.4vw, 28px); }
+  .beginner-text-actions,
+  .beginner-character-actions { margin-top: 11px; }
+  .beginner-sentence-focus { min-height: clamp(275px, 36dvh, 380px); }
+  .beginner-sentence-focus h2 { font-size: clamp(56px, 6.2vw, 82px); line-height: 1.15; }
+  .beginner-sentence-focus .beginner-pinyin { font-size: clamp(25px, 3vw, 34px); }
+}
+
+@media (min-width: 761px) and (max-width: 1440px) and (any-pointer: coarse) and (orientation: landscape) {
+  .pron-exercise-layout.pron-workbench { grid-template-columns: minmax(230px, 285px) minmax(0, 1fr); }
+  .pron-workbench-main > .pron-focus-stage:not(.tone-marking-stage):not(.initial-writing-stage) {
+    min-height: clamp(290px, 38dvh, 390px);
+  }
+  .pron-focus-content h2 { font-size: clamp(124px, 10vw, 150px); }
+  .beginner-text-focus { min-height: clamp(250px, 32dvh, 330px); }
+  .beginner-sentence-focus { min-height: clamp(270px, 34dvh, 350px); }
+}
+
+@media (min-width: 761px) and (max-width: 1440px) and (any-pointer: coarse) and (orientation: portrait) {
+  .pron-exercise-layout.pron-workbench { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .pron-exercise-layout.pron-workbench > .pron-selector-panel {
+    padding: 5px 0 7px;
+    border-right: 0;
+    border-bottom: 1px solid var(--pron-line);
+  }
+  .pron-exercise-layout.pron-workbench .pron-item-strip {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 7px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .pron-exercise-layout.pron-workbench .pron-item-button {
+    width: auto;
+    min-width: 122px;
+  }
+  .pron-workbench-main > .pron-focus-stage:not(.tone-marking-stage):not(.initial-writing-stage) {
+    min-height: clamp(310px, 36dvh, 390px);
+  }
+  .pron-focus-content h2 { font-size: clamp(116px, 15vw, 140px); }
+  .beginner-text-focus { min-height: clamp(280px, 31dvh, 350px); }
+  .beginner-sentence-focus { min-height: clamp(300px, 34dvh, 380px); }
+}
