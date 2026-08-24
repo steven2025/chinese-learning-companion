@@ -215,7 +215,32 @@ const elements = {
   installAppButton: document.querySelector("#installAppButton"),
   pwaInstallBanner: document.querySelector("#pwaInstallBanner"),
   pwaInstallMessage: document.querySelector("#pwaInstallMessage"),
+  aboutActivityList: document.querySelector("#aboutActivityList"),
+  aboutActivityManagement: document.querySelector("#aboutActivityManagement"),
+  aboutActivityManageList: document.querySelector("#aboutActivityManageList"),
+  aboutActivityDialog: document.querySelector("#aboutActivityDialog"),
+  aboutActivityForm: document.querySelector("#aboutActivityForm"),
+  aboutActivityUploadStatus: document.querySelector("#aboutActivityUploadStatus"),
+  aboutTeacherTabs: document.querySelector("#aboutTeacherTabs"),
+  aboutTeacherProfile: document.querySelector("#aboutTeacherProfile"),
+  aboutTeacherManagement: document.querySelector("#aboutTeacherManagement"),
+  aboutTeacherManageList: document.querySelector("#aboutTeacherManageList"),
+  aboutTeacherDialog: document.querySelector("#aboutTeacherDialog"),
+  aboutTeacherForm: document.querySelector("#aboutTeacherForm"),
+  aboutTeacherUploadStatus: document.querySelector("#aboutTeacherUploadStatus"),
+  aboutFeedbackForm: document.querySelector("#aboutFeedbackForm"),
+  aboutFeedbackLoginNote: document.querySelector("#aboutFeedbackLoginNote"),
+  aboutCommentList: document.querySelector("#aboutCommentList"),
+  aboutFeedbackManagement: document.querySelector("#aboutFeedbackManagement"),
+  aboutFeedbackManageList: document.querySelector("#aboutFeedbackManageList"),
 };
+
+const defaultAboutTeachers = [
+  { id: "teacher-cao-dandan", nameZh: "曹丹丹", nameEn: "Cao Dandan", roleZh: "专业教师", roleEn: "Chinese Language Instructor", affiliationZh: "重庆工商大学", affiliationEn: "Chongqing Technology and Business University" },
+  { id: "teacher-li-jin", nameZh: "李进", nameEn: "Li Jin", roleZh: "专业教师", roleEn: "Chinese Language Instructor", affiliationZh: "重庆工商大学", affiliationEn: "Chongqing Technology and Business University" },
+  { id: "teacher-yuan-yue", nameZh: "袁玥", nameEn: "Yuan Yue", roleZh: "专业教师", roleEn: "Chinese Language Instructor", affiliationZh: "重庆工商大学", affiliationEn: "Chongqing Technology and Business University" },
+];
+const aboutState = { publicTeachers: defaultAboutTeachers, managedTeachers: [], selectedTeacherId: defaultAboutTeachers[0].id, publicActivities: [], managedActivities: [], publicComments: [], managedComments: [], loaded: false };
 
 let deferredInstallPrompt = null;
 
@@ -308,6 +333,7 @@ function setView(view) {
   if (view === "progress") void renderProgressView();
   if (view === "home") { applyHomeStats(); if (state.role === "student") void loadStudentProgress(); }
   if (view === "writing") window.WritingZone?.render();
+  if (view === "about") void renderAboutCloudContent();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -478,6 +504,7 @@ function handleLogout() {
 function applyIdentity(role, name) {
   state.role = role;
   state.userName = name;
+  aboutState.loaded = false;
   const profile = role === "student"
     ? { mark: "学", label: name, role: "学生 Student" }
     : role === "teacher"
@@ -1506,6 +1533,203 @@ function showAboutTab(tab) {
     panel.hidden = !active;
     panel.classList.toggle("active", active);
   });
+  if (["teachers", "activities", "feedback"].includes(tab)) void renderAboutCloudContent();
+}
+
+function aboutRoleCanManageActivities() { return ["teacher", "admin"].includes(state.role); }
+function renderPublicTeachers() {
+  if (!elements.aboutTeacherTabs || !elements.aboutTeacherProfile) return;
+  const rows = aboutState.publicTeachers?.length ? aboutState.publicTeachers : defaultAboutTeachers;
+  if (!rows.some((item) => item.id === aboutState.selectedTeacherId)) aboutState.selectedTeacherId = rows[0]?.id || "";
+  elements.aboutTeacherTabs.innerHTML = rows.map((teacher) => `<button class="${teacher.id === aboutState.selectedTeacherId ? "active" : ""}" type="button" data-about-teacher-select="${escapeHtml(teacher.id)}"><b>${escapeHtml(teacher.nameZh)}</b><small>${escapeHtml(teacher.nameEn || "")}</small></button>`).join("");
+  const teacher = rows.find((item) => item.id === aboutState.selectedTeacherId) || rows[0];
+  if (!teacher) { elements.aboutTeacherProfile.innerHTML = '<p class="empty-approval">暂无教师资料 / No instructor profiles</p>'; return; }
+  const photo = teacher.photoUrl ? `<img src="${escapeHtml(teacher.photoUrl)}" alt="${escapeHtml(teacher.nameZh)}" loading="lazy">` : `<div class="instructor-photo-placeholder" aria-hidden="true">${escapeHtml((teacher.nameZh || "师").slice(0, 1))}</div>`;
+  elements.aboutTeacherProfile.innerHTML = `${photo}<article class="instructor-profile-copy"><span class="about-card-kicker">${escapeHtml(teacher.roleZh || "专业教师")} / ${escapeHtml(teacher.roleEn || "Chinese Language Instructor")}</span><h2>${escapeHtml(teacher.nameZh)} <small>${escapeHtml(teacher.nameEn || "")}</small></h2><p class="instructor-affiliation">${escapeHtml(teacher.affiliationZh || "")}<small>${escapeHtml(teacher.affiliationEn || "")}</small></p>${teacher.biographyZh || teacher.biographyEn ? `<section><h3>教师简介 <small>Biography</small></h3><p>${escapeHtml(teacher.biographyZh || "")}</p><p class="about-en">${escapeHtml(teacher.biographyEn || "")}</p></section>` : ""}${teacher.teachingZh || teacher.teachingEn ? `<section><h3>教学方向 <small>Teaching Areas</small></h3><p>${escapeHtml(teacher.teachingZh || "")}</p><p class="about-en">${escapeHtml(teacher.teachingEn || "")}</p></section>` : ""}${teacher.coursesZh || teacher.coursesEn ? `<section><h3>教授课程 <small>Courses</small></h3><p>${escapeHtml(teacher.coursesZh || "")}</p><p class="about-en">${escapeHtml(teacher.coursesEn || "")}</p></section>` : ""}</article>`;
+}
+
+function renderManagedTeachers() {
+  if (!elements.aboutTeacherManagement) return;
+  const canManage = ["teacher", "admin"].includes(state.role) && window.LearningApi?.isConfigured();
+  elements.aboutTeacherManagement.hidden = !canManage;
+  if (!canManage) return;
+  const addButton = elements.aboutTeacherManagement.querySelector("[data-action='open-about-teacher']");
+  if (addButton) addButton.hidden = state.role !== "admin";
+  const rows = aboutState.managedTeachers || [];
+  elements.aboutTeacherManageList.innerHTML = rows.length ? rows.map((teacher) => {
+    const actions = [`<button class="quiet-button" type="button" data-edit-about-teacher="${escapeHtml(teacher.id)}">编辑 <small>Edit</small></button>`];
+    if (state.role === "admin" && teacher.status !== "published") actions.push(`<button class="primary-button" type="button" data-about-teacher-action="publish" data-id="${escapeHtml(teacher.id)}">发布 <small>Publish</small></button>`);
+    if (state.role === "admin" && teacher.status === "published") actions.push(`<button class="quiet-button" type="button" data-about-teacher-action="unpublish" data-id="${escapeHtml(teacher.id)}">下架 <small>Unpublish</small></button>`);
+    if (state.role === "admin") actions.push(`<button class="danger-button" type="button" data-about-teacher-action="delete" data-id="${escapeHtml(teacher.id)}">删除 <small>Delete</small></button>`);
+    return `<article class="about-manage-row"><div><span class="activity-status">${escapeHtml(teacher.status || "draft")}</span><strong>${escapeHtml(teacher.nameZh)} <small>${escapeHtml(teacher.nameEn || "")}</small></strong><p>${escapeHtml(teacher.teacherUserId || "未绑定账号 / Unbound")} · ${escapeHtml(teacher.roleZh || "专业教师")}</p></div><div class="about-manage-actions">${actions.join("")}</div></article>`;
+  }).join("") : '<p class="empty-approval">当前账号没有可编辑的教师资料。请管理员先绑定教师账号。 / No editable profile is bound to this account.</p>';
+}
+
+function openAboutTeacherDialog(teacher) {
+  if (!["teacher", "admin"].includes(state.role)) return;
+  const form = elements.aboutTeacherForm;
+  form.reset();
+  ["id", "teacherUserId", "nameZh", "nameEn", "roleZh", "roleEn", "affiliationZh", "affiliationEn", "teachingZh", "teachingEn", "biographyZh", "biographyEn", "coursesZh", "coursesEn", "displayOrder"].forEach((name) => { if (form.elements[name]) form.elements[name].value = teacher?.[name] ?? ""; });
+  if (!teacher) { form.elements.roleZh.value = "专业教师"; form.elements.roleEn.value = "Chinese Language Instructor"; form.elements.affiliationZh.value = "重庆工商大学"; form.elements.affiliationEn.value = "Chongqing Technology and Business University"; form.elements.displayOrder.value = "999"; }
+  form.querySelectorAll(".admin-teacher-binding").forEach((field) => { field.hidden = state.role !== "admin"; });
+  elements.aboutTeacherUploadStatus.hidden = true;
+  elements.aboutTeacherDialog.showModal();
+}
+
+async function saveAboutTeacherForm(form) {
+  const data = new FormData(form);
+  const photo = form.elements.photo.files?.[0];
+  if (photo && (!new Set(["image/jpeg", "image/png", "image/webp"]).has(photo.type) || photo.size > 5 * 1024 * 1024)) throw new Error("教师照片仅支持JPEG、PNG、WebP且不能超过5MB");
+  const input = {};
+  ["id", "teacherUserId", "nameZh", "nameEn", "roleZh", "roleEn", "affiliationZh", "affiliationEn", "teachingZh", "teachingEn", "biographyZh", "biographyEn", "coursesZh", "coursesEn", "displayOrder"].forEach((name) => { input[name] = data.get(name); });
+  const saved = await window.LearningApi.saveAboutTeacher(input);
+  if (photo) {
+    elements.aboutTeacherUploadStatus.hidden = false;
+    elements.aboutTeacherUploadStatus.textContent = "正在上传教师照片… / Uploading photo…";
+    const ticket = await window.LearningApi.aboutTeacherPhotoTicket({ id: saved.teacher.id, contentType: photo.type, size: photo.size });
+    const uploaded = await fetch(ticket.uploadUrl, { method: "PUT", headers: ticket.headers, body: photo });
+    if (!uploaded.ok) throw new Error(`教师照片上传失败：${uploaded.status}`);
+    await window.LearningApi.commitAboutTeacherPhoto({ id: saved.teacher.id, photoId: ticket.photoId, objectKey: ticket.objectKey });
+  }
+  elements.aboutTeacherDialog.close(); aboutState.loaded = false; await renderAboutCloudContent(true);
+  showToast(state.role === "teacher" ? "资料已提交管理员审核 / Submitted for review" : "教师资料已保存 / Instructor profile saved");
+}
+
+function aboutActivityStatusLabel(status) {
+  return ({ draft: "草稿 / Draft", pending: "待审核 / Pending", published: "已发布 / Published", deleted: "已删除 / Deleted" })[status] || status;
+}
+
+function renderPublicActivities() {
+  if (!elements.aboutActivityList) return;
+  const rows = aboutState.publicActivities || [];
+  elements.aboutActivityList.innerHTML = rows.length ? rows.map((activity) => {
+    const photos = (activity.photos || []).map((photo) => `<figure><img src="${escapeHtml(photo.url)}" alt="${escapeHtml(photo.altZh || photo.altEn || "课程活动照片")}" loading="lazy"><figcaption>${escapeHtml(photo.altZh || photo.altEn || "")}</figcaption></figure>`).join("");
+    const videos = (activity.videos || []).map((video) => `<figure class="activity-video"><video controls preload="metadata" playsinline src="${escapeHtml(video.url)}"></video><figcaption>${escapeHtml(video.titleZh || "活动视频")} <small>${escapeHtml(video.titleEn || "Activity video")}</small></figcaption></figure>`).join("");
+    return `<article class="activity-card"><header><div><h3>${escapeHtml(activity.title?.zh || "")}</h3><small>${escapeHtml(activity.title?.en || "")}</small></div><time class="activity-date" datetime="${escapeHtml(activity.date)}">${escapeHtml(activity.date)}</time></header><p>${escapeHtml(activity.summary?.zh || "")}</p><p class="about-en">${escapeHtml(activity.summary?.en || "")}</p>${activity.className ? `<span class="activity-class">${escapeHtml(activity.className)}</span>` : ""}${photos || videos ? `<div class="activity-media-grid">${photos}${videos}</div>` : ""}</article>`;
+  }).join("") : '<div class="activity-placeholder"><div class="activity-visual" aria-hidden="true"><span>照</span><span>影</span><span>▶</span></div><div><strong>活动内容正在整理中 <small>Activity content is being prepared</small></strong><p>已发布的课程活动将在这里展示。</p><p class="about-en">Published course activities will appear here.</p></div></div>';
+}
+
+function renderManagedActivities() {
+  if (!elements.aboutActivityManagement) return;
+  elements.aboutActivityManagement.hidden = !aboutRoleCanManageActivities() || !window.LearningApi?.isConfigured();
+  if (elements.aboutActivityManagement.hidden) return;
+  const rows = aboutState.managedActivities || [];
+  elements.aboutActivityManageList.innerHTML = rows.length ? rows.map((activity) => {
+    const canPublish = state.role === "admin";
+    const actions = [`<button class="quiet-button" type="button" data-edit-about-activity="${escapeHtml(activity.id)}">编辑 <small>Edit</small></button>`];
+    if (activity.status === "draft") actions.push(`<button class="primary-button" type="button" data-about-activity-action="submit" data-id="${escapeHtml(activity.id)}">${state.role === "admin" ? "发布 <small>Publish</small>" : "提交审核 <small>Submit</small>"}</button>`);
+    if (canPublish && activity.status === "pending") actions.push(`<button class="primary-button" type="button" data-about-activity-action="publish" data-id="${escapeHtml(activity.id)}">审核发布 <small>Publish</small></button>`);
+    if (canPublish && activity.status === "published") actions.push(`<button class="quiet-button" type="button" data-about-activity-action="unpublish" data-id="${escapeHtml(activity.id)}">下架 <small>Unpublish</small></button>`);
+    if (canPublish) actions.push(`<button class="danger-button" type="button" data-about-activity-action="delete" data-id="${escapeHtml(activity.id)}">删除 <small>Delete</small></button>`);
+    return `<article class="about-manage-row"><div><span class="activity-status">${escapeHtml(aboutActivityStatusLabel(activity.status))}</span><strong>${escapeHtml(activity.title?.zh || "")} <small>${escapeHtml(activity.title?.en || "")}</small></strong><p>${escapeHtml(activity.date)} · ${(activity.photos || []).length}张照片 · ${(activity.videos || []).length}个视频</p></div><div class="about-manage-actions">${actions.join("")}</div></article>`;
+  }).join("") : '<p class="empty-approval">还没有活动草稿。 / No activity drafts yet.</p>';
+}
+
+function renderPublicComments() {
+  if (!elements.aboutCommentList) return;
+  const rows = aboutState.publicComments || [];
+  elements.aboutCommentList.innerHTML = rows.length ? rows.map((comment) => `<article class="about-comment"><header><span class="comment-role">${escapeHtml(comment.author?.role || "student")}</span><strong>${escapeHtml(comment.author?.name || "学习者")}</strong><time>${escapeHtml(String(comment.publishedAt || comment.createdAt || "").slice(0, 10))}</time></header><p>${escapeHtml(comment.content)}</p>${comment.adminReply ? `<aside class="about-comment-reply"><strong>管理员回复 / Administrator Reply</strong><p>${escapeHtml(comment.adminReply)}</p></aside>` : ""}</article>`).join("") : '<p class="empty-approval">还没有公开讨论。 / No published discussion yet.</p>';
+}
+
+function renderManagedFeedback() {
+  const isAdmin = state.role === "admin" && window.LearningApi?.isConfigured();
+  elements.aboutFeedbackManagement.hidden = !isAdmin;
+  if (!isAdmin) return;
+  const rows = aboutState.managedComments || [];
+  elements.aboutFeedbackManageList.innerHTML = rows.length ? rows.map((comment) => `<article class="about-manage-row comment-manage-row"><div><span>${escapeHtml(comment.status)} · ${escapeHtml(comment.language)}</span><strong>${escapeHtml(comment.author?.name || "学习者")} <small>${escapeHtml(comment.author?.role || "")}</small></strong><p>${escapeHtml(comment.content)}</p></div><div class="about-manage-actions">${comment.status === "pending" || comment.status === "hidden" ? `<button class="primary-button" type="button" data-about-feedback-action="approve" data-id="${escapeHtml(comment.id)}">通过 <small>Approve</small></button>` : ""}${comment.status === "published" ? `<button class="quiet-button" type="button" data-about-feedback-action="hide" data-id="${escapeHtml(comment.id)}">隐藏 <small>Hide</small></button>` : ""}<button class="quiet-button" type="button" data-about-feedback-action="reply" data-id="${escapeHtml(comment.id)}">回复 <small>Reply</small></button><button class="danger-button" type="button" data-about-feedback-action="delete" data-id="${escapeHtml(comment.id)}">删除 <small>Delete</small></button></div></article>`).join("") : '<p class="empty-approval">暂无待处理评论。 / No comments to moderate.</p>';
+}
+
+async function renderAboutCloudContent(force = false) {
+  if (!window.LearningApi?.isConfigured()) {
+    aboutState.publicTeachers = defaultAboutTeachers;
+    renderPublicTeachers();
+    elements.aboutActivityList.innerHTML = '<p class="empty-approval">课程活动云服务尚未配置。 / Activity service is not configured.</p>';
+    elements.aboutCommentList.innerHTML = '<p class="empty-approval">讨论云服务尚未配置。 / Discussion service is not configured.</p>';
+    elements.aboutFeedbackLoginNote.textContent = "云服务尚未配置 / Cloud service is not configured";
+    return;
+  }
+  if (aboutState.loaded && !force) { renderPublicTeachers(); renderManagedTeachers(); renderPublicActivities(); renderManagedActivities(); renderPublicComments(); renderManagedFeedback(); return; }
+  const publicResults = await Promise.allSettled([window.LearningApi.publicAboutTeachers(), window.LearningApi.publicAboutActivities(), window.LearningApi.publicAboutFeedback()]);
+  aboutState.publicTeachers = publicResults[0].status === "fulfilled" && publicResults[0].value.teachers?.length ? publicResults[0].value.teachers : defaultAboutTeachers;
+  aboutState.publicActivities = publicResults[1].status === "fulfilled" ? publicResults[1].value.activities || [] : [];
+  aboutState.publicComments = publicResults[2].status === "fulfilled" ? publicResults[2].value.comments || [] : [];
+  if (["teacher", "admin"].includes(state.role)) {
+    const managedTeachers = await window.LearningApi.manageAboutTeachers().catch(() => ({ teachers: [] }));
+    aboutState.managedTeachers = managedTeachers.teachers || [];
+  }
+  if (aboutRoleCanManageActivities()) {
+    const managed = await window.LearningApi.manageAboutActivities().catch(() => ({ activities: [] }));
+    aboutState.managedActivities = managed.activities || [];
+  }
+  if (state.role === "admin") {
+    const managedFeedback = await window.LearningApi.manageAboutFeedback().catch(() => ({ comments: [] }));
+    aboutState.managedComments = managedFeedback.comments || [];
+  }
+  aboutState.loaded = true;
+  elements.aboutFeedbackLoginNote.textContent = state.role === "guest" ? "请先登录后发言。 / Please sign in before posting." : `当前身份：${state.userName || state.role} / Signed in as ${state.role}`;
+  renderPublicTeachers(); renderManagedTeachers();
+  renderPublicActivities(); renderManagedActivities(); renderPublicComments(); renderManagedFeedback();
+}
+
+function openAboutActivityDialog(activity) {
+  if (!aboutRoleCanManageActivities()) { showToast("只有教师或管理员可以管理课程活动 / Teachers or administrators only"); return; }
+  const form = elements.aboutActivityForm;
+  form.reset();
+  form.elements.id.value = activity?.id || "";
+  form.elements.date.value = activity?.date || new Date().toISOString().slice(0, 10);
+  form.elements.className.value = activity?.className || "";
+  form.elements.titleZh.value = activity?.title?.zh || "";
+  form.elements.titleEn.value = activity?.title?.en || "";
+  form.elements.summaryZh.value = activity?.summary?.zh || "";
+  form.elements.summaryEn.value = activity?.summary?.en || "";
+  elements.aboutActivityUploadStatus.hidden = true;
+  elements.aboutActivityDialog.showModal();
+}
+
+function validateAboutFiles(photos, videos) {
+  if (photos.length > 20) throw new Error("每项活动最多选择20张照片");
+  if (videos.length > 3) throw new Error("每项活动最多选择3个视频");
+  photos.forEach((file) => { if (!new Set(["image/jpeg", "image/png", "image/webp"]).has(file.type) || file.size > 8 * 1024 * 1024) throw new Error(`照片“${file.name}”格式不支持或超过8MB`); });
+  videos.forEach((file) => { if (file.type !== "video/mp4" || file.size > 50 * 1024 * 1024) throw new Error(`视频“${file.name}”必须为MP4且不超过50MB`); });
+}
+
+async function uploadAboutMedia(activityId, file) {
+  const ticket = await window.LearningApi.aboutActivityMediaTicket({ activityId, contentType: file.type, size: file.size });
+  const uploaded = await fetch(ticket.uploadUrl, { method: "PUT", headers: ticket.headers, body: file });
+  if (!uploaded.ok) throw new Error(`媒体上传失败：${uploaded.status}`);
+  return window.LearningApi.commitAboutActivityMedia({ activityId, mediaId: ticket.mediaId, mediaKind: ticket.mediaKind, objectKey: ticket.objectKey, ...(ticket.mediaKind === "video" ? { titleZh: file.name.replace(/\.mp4$/i, ""), titleEn: file.name.replace(/\.mp4$/i, "") } : { altZh: "课程活动照片", altEn: "Course activity photo" }) });
+}
+
+async function saveAboutActivityForm(form) {
+  const data = new FormData(form);
+  const photos = [...form.elements.photos.files];
+  const videos = [...form.elements.videos.files];
+  validateAboutFiles(photos, videos);
+  const saved = await window.LearningApi.saveAboutActivity({ id: data.get("id"), date: data.get("date"), className: data.get("className"), titleZh: data.get("titleZh"), titleEn: data.get("titleEn"), summaryZh: data.get("summaryZh"), summaryEn: data.get("summaryEn") });
+  const files = [...photos, ...videos];
+  for (let index = 0; index < files.length; index += 1) {
+    elements.aboutActivityUploadStatus.hidden = false;
+    elements.aboutActivityUploadStatus.textContent = `正在上传 ${index + 1} / ${files.length}：${files[index].name}`;
+    await uploadAboutMedia(saved.activity.id, files[index]);
+  }
+  elements.aboutActivityDialog.close();
+  aboutState.loaded = false;
+  await renderAboutCloudContent(true);
+  showToast("活动已保存 / Activity saved");
+}
+
+async function submitAboutFeedback(form) {
+  if (state.role === "guest" || !window.LearningApi?.token()) throw new Error("请先使用邀请码登录后发言");
+  const data = new FormData(form);
+  if (!data.get("guidelinesAccepted")) {
+    form.querySelector(".community-guidelines").open = true;
+    throw new Error("请先阅读并同意发言规范与法律声明");
+  }
+  const result = await window.LearningApi.createAboutFeedback({ language: data.get("language"), type: data.get("type"), courseId: data.get("courseId"), contact: data.get("contact"), content: data.get("content"), page: "about", guidelinesAccepted: true, legalAccepted: true });
+  form.reset();
+  aboutState.loaded = false;
+  await renderAboutCloudContent(true);
+  showToast(`${result.message} / ${result.status === "pending" ? "Pending administrator review" : "Published"}`, 4200);
 }
 
 function showAdminTab(tab) {
@@ -1869,7 +2093,40 @@ document.addEventListener("click", (event) => {
   if (teacherTab) { showTeacherTab(teacherTab); return; }
   const aboutTab = event.target.closest("[data-about-tab]")?.dataset.aboutTab;
   if (aboutTab) { showAboutTab(aboutTab); return; }
-  if (event.target.closest("[data-action='feedback-coming-soon']")) { showToast("在线反馈功能将在后续版本开放 / Online feedback is coming soon", 4200); return; }
+  const teacherSelect = event.target.closest("[data-about-teacher-select]");
+  if (teacherSelect) { aboutState.selectedTeacherId = teacherSelect.dataset.aboutTeacherSelect; renderPublicTeachers(); return; }
+  if (event.target.closest("[data-action='open-about-teacher']")) { openAboutTeacherDialog(); return; }
+  if (event.target.closest("[data-about-teacher-close]")) { elements.aboutTeacherDialog.close(); return; }
+  const editAboutTeacher = event.target.closest("[data-edit-about-teacher]");
+  if (editAboutTeacher) { openAboutTeacherDialog(aboutState.managedTeachers.find((item) => item.id === editAboutTeacher.dataset.editAboutTeacher)); return; }
+  const teacherProfileAction = event.target.closest("[data-about-teacher-action]");
+  if (teacherProfileAction) {
+    const action = teacherProfileAction.dataset.aboutTeacherAction;
+    if (action === "delete" && !window.confirm("确定删除该教师资料？ / Delete this instructor profile?")) return;
+    void window.LearningApi.moderateAboutTeacher({ id: teacherProfileAction.dataset.id, action }).then(() => { aboutState.loaded = false; return renderAboutCloudContent(true); }).then(() => showToast("教师资料状态已更新 / Instructor profile updated")).catch((error) => showToast(error.message || "操作失败"));
+    return;
+  }
+  if (event.target.closest("[data-action='refresh-about-feedback']")) { aboutState.loaded = false; void renderAboutCloudContent(true); return; }
+  if (event.target.closest("[data-action='open-about-activity']")) { openAboutActivityDialog(); return; }
+  if (event.target.closest("[data-about-activity-close]")) { elements.aboutActivityDialog.close(); return; }
+  const editAboutActivity = event.target.closest("[data-edit-about-activity]");
+  if (editAboutActivity) { openAboutActivityDialog(aboutState.managedActivities.find((item) => item.id === editAboutActivity.dataset.editAboutActivity)); return; }
+  const activityAction = event.target.closest("[data-about-activity-action]");
+  if (activityAction) {
+    const action = activityAction.dataset.aboutActivityAction;
+    if (action === "delete" && !window.confirm("确定删除该活动？ / Delete this activity?")) return;
+    void window.LearningApi.moderateAboutActivity({ id: activityAction.dataset.id, action }).then(() => { aboutState.loaded = false; return renderAboutCloudContent(true); }).then(() => showToast("活动状态已更新 / Activity updated")).catch((error) => showToast(error.message || "操作失败"));
+    return;
+  }
+  const feedbackAction = event.target.closest("[data-about-feedback-action]");
+  if (feedbackAction) {
+    const action = feedbackAction.dataset.aboutFeedbackAction;
+    if (action === "delete" && !window.confirm("确定删除该评论？ / Delete this comment?")) return;
+    const reply = action === "reply" ? window.prompt("管理员回复（仅中文或英文）/ Administrator reply (Chinese or English only)") : "";
+    if (action === "reply" && !reply) return;
+    void window.LearningApi.moderateAboutFeedback({ id: feedbackAction.dataset.id, action, reply, reason: action === "delete" ? "违反发言规范 / Community Guidelines violation" : "" }).then(() => { aboutState.loaded = false; return renderAboutCloudContent(true); }).then(() => showToast("评论状态已更新 / Comment updated")).catch((error) => showToast(error.message || "操作失败"));
+    return;
+  }
   const adminTab = event.target.closest("[data-admin-tab]")?.dataset.adminTab;
   if (adminTab) { showAdminTab(adminTab); return; }
   if (event.target.closest("[data-action='open-add-teacher']")) { elements.addTeacherForm.hidden = false; elements.addTeacherForm.querySelector('[name="teacherName"]')?.focus(); return; }
@@ -1923,6 +2180,11 @@ elements.studentExcelInput.addEventListener("change", () => {
   if (!file) return;
   void importStudentExcel(file).catch((error) => showToast(error.message || "导入失败")).finally(() => { elements.studentExcelInput.value = ""; });
 });
+elements.aboutActivityForm?.addEventListener("submit", (event) => { event.preventDefault(); void saveAboutActivityForm(event.currentTarget).catch((error) => { elements.aboutActivityUploadStatus.hidden = false; elements.aboutActivityUploadStatus.textContent = error.message || "活动保存失败"; }); });
+elements.aboutActivityDialog?.addEventListener("click", (event) => { if (event.target === elements.aboutActivityDialog) elements.aboutActivityDialog.close(); });
+elements.aboutTeacherForm?.addEventListener("submit", (event) => { event.preventDefault(); void saveAboutTeacherForm(event.currentTarget).catch((error) => { elements.aboutTeacherUploadStatus.hidden = false; elements.aboutTeacherUploadStatus.textContent = error.message || "教师资料保存失败"; }); });
+elements.aboutTeacherDialog?.addEventListener("click", (event) => { if (event.target === elements.aboutTeacherDialog) elements.aboutTeacherDialog.close(); });
+elements.aboutFeedbackForm?.addEventListener("submit", (event) => { event.preventDefault(); void submitAboutFeedback(event.currentTarget).catch((error) => showToast(error.message || "提交失败", 4200)); });
 elements.addStudentForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);

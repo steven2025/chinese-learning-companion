@@ -751,7 +751,7 @@ button.primary-button small, a.primary-button small, .quiet-button small, .dange
 .about-hero h1 small { font-size: .43em; font-weight: 650; opacity: .86; }
 .about-hero p { max-width: 820px; margin: 0; color: #e1efed; font-size: 15px; line-height: 1.6; }
 .about-hero p small { color: #bcd7d4; font-size: 12px; }
-.about-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
+.about-tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 18px 0; }
 .about-tabs button { min-height: 66px; display: grid; grid-template-columns: 38px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 14px; color: #486164; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-align: left; box-shadow: 0 5px 16px rgba(27,65,65,.05); }
 .about-tabs button > span { width: 36px; height: 36px; display: grid; place-items: center; color: var(--teal); border-radius: 10px; background: var(--teal-soft); font-weight: 850; }
 .about-tabs b, .about-tabs small { display: block; }
@@ -796,6 +796,30 @@ button.primary-button small, a.primary-button small, .quiet-button small, .dange
 .guide-faq h3 { grid-column: 1 / -1; }
 .guide-faq p { margin: 0; line-height: 1.6; }
 .guide-faq p small { color: var(--muted); }
+.instructor-panel { grid-template-columns: minmax(190px, .32fr) minmax(0, 1.68fr); }
+.instructor-name-tabs { display: flex; flex-direction: column; gap: 9px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: #f7faf9; }
+.instructor-name-tabs button { min-height: 58px; display: grid; align-content: center; gap: 2px; padding: 9px 14px; color: #426063; border: 1px solid #c5d6d2; border-radius: 10px; background: #fff; text-align: left; }
+.instructor-name-tabs button b { font-size: 16px; }
+.instructor-name-tabs button small { color: var(--muted); font-size: 10px; }
+.instructor-name-tabs button.active { color: #fff; border-color: var(--teal); background: var(--teal); box-shadow: 0 7px 16px rgba(20,125,117,.18); }
+.instructor-name-tabs button.active small { color: #d7eeeb; }
+.instructor-profile { min-height: 390px; display: grid; grid-template-columns: minmax(190px, 28%) minmax(0, 1fr); gap: 28px; padding: 28px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 8px 24px rgba(28,61,61,.06); }
+.instructor-profile > img, .instructor-photo-placeholder { width: 100%; aspect-ratio: 4 / 5; max-height: 390px; border-radius: 14px; object-fit: cover; }
+.instructor-photo-placeholder { display: grid; place-items: center; color: #fff; background: linear-gradient(145deg, #176d68, #315f89); font: 800 clamp(60px, 9vw, 108px)/1 "STKaiti", "KaiTi", serif; }
+.instructor-profile-copy { min-width: 0; }
+.instructor-profile-copy > .about-card-kicker { color: var(--coral); }
+.instructor-profile-copy h2 { margin: 7px 0 5px; font-size: clamp(28px, 4vw, 42px); }
+.instructor-profile-copy h2 small { margin-left: 7px; color: var(--muted); font-size: .42em; }
+.instructor-affiliation { margin: 0 0 20px; color: #3e5d60; font-weight: 750; }
+.instructor-affiliation small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; font-weight: 500; }
+.instructor-profile-copy section { padding: 14px 0; border-top: 1px solid var(--line); }
+.instructor-profile-copy section h3 { margin: 0 0 7px; font-size: 15px; }
+.instructor-profile-copy section h3 small { margin-left: 5px; color: var(--muted); font-size: 10px; }
+.instructor-profile-copy section p { margin: 4px 0; line-height: 1.65; white-space: pre-wrap; }
+.instructor-management { grid-column: 1 / -1; }
+.about-teacher-dialog .auth-dialog-shell { width: min(820px, calc(100vw - 28px)); }
+.about-teacher-dialog textarea { min-height: 76px; resize: vertical; }
+.about-teacher-dialog input[type="file"] { padding: 9px; border: 1px dashed #9eb8b3; border-radius: 8px; background: #f8fbfa; }
 .activity-placeholder { grid-column: 1 / -1; min-height: 310px; display: grid; grid-template-columns: minmax(250px, .8fr) minmax(0, 1.2fr); align-items: center; gap: 34px; padding: 30px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
 .activity-visual { min-height: 220px; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; gap: 8px; padding: 18px; border-radius: 14px; background: linear-gradient(135deg, #e4f2ef, #e7eff8); }
 .activity-visual span { aspect-ratio: 1; display: grid; place-items: center; color: #fff; border-radius: 12px; background: var(--teal); font-size: 32px; font-weight: 850; transform: rotate(-4deg); }
@@ -810,12 +834,58 @@ button.primary-button small, a.primary-button small, .quiet-button small, .dange
 .feedback-preview input, .feedback-preview select, .feedback-preview textarea { width: 100%; min-height: 44px; padding: 10px 12px; color: var(--ink); border: 1px solid #b9cbc7; border-radius: 8px; background: #fbfdfc; resize: vertical; }
 .feedback-wide { grid-column: 1 / -1; }
 .feedback-preview .primary-button { justify-self: end; min-height: 44px; }
+.activity-public-list, .about-management-panel, .about-comment-section { grid-column: 1 / -1; }
+.activity-public-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.activity-card, .about-management-panel, .about-comment-section { padding: 22px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 8px 24px rgba(28,61,61,.06); }
+.activity-card header, .about-management-panel > header, .about-comment-section > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.activity-card h3 { margin: 0; font-size: 20px; }
+.activity-card h3 small { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+.activity-date, .activity-status { flex: 0 0 auto; padding: 5px 9px; color: var(--teal); border-radius: 999px; background: var(--teal-soft); font-size: 11px; font-weight: 800; }
+.activity-card > p { color: #52696c; line-height: 1.65; }
+.activity-card > p small { display: block; margin-top: 5px; color: var(--muted); }
+.activity-media-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.activity-media-grid figure { min-width: 0; margin: 0; overflow: hidden; border-radius: 10px; background: #e9f1ef; }
+.activity-media-grid img, .activity-media-grid video { width: 100%; height: 150px; display: block; object-fit: cover; }
+.activity-media-grid video { background: #122d30; }
+.activity-media-grid figcaption { padding: 7px 9px; color: #52696c; font-size: 10px; line-height: 1.35; }
+.about-management-panel { display: grid; gap: 14px; }
+.about-management-panel > header strong, .about-comment-section > header strong { font-size: 18px; }
+.about-management-panel > header small, .about-comment-section > header small { color: var(--muted); font-size: 10px; }
+.about-manage-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); }
+.about-manage-row:first-child { border-top: 0; }
+.about-manage-row h4 { margin: 0 0 4px; }
+.about-manage-row p { margin: 0; color: var(--muted); font-size: 12px; }
+.about-manage-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+.about-manage-actions button { min-height: 36px; padding: 7px 11px; }
+.community-guidelines { padding: 0; border: 1px solid #e6c47b; border-radius: 10px; background: #fff9e9; overflow: hidden; }
+.community-guidelines summary { padding: 14px 16px; color: #7a520b; cursor: pointer; font-weight: 850; }
+.community-guidelines summary small { margin-left: 6px; font-size: 10px; }
+.community-guidelines > div { padding: 0 18px 16px; color: #5e5544; line-height: 1.55; }
+.community-guidelines ol { margin: 6px 0 0; padding-left: 22px; }
+.community-guidelines li { margin: 6px 0; }
+.guidelines-consent { display: flex !important; grid-column: 1 / -1; grid-template-columns: none !important; align-items: flex-start; gap: 9px !important; padding: 12px 14px; border-radius: 9px; background: var(--teal-soft); }
+.guidelines-consent input { width: 18px !important; min-height: 18px !important; margin-top: 1px; }
+.feedback-login-note { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 12px; }
+.about-comment-section { display: grid; gap: 12px; }
+.about-comment-list { display: grid; gap: 10px; }
+.about-comment { padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: #fbfdfc; }
+.about-comment header { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 11px; }
+.about-comment p { margin: 9px 0 0; white-space: pre-wrap; line-height: 1.6; }
+.about-comment-reply { margin-top: 10px; padding: 10px 12px; border-left: 3px solid var(--gold); background: var(--gold-soft); font-size: 12px; }
+.about-activity-dialog .auth-dialog-shell { width: min(760px, calc(100vw - 28px)); }
+.about-activity-dialog textarea { min-height: 84px; resize: vertical; }
+.about-activity-dialog input[type="file"] { padding: 9px; border: 1px dashed #9eb8b3; border-radius: 8px; background: #f8fbfa; }
+.about-activity-dialog label small { display: block; margin-top: 4px; color: var(--muted); line-height: 1.45; }
 
 @media (max-width: 900px) {
   .about-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .about-panel { grid-template-columns: 1fr; }
   .about-notice, .about-section-heading, .guide-grid, .activity-placeholder, .feedback-preview { grid-column: auto; }
   .activity-placeholder { grid-template-columns: 1fr; }
+  .activity-public-list { grid-template-columns: 1fr; }
+  .instructor-panel { grid-template-columns: 1fr; }
+  .instructor-name-tabs { flex-direction: row; overflow-x: auto; }
+  .instructor-name-tabs button { min-width: 145px; }
 }
 
 @media (max-width: 760px) {
@@ -836,4 +906,9 @@ button.primary-button small, a.primary-button small, .quiet-button small, .dange
   .feedback-wide { grid-column: auto; }
   .feedback-preview .primary-button { width: 100%; justify-self: stretch; }
   .activity-placeholder { padding: 18px; }
+  .activity-media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .about-manage-row { grid-template-columns: 1fr; }
+  .about-manage-actions { justify-content: flex-start; }
+  .instructor-profile { grid-template-columns: 1fr; gap: 18px; padding: 18px; }
+  .instructor-profile > img, .instructor-photo-placeholder { width: min(230px, 72vw); margin: 0 auto; }
 }

@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260824-2">
+  <link rel="stylesheet" href="styles.css?v=20260824-4">
   <link rel="stylesheet" href="writing-zone.css?v=20260811-6">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
@@ -280,6 +280,7 @@
 
         <nav class="about-tabs" aria-label="关于点点页面导航 / About DianDian navigation">
           <button class="active" type="button" data-about-tab="developer"><span aria-hidden="true">开</span><b>开发者信息<small>Developer Information</small></b></button>
+          <button type="button" data-about-tab="teachers"><span aria-hidden="true">师</span><b>授课教师<small>Instructors</small></b></button>
           <button type="button" data-about-tab="guide"><span aria-hidden="true">册</span><b>平台使用手册<small>User Guide</small></b></button>
           <button type="button" data-about-tab="activities"><span aria-hidden="true">影</span><b>课程活动<small>Course Activities</small></b></button>
           <button type="button" data-about-tab="feedback"><span aria-hidden="true">言</span><b>讨论与反馈<small>Discussion & Feedback</small></b></button>
@@ -304,6 +305,16 @@
           </aside>
         </section>
 
+        <section class="about-panel instructor-panel" data-about-panel="teachers" hidden>
+          <header class="about-section-heading"><span>教师团队 / Teaching Team</span><h2>授课教师 <small>Instructors</small></h2><p>点击姓名查看教师资料。 / Select a name to view the instructor profile.</p></header>
+          <nav class="instructor-name-tabs" id="aboutTeacherTabs" aria-label="授课教师 / Instructors"><button class="active" type="button" disabled>曹丹丹</button><button type="button" disabled>李进</button><button type="button" disabled>袁玥</button></nav>
+          <section class="instructor-profile" id="aboutTeacherProfile"><div class="instructor-photo-placeholder" aria-hidden="true">师</div><div><p class="empty-approval">正在读取教师资料… / Loading instructor profiles…</p></div></section>
+          <section class="about-management-panel instructor-management" id="aboutTeacherManagement" hidden>
+            <header><div><strong>教师资料管理 <small>Instructor Profile Management</small></strong><p>教师只能编辑本人资料；管理员可新增、审核和发布。</p></div><button class="primary-button" type="button" data-action="open-about-teacher">＋ 新增教师 <small>Add instructor</small></button></header>
+            <div id="aboutTeacherManageList"></div>
+          </section>
+        </section>
+
         <section class="about-panel" data-about-panel="guide" hidden>
           <header class="about-section-heading"><span>快速上手 / Getting Started</span><h2>平台使用手册 <small>User Guide</small></h2><p>选择相应身份和功能，查看简要操作说明。 / Choose a role or feature for a concise guide.</p></header>
           <div class="guide-grid">
@@ -317,21 +328,31 @@
 
         <section class="about-panel" data-about-panel="activities" hidden>
           <header class="about-section-heading"><span>课堂内外 / In and Beyond the Classroom</span><h2>课程活动 <small>Course Activities</small></h2><p>记录语言实践、文化体验和课程交流活动。 / Highlights from language practice, cultural experiences, and course exchanges.</p></header>
-          <div class="activity-placeholder">
-            <div class="activity-visual" aria-hidden="true"><span>照</span><span>影</span><span>▶</span></div>
-            <div><strong>活动内容正在整理中 <small>Activity content is being prepared</small></strong><p>后续将按活动主题展示活动介绍、日期、课程或班级，以及经授权发布的照片和视频。</p><p class="about-en">Future updates will organize introductions, dates, classes, and authorized photos and videos by activity topic.</p></div>
-          </div>
+          <div class="activity-public-list" id="aboutActivityList"><p class="empty-approval">正在读取课程活动… / Loading course activities…</p></div>
+          <section class="about-management-panel" id="aboutActivityManagement" hidden>
+            <header><div><strong>活动内容管理 <small>Activity Management</small></strong><p>教师可上传草稿并提交审核；管理员负责发布、下架和删除。</p></div><button class="primary-button" type="button" data-action="open-about-activity">＋ 新建活动 <small>New activity</small></button></header>
+            <div id="aboutActivityManageList"></div>
+          </section>
         </section>
 
         <section class="about-panel" data-about-panel="feedback" hidden>
-          <header class="about-section-heading"><span>共同完善 / Help Us Improve</span><h2>讨论与反馈 <small>Discussion & Feedback</small></h2><p>欢迎提出评价、问题和建议。在线提交功能将在后续版本开放。 / Evaluations, questions, and suggestions are welcome. Online submission will be enabled in a future version.</p></header>
-          <form class="feedback-preview" id="aboutFeedbackPreview">
-            <label><span>反馈类型 / Feedback Type</span><select><option>功能建议 / Feature Suggestion</option><option>功能问题 / Technical Issue</option><option>内容错误 / Content Error</option><option>使用评价 / Evaluation</option><option>其他 / Other</option></select></label>
-            <label><span>所属课程 / Related Course</span><input type="text" placeholder="例如：初级综合1 第5课 / e.g. Elementary Comprehensive 1, Lesson 5"></label>
-            <label class="feedback-wide"><span>反馈内容 / Feedback</span><textarea rows="6" placeholder="请描述您的问题或建议 / Describe your question or suggestion"></textarea></label>
-            <label><span>联系方式（选填）/ Contact (Optional)</span><input type="text" placeholder="Email or other contact"></label>
-            <button class="primary-button" type="button" data-action="feedback-coming-soon">提交功能准备中 <small>Submission coming soon</small></button>
+          <header class="about-section-heading"><span>共同完善 / Help Us Improve</span><h2>讨论与反馈 <small>Discussion & Feedback</small></h2><p>仅支持中文或英文。学生发言经管理员审核后公开。 / Chinese or English only. Student posts are published after administrator review.</p></header>
+          <form class="feedback-preview" id="aboutFeedbackForm">
+            <label><span>发言语言 / Language</span><select name="language" required><option value="zh">中文 / Chinese</option><option value="en">英文 / English</option></select></label>
+            <label><span>反馈类型 / Feedback Type</span><select name="type"><option value="suggestion">功能建议 / Feature Suggestion</option><option value="issue">功能问题 / Technical Issue</option><option value="content-error">内容错误 / Content Error</option><option value="evaluation">使用评价 / Evaluation</option><option value="other">其他 / Other</option></select></label>
+            <label><span>所属课程 / Related Course</span><input name="courseId" type="text" maxlength="80" placeholder="例如：初级综合1 第5课 / e.g. Elementary Comprehensive 1, Lesson 5"></label>
+            <label><span>联系方式（选填，不公开）/ Contact (Optional, private)</span><input name="contact" type="text" maxlength="160" placeholder="Email or other contact"></label>
+            <label class="feedback-wide"><span>发言内容 / Post</span><textarea name="content" rows="6" minlength="10" maxlength="1000" required placeholder="仅限中文或英文，请勿填写隐私或敏感信息。 / Chinese or English only. Do not include private or sensitive information."></textarea><small>10—1000字符；禁止外部链接。 / 10–1000 characters; external links are not allowed.</small></label>
+            <details class="community-guidelines feedback-wide">
+              <summary>发言规范与法律声明 <small>Community Guidelines & Legal Notice</small></summary>
+              <div><strong>用户发表的所有内容必须遵守中华人民共和国法律法规。</strong><p>严禁发布违法违规、危害国家安全、扰乱社会秩序、侵犯他人合法权益或其他法律法规禁止的内容。</p><p><b>All content must comply with the laws and regulations of the People’s Republic of China.</b> Content that violates laws and regulations, endangers national security, disrupts public order, infringes upon the lawful rights of others, or is otherwise prohibited is strictly forbidden.</p><ol><li>仅使用中文或英文。 / Chinese or English only.</li><li>文明交流，禁止侮辱、歧视、骚扰、威胁和人身攻击。 / Communicate respectfully. No abuse, discrimination, harassment, threats, or personal attacks.</li><li>不得发布违法、不当、虚假、有害或扰乱教学秩序的内容。 / No illegal, inappropriate, misleading, harmful, or disruptive content.</li><li>不得泄露本人或他人的隐私、联系方式、账号及身份信息。 / Do not disclose private information, contact details, credentials, or identity information.</li><li>未经授权，不得发布他人的姓名、照片、视频或个人资料。 / Do not share another person’s name, photos, videos, or personal information without permission.</li><li>禁止广告、垃圾信息、重复内容和无关链接。 / No advertising, spam, duplicate content, or unrelated links.</li><li>管理员有权审核、隐藏或删除违规内容。 / Administrators may review, hide, or remove content that violates these rules.</li></ol></div>
+            </details>
+            <label class="guidelines-consent feedback-wide"><input name="guidelinesAccepted" type="checkbox" required><span>我已阅读并同意遵守发言规范及中华人民共和国法律法规。<small>I have read and agree to follow the Community Guidelines and the laws and regulations of the People’s Republic of China.</small></span></label>
+            <p class="feedback-login-note" id="aboutFeedbackLoginNote">请先登录后发言。 / Please sign in before posting.</p>
+            <button class="primary-button" type="submit">提交 <small>Submit</small></button>
           </form>
+          <section class="about-comment-section feedback-wide"><header><strong>讨论区 <small>Discussion</small></strong><button class="text-button" type="button" data-action="refresh-about-feedback">刷新 / Refresh</button></header><div class="about-comment-list" id="aboutCommentList"><p class="empty-approval">正在读取讨论内容… / Loading discussion…</p></div></section>
+          <section class="about-management-panel feedback-wide" id="aboutFeedbackManagement" hidden><header><div><strong>评论审核 <small>Comment Moderation</small></strong><p>管理员可以审核、隐藏、回复或删除评论。</p></div></header><div id="aboutFeedbackManageList"></div></section>
         </section>
       </section>
     </main>
@@ -353,6 +374,51 @@
     <button class="pwa-install-action" type="button" data-pwa-install>安装 / Install</button>
     <button class="pwa-install-dismiss" type="button" data-pwa-dismiss aria-label="暂不安装 / Not now">×</button>
   </section>
+
+  <dialog class="role-dialog about-teacher-dialog" id="aboutTeacherDialog" aria-labelledby="aboutTeacherDialogTitle">
+    <form class="auth-dialog-shell" id="aboutTeacherForm">
+      <header><div><span>授课教师 / Instructor</span><h2 id="aboutTeacherDialogTitle">教师资料 <small>Instructor profile</small></h2></div><button type="button" data-about-teacher-close aria-label="关闭">×</button></header>
+      <input name="id" type="hidden">
+      <div class="form-grid two-columns">
+        <label class="admin-teacher-binding"><span>绑定教师账号ID / Teacher Account ID</span><input name="teacherUserId" maxlength="100"><small>必须与教师登录账号的 userId 完全一致。</small></label>
+        <label class="admin-teacher-binding"><span>显示顺序 / Display Order</span><input name="displayOrder" type="number" min="0" max="9999" value="999"></label>
+        <label><span>中文姓名 / Chinese Name</span><input name="nameZh" maxlength="80" required></label>
+        <label><span>英文姓名 / English Name</span><input name="nameEn" maxlength="120" required></label>
+        <label><span>教师身份 / Teaching Role</span><input name="roleZh" maxlength="80" value="专业教师" required></label>
+        <label><span>Teaching Role</span><input name="roleEn" maxlength="120" value="Chinese Language Instructor" required></label>
+        <label><span>所属单位 / Affiliation</span><input name="affiliationZh" maxlength="160" value="重庆工商大学"></label>
+        <label><span>Affiliation</span><input name="affiliationEn" maxlength="220" value="Chongqing Technology and Business University"></label>
+        <label class="wide-field"><span>教学方向 / Teaching Areas（中文）</span><textarea name="teachingZh" maxlength="600"></textarea></label>
+        <label class="wide-field"><span>Teaching Areas (English)</span><textarea name="teachingEn" maxlength="900"></textarea></label>
+        <label class="wide-field"><span>教师简介 / Biography（中文）</span><textarea name="biographyZh" maxlength="1600"></textarea></label>
+        <label class="wide-field"><span>Biography (English)</span><textarea name="biographyEn" maxlength="2400"></textarea></label>
+        <label><span>教授课程 / Courses（中文）</span><textarea name="coursesZh" maxlength="600"></textarea></label>
+        <label><span>Courses (English)</span><textarea name="coursesEn" maxlength="900"></textarea></label>
+        <label class="wide-field"><span>教师照片 / Photo</span><input name="photo" type="file" accept="image/jpeg,image/png,image/webp"><small>请确认已获得教师本人同意；JPEG、PNG、WebP，单张≤5MB，页面按4:5展示。</small></label>
+      </div>
+      <p class="course-import-result" id="aboutTeacherUploadStatus" role="status" hidden></p>
+      <button class="primary-button" type="submit">保存教师资料 <small>Save profile</small></button>
+    </form>
+  </dialog>
+
+  <dialog class="role-dialog about-activity-dialog" id="aboutActivityDialog" aria-labelledby="aboutActivityDialogTitle">
+    <form class="auth-dialog-shell" id="aboutActivityForm">
+      <header><div><span>课程活动 / Course Activity</span><h2 id="aboutActivityDialogTitle">新建活动 <small>New activity</small></h2></div><button type="button" data-about-activity-close aria-label="关闭">×</button></header>
+      <input name="id" type="hidden">
+      <div class="form-grid two-columns">
+        <label><span>活动日期 / Date</span><input name="date" type="date" required></label>
+        <label><span>课程或班级（选填）/ Course or Class</span><input name="className" maxlength="100"></label>
+        <label><span>中文标题 / Chinese Title</span><input name="titleZh" maxlength="120" required></label>
+        <label><span>英文标题 / English Title</span><input name="titleEn" maxlength="180" required></label>
+        <label class="wide-field"><span>中文简介 / Chinese Introduction</span><textarea name="summaryZh" rows="4" maxlength="1200" required></textarea></label>
+        <label class="wide-field"><span>英文简介 / English Introduction</span><textarea name="summaryEn" rows="4" maxlength="1800" required></textarea></label>
+        <label><span>照片 / Photos</span><input name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><small>JPEG、PNG、WebP；单张≤8MB；每项活动最多20张。</small></label>
+        <label><span>视频 / Videos</span><input name="videos" type="file" accept="video/mp4" multiple><small>仅MP4（H.264 + AAC）；单个≤50MB；每项活动最多3个。</small></label>
+      </div>
+      <p class="course-import-result" id="aboutActivityUploadStatus" role="status" hidden></p>
+      <button class="primary-button" type="submit">保存活动与上传媒体 <small>Save & Upload</small></button>
+    </form>
+  </dialog>
 
   <dialog class="role-dialog" id="roleDialog" aria-labelledby="roleDialogTitle">
     <div class="auth-dialog-shell">
@@ -520,10 +586,10 @@
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="../../vendor/xlsx.full.min.js"></script>
   <script src="../../config.js?v=20260823-1"></script>
-  <script src="../shared/learning-api-client.js?v=20260823-6"></script>
+  <script src="../shared/learning-api-client.js?v=20260824-2"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260823-2"></script>
-  <script src="app.js?v=20260824-1" defer></script>
+  <script src="app.js?v=20260824-3" defer></script>
   <script src="writing-zone.js?v=20260823-4" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
