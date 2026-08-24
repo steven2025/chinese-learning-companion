@@ -209,19 +209,19 @@
     el.newButton.hidden = !student;
     if (!student) {
       el.count.textContent = "0篇";
-      el.list.innerHTML = `<div class="writing-empty"><strong>登录后进入写作专区</strong><p>学生登录后可以录入作文题目和要求，并使用田字格完成手写作文。</p><button class="primary-button" type="button" data-writing-action="login">学生登录</button></div>`;
+      el.list.innerHTML = `<div class="writing-empty"><strong>登录后进入写作专区</strong><p>学生登录后可以录入作文题目和要求，并使用田字格完成手写作文。</p><button class="primary-button" type="button" data-writing-action="login">学生登录 <small>Sign in</small></button></div>`;
       return;
     }
     const own = visibleEssays().sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
     const filtered = localState.filter === "all" ? own : own.filter((essay) => essay.status === localState.filter);
     el.count.textContent = `${filtered.length}篇`;
     if (!filtered.length) {
-      el.list.innerHTML = `<div class="writing-empty"><strong>${own.length ? "当前分类暂无作文" : "开始第一篇手写作文"}</strong><p>题目和要求可以键盘录入，作文正文只在田字格中手写。</p>${own.length ? "" : '<button class="primary-button" type="button" data-writing-action="new">新建作文</button>'}</div>`;
+      el.list.innerHTML = `<div class="writing-empty"><strong>${own.length ? "当前分类暂无作文" : "开始第一篇手写作文"}</strong><p>题目和要求可以键盘录入，作文正文只在田字格中手写。</p>${own.length ? "" : '<button class="primary-button" type="button" data-writing-action="new">新建作文 <small>New essay</small></button>'}</div>`;
       return;
     }
     el.list.innerHTML = filtered.map((essay) => {
       const canWrite = ["draft", "returned"].includes(essay.status);
-      const actionLabel = essay.status === "returned" ? "开始改写" : essay.status === "draft" ? "继续写作" : "查看详情";
+      const actionLabel = essay.status === "returned" ? "开始改写 <small>Revise</small>" : essay.status === "draft" ? "继续写作 <small>Write</small>" : "查看详情 <small>View</small>";
       return `<article class="writing-row" data-status="${essay.status}">
         <span class="writing-row-mark" aria-hidden="true">写</span>
         <div class="writing-row-copy"><strong>${safe(essay.title)}</strong><p>${safe(essay.requirements)}</p><small>提交给 ${safe(essay.teacher || "本机草稿")} · ${wordCount(essay)}字 · 第${essay.version || 1}稿 · ${formatDate(essay.updatedAt)}</small></div>
@@ -245,7 +245,7 @@
       <span class="writing-row-mark" aria-hidden="true">阅</span>
       <div class="writing-row-copy"><strong>${safe(essay.title)}</strong><p>${safe(essay.studentName)} · 学号 ${safe(essay.studentId)}</p><small>${wordCount(essay)}字 · 第${essay.version || 1}稿 · 提交于 ${formatDate(essay.submittedAt)}</small></div>
       <span class="writing-row-status">${essay.teacherFeedback?.published ? "已反馈" : statusLabels[essay.status] || essay.status}</span>
-      <div class="writing-row-actions"><button class="resume-button" type="button" data-writing-review="${essay.id}">批阅</button></div>
+      <div class="writing-row-actions"><button class="resume-button" type="button" data-writing-review="${essay.id}">批阅 <small>Review</small></button></div>
     </article>`).join("");
   }
 
@@ -706,7 +706,7 @@
       el.assistContent.innerHTML = `<div class="assist-note"><strong>${labels[localState.assistTab][0]}</strong><p>${labels[localState.assistTab][1]}</p></div><section class="assist-result-section">${content}</section>`;
       return;
     }
-    el.assistContent.innerHTML = `<div class="assist-note"><strong>${labels[localState.assistTab][0]}</strong><p>${labels[localState.assistTab][1]}</p></div><section class="assist-result-section"><h3>按“${safe(localeOptions.find(([code]) => code === essay.locale)?.[1] || "中文")}”生成辅助</h3><p>AI只给出理解、结构或表达方向，不代写完整作文。</p><button class="primary-button" type="button" data-writing-assist-generate>生成本项辅助</button></section>`;
+    el.assistContent.innerHTML = `<div class="assist-note"><strong>${labels[localState.assistTab][0]}</strong><p>${labels[localState.assistTab][1]}</p></div><section class="assist-result-section"><h3>按“${safe(localeOptions.find(([code]) => code === essay.locale)?.[1] || "中文")}”生成辅助</h3><p>AI只给出理解、结构或表达方向，不代写完整作文。</p><button class="primary-button" type="button" data-writing-assist-generate>生成本项辅助 <small>Generate</small></button></section>`;
   }
 
   async function generateAssist() {
@@ -806,13 +806,13 @@
           <label><span>教师评价</span><textarea name="evaluation" placeholder="可修改AI评价或补充教师评价">${safe(feedback.evaluation || "")}</textarea></label>
           <label><span>修改建议</span><textarea name="suggestions" placeholder="给学生明确、可执行的修改方向">${safe(feedback.suggestions || "")}</textarea></label>
           <label><span>最终分数</span><input name="score" type="number" min="0" max="100" value="${safe(feedback.score || "")}" placeholder="0—100"></label>
-          <div class="teacher-review-actions"><button class="quiet-button" type="button" data-review-action="save">保存批阅</button><button class="quiet-button" type="button" data-review-action="return">退回修改</button><button class="primary-button" type="button" data-review-action="publish">发布反馈</button></div>
+          <div class="teacher-review-actions"><button class="quiet-button" type="button" data-review-action="save">保存批阅 <small>Save</small></button><button class="quiet-button" type="button" data-review-action="return">退回修改 <small>Return</small></button><button class="primary-button" type="button" data-review-action="publish">发布反馈 <small>Publish</small></button></div>
         </form></aside></div>`;
     } else {
       const feedback = essay.teacherFeedback || {};
       el.reviewContent.innerHTML = `<div class="writing-review-layout">${manuscript}<aside class="review-feedback"><h3>学习建议</h3>${adviceMarkup(essay.aiAssessment, false)}
         ${feedback.published ? `<div class="student-feedback-panel"><section><h3>教师评价</h3><p>${safe(feedback.evaluation || "暂无文字评价")}</p></section><section><h3>修改建议</h3><p>${safe(feedback.suggestions || "暂无补充建议")}</p></section><section><h3>教师最终分</h3><p>${safe(feedback.score || "未评分")}</p></section></div>` : '<p class="empty-approval">教师尚未发布正式反馈。</p>'}
-        ${essay.status === "returned" ? '<button class="primary-button" type="button" data-writing-revise>开始修改</button>' : ""}</aside></div>`;
+        ${essay.status === "returned" ? '<button class="primary-button" type="button" data-writing-revise>开始修改 <small>Revise</small></button>' : ""}</aside></div>`;
     }
     openDialog(el.reviewDialog);
   }

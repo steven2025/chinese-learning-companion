@@ -8,8 +8,8 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260823-8">
-  <link rel="stylesheet" href="writing-zone.css?v=20260811-4">
+  <link rel="stylesheet" href="styles.css?v=20260823-9">
+  <link rel="stylesheet" href="writing-zone.css?v=20260811-6">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
 <body>
@@ -35,19 +35,20 @@
         <i aria-hidden="true">⌄</i>
       </button>
       <button class="logout-button" id="logoutButton" type="button" hidden title="退出登录 / Sign out">
-        <span aria-hidden="true">↪</span><b>退出</b>
+        <span aria-hidden="true">↪</span><b>退出<small>Sign out</small></b>
       </button>
     </header>
 
     <aside class="sidebar" aria-label="主导航">
       <nav class="primary-navigation">
-        <button class="active" type="button" data-view="home"><span aria-hidden="true">⌂</span><b>首页</b></button>
-        <button type="button" data-view="courses"><span aria-hidden="true">册</span><b>我的课程</b></button>
-        <button type="button" data-view="writing"><span aria-hidden="true">写</span><b>写作专区</b></button>
-        <button type="button" data-view="games"><span aria-hidden="true">趣</span><b>趣味游戏</b></button>
-        <button type="button" data-view="progress"><span aria-hidden="true">记</span><b>学习记录</b></button>
-        <button type="button" data-view="teacher" data-role-nav="teacher" hidden><span aria-hidden="true">教</span><b>教学工作台</b></button>
-        <button type="button" data-view="admin" data-role-nav="admin" hidden><span aria-hidden="true">管</span><b>系统管理</b></button>
+        <button class="active" type="button" data-view="home"><span aria-hidden="true">⌂</span><b>首页<small>Home</small></b></button>
+        <button type="button" data-view="courses"><span aria-hidden="true">册</span><b>我的课程<small>My courses</small></b></button>
+        <button type="button" data-view="writing"><span aria-hidden="true">写</span><b>写作专区<small>Writing</small></b></button>
+        <button type="button" data-view="games"><span aria-hidden="true">趣</span><b>趣味游戏<small>Games</small></b></button>
+        <button type="button" data-view="tools"><span aria-hidden="true">工</span><b>学习工具<small>Tools</small></b></button>
+        <button type="button" data-view="progress"><span aria-hidden="true">记</span><b>学习记录<small>Progress</small></b></button>
+        <button type="button" data-view="teacher" data-role-nav="teacher" hidden><span aria-hidden="true">教</span><b>教学工作台<small>Teaching</small></b></button>
+        <button type="button" data-view="admin" data-role-nav="admin" hidden><span aria-hidden="true">管</span><b>系统管理<small>Admin</small></b></button>
       </nav>
     </aside>
 
@@ -55,7 +56,7 @@
       <section class="app-view active" id="homeView" data-view-panel="home">
         <header class="page-heading">
           <div><span>学习中心</span><h1>下午好，继续今天的学习</h1></div>
-          <button class="quiet-button" type="button" data-action="open-role-dialog">切换身份视图</button>
+          <button class="quiet-button" type="button" data-action="open-role-dialog">切换身份视图 <small>Switch view</small></button>
         </header>
 
         <section class="continue-panel" aria-labelledby="continueTitle">
@@ -67,12 +68,12 @@
             <div class="progress-line"><i id="homeProgressBar" style="width: 0%"></i></div>
             <small id="homeProgressText">加载学习记录…</small>
           </div>
-          <a class="primary-button" id="continueLink" href="../digital-book/?lesson=zjzh-1-1">继续学习 <span>›</span></a>
+          <a class="primary-button" id="continueLink" href="../digital-book/?lesson=zjzh-1-1">继续学习 <small>Continue</small> <span>›</span></a>
         </section>
 
         <div class="dashboard-grid">
           <section class="dashboard-section">
-            <header><div><span>本周安排</span><h2>学习任务</h2></div><button type="button" data-view="courses">全部课程</button></header>
+            <header><div><span>本周安排</span><h2>学习任务</h2></div><button type="button" data-view="courses">全部课程 <small>All courses</small></button></header>
             <div class="task-list">
               <a id="primaryTaskLink" href="../digital-book/?lesson=zjzh-1-1"><span class="task-number">01</span><span><strong>词汇与课文学习</strong><small id="primaryTaskMeta">中级综合1 · 第1课</small></span><b>继续</b></a>
               <a id="secondaryTaskLink" href="../digital-book/?lesson=zjzh-1-1#practice"><span class="task-number coral">02</span><span><strong id="secondaryTaskTitle">完成课后练习</strong><small id="secondaryTaskMeta">第41—48题</small></span><b>开始</b></a>
@@ -87,7 +88,7 @@
               <div><dt>已学词语</dt><dd id="statWords">—<small>个</small></dd></div>
               <div><dt>完成练习</dt><dd id="statExercises">—<small>题</small></dd></div>
             </dl>
-            <button class="text-button" type="button" data-view="progress">查看学习记录 ›</button>
+            <button class="text-button" type="button" data-view="progress">查看学习记录 <small>Progress</small> ›</button>
           </section>
         </div>
 
@@ -96,15 +97,15 @@
       <section class="app-view" id="writingView" data-view-panel="writing" hidden>
         <header class="page-heading writing-page-heading">
           <div><span>独立写作</span><h1>写作专区</h1><p>录入题目和要求，在田字格中完成并提交手写作文。</p></div>
-          <button class="primary-button compact-action" id="newEssayButton" type="button"><span aria-hidden="true">＋</span>新建作文</button>
+          <button class="primary-button compact-action" id="newEssayButton" type="button"><span aria-hidden="true">＋</span>新建作文 <small>New essay</small></button>
         </header>
         <section class="writing-toolbar" aria-label="作文筛选">
           <nav id="writingStatusTabs">
-            <button class="active" type="button" data-writing-filter="all">全部</button>
-            <button type="button" data-writing-filter="draft">草稿</button>
-            <button type="button" data-writing-filter="submitted">已提交</button>
-            <button type="button" data-writing-filter="returned">待修改</button>
-            <button type="button" data-writing-filter="completed">已完成</button>
+            <button class="active" type="button" data-writing-filter="all">全部<small>All</small></button>
+            <button type="button" data-writing-filter="draft">草稿<small>Draft</small></button>
+            <button type="button" data-writing-filter="submitted">已提交<small>Submitted</small></button>
+            <button type="button" data-writing-filter="returned">待修改<small>Returned</small></button>
+            <button type="button" data-writing-filter="completed">已完成<small>Completed</small></button>
           </nav>
           <span id="writingItemCount">0篇</span>
         </section>
@@ -134,6 +135,17 @@
             <div class="game-entry-mark" aria-hidden="true">闯</div>
             <div><span>初级综合Ⅰ 1—2课 · 中级综合Ⅰ 1—3课</span><h2>汉字大闯关</h2><p>根据拼音、教材词语和中文提示，从相近汉字中选出正确答案。</p><small>50个教材汉字项目</small></div>
             <em>开始闯关 ›</em>
+          </a>
+        </div>
+      </section>
+
+      <section class="app-view" id="toolsView" data-view-panel="tools" hidden>
+        <header class="page-heading"><div><span>学习工具</span><h1>学习工具 <small>Tools</small></h1><p>拼音、汉字与发音的辅助学习工具，持续更新中。</p></div></header>
+        <div class="game-library">
+          <a class="game-entry" href="../pinyin-generator/">
+            <div class="game-entry-mark" aria-hidden="true">拼</div>
+            <div><span>拼音工具 · Pinyin tool</span><h2>拼音声调生成器 <small>Pinyin Tone Generator</small></h2><p>输入拼音，点选声调，一键得到带调拼音和 IPA 国际音标。</p><small>拼音 · 声调 · IPA</small></div>
+            <em>打开工具 ›</em>
           </a>
         </div>
       </section>
@@ -178,18 +190,18 @@
         <section class="teacher-course-panel" id="teacherCoursePanel">
           <header class="teacher-course-head">
             <div><span>课程管理</span><h2>我的课程 <small>My courses</small></h2><p>按“学期 + 教材”建立课程，再在课程中添加学生并发放邀请码。</p></div>
-            <button class="primary-button" type="button" data-action="open-new-course">＋ 新建课程</button>
+            <button class="primary-button" type="button" data-action="open-new-course">＋ 新建课程 <small>New course</small></button>
           </header>
           <div class="teacher-course-list" id="teacherCourseList"><p class="empty-approval">还没有课程，点击“＋新建课程”。</p></div>
           <section class="course-student-panel" id="courseStudentPanel" hidden>
             <header class="course-student-head">
-              <button class="quiet-button" type="button" data-action="back-course-list">← 返回课程列表</button>
+              <button class="quiet-button" type="button" data-action="back-course-list">← 返回课程列表 <small>Back</small></button>
               <div class="course-student-title"><strong id="courseStudentTitle">—</strong><small id="courseStudentMeta">—</small></div>
-              <button class="quiet-button" type="button" data-action="copy-all-invites">复制全部邀请信息</button>
+              <button class="quiet-button" type="button" data-action="copy-all-invites">复制全部邀请信息 <small>Copy all</small></button>
             </header>
             <div class="course-student-toolbar">
-              <button class="quiet-button" type="button" data-action="open-add-student">＋ 新增学生</button>
-              <a class="quiet-button" href="templates/student-import-template.xlsx" download="学生导入模板.xlsx" data-action="download-student-template">下载 Excel 模板</a>
+              <button class="quiet-button" type="button" data-action="open-add-student">＋ 新增学生 <small>Add student</small></button>
+              <a class="quiet-button" href="templates/student-import-template.xlsx" download="学生导入模板.xlsx" data-action="download-student-template">下载 Excel 模板 <small>Template</small></a>
               <label class="file-import-label"><span>导入 Excel</span><input type="file" id="studentExcelInput" accept=".xlsx,.xls,.csv" hidden></label>
             </div>
             <p class="course-import-result" id="courseImportResult" role="status" hidden></p>
@@ -228,28 +240,28 @@
         <section class="teacher-writing-summary">
           <div><span>写作专区</span><h2>作文收件箱</h2><p>查看学生手写作文、AI评价和待批阅记录。</p></div>
           <strong id="teacherWritingPending">0篇待批阅</strong>
-          <button class="quiet-button" type="button" data-view="writing">打开收件箱</button>
+          <button class="quiet-button" type="button" data-view="writing">打开收件箱 <small>Inbox</small></button>
         </section>
         </section>
-        <div class="management-list"><button>课文学习进度 <span>下一阶段</span></button><button>布置课程与作业 <span>待接入</span></button><a href="../digital-book/">以学生视图预览第1课 <span>打开 ›</span></a></div>
+        <div class="management-list"><button>课文学习进度 <small>Text progress</small> <span>下一阶段</span></button><button>布置课程与作业 <small>Assignments</small> <span>待接入</span></button><a href="../digital-book/">以学生视图预览第1课 <small>Preview</small> <span>打开 ›</span></a></div>
       </section>
 
       <section class="app-view" id="adminView" data-view-panel="admin" hidden>
         <header class="page-heading"><div><span>管理员身份</span><h1>系统管理</h1><p>管理教师账号、教材开放与多语言内容审核。</p></div></header>
         <nav class="admin-tabs" aria-label="系统管理功能">
-          <button class="active" type="button" data-admin-tab="users">用户与角色管理</button>
-          <button type="button" data-admin-tab="publishing">教材与课程发布</button>
-          <button type="button" data-admin-tab="review">多语言内容审核</button>
+          <button class="active" type="button" data-admin-tab="users">用户与角色管理<small>Users &amp; roles</small></button>
+          <button type="button" data-admin-tab="publishing">教材与课程发布<small>Publishing</small></button>
+          <button type="button" data-admin-tab="review">多语言内容审核<small>Review</small></button>
         </nav>
         <section class="admin-panel" data-admin-panel="users">
           <div class="admin-panel-heading"><div><span>角色</span><h2>用户与角色管理</h2><p>教师负责本班学生名单；管理员负责教师账号的开通、停用与删除。</p></div></div>
           <form class="admin-inline-form" id="addTeacherForm" hidden>
             <label><span>教师姓名 / Name</span><input name="teacherName" required maxlength="40" placeholder="教师中文姓名或英文名"></label>
             <label><span>教师邀请码 / Invite（必填）</span><input name="teacherInviteCode" required maxlength="12" placeholder="教师登录用邀请码，自行设置"></label>
-            <button class="primary-button" type="submit">添加教师</button>
-            <button class="quiet-button" type="button" data-action="cancel-add-teacher">取消</button>
+            <button class="primary-button" type="submit">添加教师 <small>Add teacher</small></button>
+            <button class="quiet-button" type="button" data-action="cancel-add-teacher">取消 <small>Cancel</small></button>
           </form>
-          <div class="admin-toolbar"><strong>教师账号 <span id="teacherCount">0</span></strong><button class="quiet-button" type="button" data-action="open-add-teacher">＋ 新增教师</button></div>
+          <div class="admin-toolbar"><strong>教师账号 <span id="teacherCount">0</span></strong><button class="quiet-button" type="button" data-action="open-add-teacher">＋ 新增教师 <small>Add teacher</small></button></div>
           <div class="admin-list" id="adminTeacherList"></div>
         </section>
         <section class="admin-panel" data-admin-panel="publishing" hidden>
@@ -258,19 +270,20 @@
         </section>
         <section class="admin-panel" data-admin-panel="review" hidden>
           <div class="admin-panel-heading"><div><span>语种</span><h2>多语言内容审核</h2><p>从云端数据统计已开放课次的语种覆盖，并标记审核状态。</p></div></div>
-          <div class="admin-toolbar"><strong>覆盖语种：中文 · 拼音 · 英 · 西 · 法 · 印尼 · 日 · 韩 · 老挝 · 马来 · 缅 · 俄 · 泰</strong><button class="quiet-button" type="button" data-action="review-refresh-all">全部刷新统计</button></div>
+          <div class="admin-toolbar"><strong>覆盖语种：中文 · 拼音 · 英 · 西 · 法 · 印尼 · 日 · 韩 · 老挝 · 马来 · 缅 · 俄 · 泰</strong><button class="quiet-button" type="button" data-action="review-refresh-all">全部刷新统计 <small>Refresh all</small></button></div>
           <div class="admin-list" id="adminReviewList"></div>
         </section>
-        <div class="management-list"><button>系统配置 <span>待接入</span></button></div>
+        <div class="management-list"><button>系统配置 <small>Settings</small> <span>待接入</span></button></div>
       </section>
     </main>
 
     <nav class="mobile-navigation" aria-label="移动端导航">
-      <button class="active" type="button" data-view="home"><span>⌂</span><b>首页</b></button>
-      <button type="button" data-view="courses"><span>册</span><b>课程</b></button>
-      <button type="button" data-view="writing"><span>写</span><b>写作</b></button>
-      <button type="button" data-view="games"><span>趣</span><b>游戏</b></button>
-      <button type="button" data-view="progress"><span>记</span><b>记录</b></button>
+      <button class="active" type="button" data-view="home"><span>⌂</span><b>首页<small>Home</small></b></button>
+      <button type="button" data-view="courses"><span>册</span><b>课程<small>Courses</small></b></button>
+      <button type="button" data-view="writing"><span>写</span><b>写作<small>Writing</small></b></button>
+      <button type="button" data-view="games"><span>趣</span><b>游戏<small>Games</small></b></button>
+      <button type="button" data-view="tools"><span>工</span><b>工具<small>Tools</small></b></button>
+      <button type="button" data-view="progress"><span>记</span><b>记录<small>Records</small></b></button>
     </nav>
   </div>
 
@@ -285,9 +298,9 @@
     <div class="auth-dialog-shell">
       <header><div><span>账号原型</span><h2 id="roleDialogTitle">邀请码登录</h2></div><button type="button" data-auth-close aria-label="关闭">×</button></header>
       <nav class="auth-tabs" aria-label="登录身份">
-        <button class="active" type="button" data-auth-tab="student-login">学生登录</button>
-        <button type="button" data-auth-tab="teacher-login">教师登录</button>
-        <button type="button" data-auth-tab="admin-login">管理员</button>
+        <button class="active" type="button" data-auth-tab="student-login">学生登录<small>Student</small></button>
+        <button type="button" data-auth-tab="teacher-login">教师登录<small>Teacher</small></button>
+        <button type="button" data-auth-tab="admin-login">管理员<small>Admin</small></button>
       </nav>
 
       <form class="auth-panel active" id="studentLoginForm" data-auth-panel="student-login">
@@ -295,7 +308,7 @@
           <label><span>学号 / Student ID</span><input name="studentAccount" required autocomplete="username" placeholder="请输入学号"></label>
           <label><span>邀请码 / Invitation code</span><input name="inviteCode" required autocomplete="one-time-code" placeholder="教师发放的个人邀请码"></label>
         </div>
-        <button class="primary-button" type="submit" data-auth-submit>验证并进入课程</button>
+        <button class="primary-button" type="submit" data-auth-submit>验证并进入课程 <small>Continue</small></button>
         <p>使用教师发放的“学号 + 个人邀请码”登录；登录后可查看名下所有课程。</p>
       </form>
 
@@ -305,14 +318,14 @@
           <label><span>教师邀请码</span><input name="inviteCode" required autocomplete="one-time-code" placeholder="管理员发放的邀请码"></label>
           <label class="wide-field" data-auth-context hidden><span>选择班级与教材 / Class and textbook</span><select name="contextId"></select></label>
         </div>
-        <button class="primary-button" type="submit" data-auth-submit>验证并进入工作台</button>
+        <button class="primary-button" type="submit" data-auth-submit>验证并进入工作台 <small>Continue</small></button>
         <p>教师账号由管理员开通（姓名＋邀请码）；登录后可自行新建课程并管理学生。</p>
       </form>
 
       <form class="auth-panel" id="adminLoginForm" data-auth-panel="admin-login" hidden>
         <label><span>管理员姓名</span><input name="administrator" required autocomplete="username" placeholder="请输入管理员姓名"></label>
         <label><span>管理员邀请码</span><input name="inviteCode" required autocomplete="one-time-code" placeholder="请输入管理员邀请码"></label>
-        <button class="primary-button" type="submit">进入系统管理</button>
+        <button class="primary-button" type="submit">进入系统管理 <small>Enter</small></button>
         <p>管理员账号与邀请码由系统初始化，仅管理员本人持有，请勿泄露。</p>
       </form>
     </div>
@@ -355,7 +368,7 @@
         <label><span>AI反馈语言</span><select id="essayLocaleSelect" name="locale"></select></label>
       </div>
       <p class="writing-setup-hint" id="writingSetupHint" hidden>尚未绑定教师：作文将保存在本机，教师端暂不可见。请先请教师提供课程邀请码并加入课程后再提交。</p>
-      <footer><button class="quiet-button" type="button" data-writing-close="setup">取消</button><button class="primary-button" type="submit">建立作文并开始手写</button></footer>
+      <footer><button class="quiet-button" type="button" data-writing-close="setup">取消 <small>Cancel</small></button><button class="primary-button" type="submit">建立作文并开始手写 <small>Start writing</small></button></footer>
     </form>
   </dialog>
 
@@ -363,9 +376,9 @@
     <div class="writing-assist-shell">
       <header><div><span>多语言辅助</span><h2 id="writingAssistTitle">AI写作准备</h2></div><button type="button" data-writing-close="assist" aria-label="关闭">×</button></header>
       <nav id="writingAssistTabs" aria-label="AI辅助类型">
-        <button class="active" type="button" data-assist-tab="understand">理解题目</button>
-        <button type="button" data-assist-tab="outline">写作结构</button>
-        <button type="button" data-assist-tab="expressions">参考表达</button>
+        <button class="active" type="button" data-assist-tab="understand">理解题目<small>Understand</small></button>
+        <button type="button" data-assist-tab="outline">写作结构<small>Outline</small></button>
+        <button type="button" data-assist-tab="expressions">参考表达<small>Expressions</small></button>
       </nav>
       <section id="writingAssistContent" class="writing-assist-content"></section>
     </div>
@@ -377,12 +390,12 @@
         <div><span id="essayWritingMeta">手写作文</span><h2 id="essayWritingTitle">田字格作文稿</h2></div>
         <div class="essay-window-actions"><button type="button" data-essay-action="toggle-fullscreen" title="全屏 / Full screen" aria-label="全屏">⛶</button><button type="button" data-writing-close="canvas" title="关闭 / Close" aria-label="关闭">×</button></div>
       </header>
-      <section class="essay-task-strip"><div><strong id="essayPromptTitle"></strong><p id="essayPromptRequirements"></p></div><button class="quiet-button" type="button" data-essay-action="assist">AI辅助</button></section>
+      <section class="essay-task-strip"><div><strong id="essayPromptTitle"></strong><p id="essayPromptRequirements"></p></div><button class="quiet-button" type="button" data-essay-action="assist">AI辅助 <small>AI assist</small></button></section>
       <div class="essay-writing-body">
         <section class="active-writing-column">
           <div class="column-heading"><span>当前一格</span><strong id="activeCellLabel">写下第1个字</strong></div>
           <div class="tian-writing-board"><i></i><i></i><i></i><i></i><canvas id="essayHandwritingCanvas" width="600" height="600" aria-label="单字手写田字格"></canvas></div>
-          <div class="cell-actions"><button class="quiet-button" type="button" data-essay-action="clear-cell">清空</button><button class="primary-button" type="button" data-essay-action="confirm-cell">确认此字</button></div>
+          <div class="cell-actions"><button class="quiet-button" type="button" data-essay-action="clear-cell">清空 <small>Clear</small></button><button class="primary-button" type="button" data-essay-action="confirm-cell">确认此字 <small>Confirm</small></button></div>
           <div class="punctuation-row" aria-label="添加标点"><button type="button" data-essay-punctuation="，">，</button><button type="button" data-essay-punctuation="。">。</button><button type="button" data-essay-punctuation="？">？</button><button type="button" data-essay-punctuation="！">！</button><button type="button" data-essay-punctuation="；">；</button><button type="button" data-essay-punctuation="：">：</button></div>
         </section>
         <section class="manuscript-column">
@@ -391,7 +404,7 @@
           <footer class="manuscript-pagination"><button type="button" data-essay-action="previous-page" aria-label="上一页">‹</button><span id="essayPageLabel">第1页</span><button type="button" data-essay-action="next-page" aria-label="下一页">›</button></footer>
         </section>
       </div>
-      <footer class="essay-writing-footer"><button class="quiet-button" type="button" data-essay-action="undo-cell">撤销上一格</button><span id="essaySaveStatus">尚未保存</span><button class="quiet-button" type="button" data-essay-action="save-draft">保存草稿</button><button class="primary-button submit-essay-button" type="button" data-essay-action="submit">提交作文</button></footer>
+      <footer class="essay-writing-footer"><button class="quiet-button" type="button" data-essay-action="undo-cell">撤销上一格 <small>Undo</small></button><span id="essaySaveStatus">尚未保存</span><button class="quiet-button" type="button" data-essay-action="save-draft">保存草稿 <small>Save draft</small></button><button class="primary-button submit-essay-button" type="button" data-essay-action="submit">提交作文 <small>Submit</small></button></footer>
     </div>
   </dialog>
 
@@ -438,8 +451,8 @@
       <header><div><span>提示</span><h2 id="confirmDialogTitle">请确认</h2></div><button type="button" data-confirm-cancel aria-label="关闭">×</button></header>
       <p class="confirm-dialog-message" id="confirmDialogMessage"></p>
       <footer class="confirm-dialog-actions">
-        <button class="quiet-button" type="button" data-confirm-cancel>取消</button>
-        <button class="danger-button" type="button" data-confirm-ok>确认</button>
+        <button class="quiet-button" type="button" data-confirm-cancel>取消 <small>Cancel</small></button>
+        <button class="danger-button" type="button" data-confirm-ok>确认 <small>Confirm</small></button>
       </footer>
     </form>
   </dialog>
@@ -450,8 +463,8 @@
   <script src="../shared/learning-api-client.js?v=20260823-6"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260823-2"></script>
-  <script src="app.js?v=20260823-15" defer></script>
-  <script src="writing-zone.js?v=20260823-3" defer></script>
+  <script src="app.js?v=20260823-17" defer></script>
+  <script src="writing-zone.js?v=20260823-4" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
     <span><strong>发现新版本</strong><small>点击刷新以更新到最新内容 / New version ready, tap to refresh</small></span>

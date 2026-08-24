@@ -644,3 +644,12 @@ button { cursor: pointer; }
 @media (max-width: 760px) {
   .teacher-row-actions { justify-content: flex-start; }
 }
+
+/* ---- bilingual button subtitles ---- */
+.primary-navigation button b small { display: block; font-size: 10px; font-weight: 650; color: #8aa1a3; }
+.primary-navigation button.active b small { color: #c3e2df; }
+.mobile-navigation button b small { display: block; font-size: 8px; font-weight: 600; opacity: .8; }
+.logout-button b small { display: block; font-size: 9px; font-weight: 600; opacity: .8; }
+.auth-tabs button small { margin-left: 4px; font-size: 9px; font-weight: 650; opacity: .8; }
+.admin-tabs button small, .teacher-tabs button small { margin-left: 5px; font-size: 9px; font-weight: 650; opacity: .75; }
+button.primary-button small, a.primary-button small, .quiet-button small, .danger-button small, .text-button small, .resume-button small { margin-left: 5px; font-size: 9px; font-weight: 700; opacity: .8; }

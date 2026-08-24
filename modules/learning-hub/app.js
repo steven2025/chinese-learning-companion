@@ -113,7 +113,7 @@ const state = {
 
 let pendingRemoveEnrollment = null;
 
-const viewLabels = { home: "首页", courses: "我的课程", writing: "写作专区", games: "趣味游戏", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
+const viewLabels = { home: "首页", courses: "我的课程", writing: "写作专区", games: "趣味游戏", tools: "学习工具", progress: "学习记录", teacher: "教学工作台", admin: "系统管理" };
 const STUDENT_SESSION_KEY = "chineseLearningStudentSession";
 
 if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
@@ -386,7 +386,7 @@ function renderLessons() {
   elements.lessonList.innerHTML = learningBook.lessons.map((title, index) => {
     const available = index < effectiveAvailable(book.id);
     const lessonNumber = index + 1;
-    const inner = `<span>${String(index + 1).padStart(2, "0")}</span><span><strong>${title}</strong><small>${available ? learningBook.contentLabel : "内容准备中"}</small></span><b>${available ? "进入 ›" : "未开放"}</b>`;
+    const inner = `<span>${String(index + 1).padStart(2, "0")}</span><span><strong>${title}</strong><small>${available ? learningBook.contentLabel : "内容准备中"}</small></span><b>${available ? "进入 <small>Enter</small> ›" : "未开放 <small>Closed</small>"}</b>`;
     return available ? `<a class="lesson-item available" href="../digital-book/?lesson=${learningBook.lessonPrefix}-${lessonNumber}">${inner}</a>` : `<button class="lesson-item" type="button" data-unavailable-lesson="${lessonNumber}">${inner}</button>`;
   }).join("");
 }
@@ -472,12 +472,12 @@ function applyIdentity(role, name) {
   state.role = role;
   state.userName = name;
   const profile = role === "student"
-    ? { mark: "学", label: name, role: "学生" }
+    ? { mark: "学", label: name, role: "学生 Student" }
     : role === "teacher"
-      ? { mark: "教", label: name, role: "教师" }
+      ? { mark: "教", label: name, role: "教师 Teacher" }
       : role === "admin"
-        ? { mark: "管", label: name, role: "管理员" }
-        : { mark: "学", label: "邀请码登录", role: "访客" };
+        ? { mark: "管", label: name, role: "管理员 Admin" }
+        : { mark: "学", label: "邀请码登录", role: "访客 Guest" };
   elements.profileAvatar.textContent = profile.mark;
   elements.profileName.textContent = profile.label;
   elements.profileRole.textContent = profile.role;
@@ -611,7 +611,7 @@ function findStudentEnrollment(studentId, teacherHint) {
 
 function renderStudentRow(student, pending) {
   const sourceLabel = student.source === "teacher" ? "教师录入" : "自助加入";
-  return `<div class="student-row"><span><strong>${escapeHtml(student.chineseName)}${student.englishName ? ` · ${escapeHtml(student.englishName)}` : ""}</strong><small>学号 ${escapeHtml(student.studentId)} · ${sourceLabel}${pending ? " · 待确认" : ""}</small></span><span class="student-row-actions">${pending ? `<button class="confirm-button" type="button" data-action="confirm-student" data-id="${escapeHtml(student.id)}">确认加入</button>` : ""}<button class="danger-button" type="button" data-action="remove-student" data-id="${escapeHtml(student.id)}">移除</button></span></div>`;
+  return `<div class="student-row"><span><strong>${escapeHtml(student.chineseName)}${student.englishName ? ` · ${escapeHtml(student.englishName)}` : ""}</strong><small>学号 ${escapeHtml(student.studentId)} · ${sourceLabel}${pending ? " · 待确认" : ""}</small></span><span class="student-row-actions">${pending ? `<button class="confirm-button" type="button" data-action="confirm-student" data-id="${escapeHtml(student.id)}">确认加入 <small>Confirm</small></button>` : ""}<button class="danger-button" type="button" data-action="remove-student" data-id="${escapeHtml(student.id)}">移除 <small>Remove</small></button></span></div>`;
 }
 
 async function handleStudentLogin(form) {
@@ -694,7 +694,7 @@ function renderStudentCoursesView() {
     const open = effectiveBookOpen(context.bookId);
     const teacherLabel = context.teacher ? `${context.teacher} 老师` : "任课教师";
     const label = `${teacherLabel} · ${escapeHtml(context.term)} · ${escapeHtml(context.className || "班")}`;
-    return `<button class="student-course-card" type="button" data-enter-course="${escapeHtml(context.id)}"${open ? "" : " disabled"}><span class="student-course-mark">课</span><span><strong>发展汉语·${escapeHtml(book.label)}</strong><small>${label}</small></span><b>进入 ›</b></button>`;
+    return `<button class="student-course-card" type="button" data-enter-course="${escapeHtml(context.id)}"${open ? "" : " disabled"}><span class="student-course-mark">课</span><span><strong>发展汉语·${escapeHtml(book.label)}</strong><small>${label}</small></span><b>进入 <small>Enter</small> ›</b></button>`;
   }).join("");
 }
 
@@ -1008,7 +1008,7 @@ async function loadTeacherCourses() {
 
 function renderTeacherCourses(courses) {
   elements.teacherCourseList.innerHTML = courses.length
-    ? courses.map((course) => `<div class="teacher-course-row"><span class="teacher-course-info"><strong>${escapeHtml(course.className || "班")}</strong><small>${escapeHtml(course.term)} · 发展汉语·${escapeHtml(bookById(course.bookId).label)} · ${course.studentCount || 0}名学生</small></span><span class="teacher-course-actions">${course.active === false ? '<b class="muted">已停用</b>' : ""}<button class="quiet-button" type="button" data-open-course-students="${escapeHtml(course.courseId)}">管理学生</button></span></div>`).join("")
+    ? courses.map((course) => `<div class="teacher-course-row"><span class="teacher-course-info"><strong>${escapeHtml(course.className || "班")}</strong><small>${escapeHtml(course.term)} · 发展汉语·${escapeHtml(bookById(course.bookId).label)} · ${course.studentCount || 0}名学生</small></span><span class="teacher-course-actions">${course.active === false ? '<b class="muted">已停用</b>' : ""}<button class="quiet-button" type="button" data-open-course-students="${escapeHtml(course.courseId)}">管理学生 <small>Manage</small></button></span></div>`).join("")
     : '<p class="empty-approval">还没有课程，点击“＋新建课程”。</p>';
 }
 
@@ -1080,7 +1080,7 @@ function renderCourseStudentsTable(students) {
     elements.courseStudentTable.innerHTML = '<p class="empty-approval">还没有学生，点击“＋新增学生”或“导入 Excel”。</p>';
     return;
   }
-  elements.courseStudentTable.innerHTML = `<div class="course-student-row head"><span>姓名</span><span>英文名</span><span>学号</span><span>邀请码</span><span>操作</span></div>` + students.map((student) => `<div class="course-student-row"><span><strong>${escapeHtml(student.chineseName || "—")}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="invite-cell"><code>${escapeHtml(student.inviteCode)}</code><button class="quiet-button" type="button" data-copy-invite="${escapeHtml(student.studentId)}">复制信息</button></span><span class="course-student-actions"><button class="quiet-button" type="button" data-reset-invite="${escapeHtml(student.studentId)}">重置码</button><button class="quiet-button" type="button" data-edit-student="${escapeHtml(student.studentId)}">编辑</button><button class="danger-button" type="button" data-remove-student-course="${escapeHtml(student.studentId)}">移除</button></span></div>`).join("");
+  elements.courseStudentTable.innerHTML = `<div class="course-student-row head"><span>姓名</span><span>英文名</span><span>学号</span><span>邀请码</span><span>操作</span></div>` + students.map((student) => `<div class="course-student-row"><span><strong>${escapeHtml(student.chineseName || "—")}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="invite-cell"><code>${escapeHtml(student.inviteCode)}</code><button class="quiet-button" type="button" data-copy-invite="${escapeHtml(student.studentId)}">复制信息 <small>Copy</small></button></span><span class="course-student-actions"><button class="quiet-button" type="button" data-reset-invite="${escapeHtml(student.studentId)}">重置码 <small>Reset</small></button><button class="quiet-button" type="button" data-edit-student="${escapeHtml(student.studentId)}">编辑 <small>Edit</small></button><button class="danger-button" type="button" data-remove-student-course="${escapeHtml(student.studentId)}">移除 <small>Remove</small></button></span></div>`).join("");
 }
 
 function openAddStudentDialog(entry) {
@@ -1372,7 +1372,7 @@ function renderTeacherWorkspace() {
   const pendingStudents = students.filter((student) => student.status === "pending");
   const confirmedStudents = students.filter((student) => student.status !== "pending");
   elements.classStudentCount.textContent = `${students.length}人`;
-  elements.classStudentList.innerHTML = `<div class="class-list-toolbar"><span>已确认 <b>${confirmedStudents.length}</b> · 待确认 <b>${pendingStudents.length}</b></span><button class="quiet-button" type="button" data-action="open-add-student">＋ 新增学生</button></div>${pendingStudents.length ? `<div class="class-subgroup"><header>待确认 <small>学生用邀请码自助加入，需确认后生效</small></header>${pendingStudents.map((student) => renderStudentRow(student, true)).join("")}</div>` : ""}${confirmedStudents.length ? `<div class="class-subgroup"><header>已确认</header>${confirmedStudents.map((student) => renderStudentRow(student, false)).join("")}</div>` : ""}${!students.length ? '<p class="empty-approval">还没有学生。点“＋新增学生”录入名单，或让学生用邀请码自助加入。</p>' : ""}`;
+  elements.classStudentList.innerHTML = `<div class="class-list-toolbar"><span>已确认 <b>${confirmedStudents.length}</b> · 待确认 <b>${pendingStudents.length}</b></span><button class="quiet-button" type="button" data-action="open-add-student">＋ 新增学生 <small>Add student</small></button></div>${pendingStudents.length ? `<div class="class-subgroup"><header>待确认 <small>学生用邀请码自助加入，需确认后生效</small></header>${pendingStudents.map((student) => renderStudentRow(student, true)).join("")}</div>` : ""}${confirmedStudents.length ? `<div class="class-subgroup"><header>已确认</header>${confirmedStudents.map((student) => renderStudentRow(student, false)).join("")}</div>` : ""}${!students.length ? '<p class="empty-approval">还没有学生。点“＋新增学生”录入名单，或让学生用邀请码自助加入。</p>' : ""}`;
 }
 
 function openAddStudentDialog() {
@@ -1541,7 +1541,7 @@ function renderAdminUsersCloud() {
   const activeCount = teachers.filter((teacher) => teacher.active).length;
   elements.teacherCount.textContent = `${teachers.length} 个账号 · ${activeCount} 个启用`;
   elements.adminTeacherList.innerHTML = teachers.length
-    ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"}<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code> · ${escapeHtml(adminAssignmentLabel(teacher))}</small></span><span class="teacher-row-actions"><button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码</button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码</button><button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用" : "启用"}</button><button class="quiet-button danger-button" type="button" data-remove-teacher="${escapeHtml(teacher.id)}">删除</button></span></div>`).join("")
+    ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"}<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code> · ${escapeHtml(adminAssignmentLabel(teacher))}</small></span><span class="teacher-row-actions"><button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码 <small>Copy</small></button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码 <small>Reset</small></button><button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用 <small>Disable</small>" : "启用 <small>Enable</small>"}</button><button class="quiet-button danger-button" type="button" data-remove-teacher="${escapeHtml(teacher.id)}">删除 <small>Delete</small></button></span></div>`).join("")
     : '<p class="empty-approval">还没有教师账号，请点击“新增教师”。</p>';
 }
 
@@ -1550,7 +1550,7 @@ function renderAdminUsersLocal() {
   const activeCount = teachers.filter((teacher) => teacher.active).length;
   elements.teacherCount.textContent = `${teachers.length} 个账号 · ${activeCount} 个启用`;
   elements.adminTeacherList.innerHTML = teachers.length
-    ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"} · ${new Date(teacher.createdAt).toLocaleDateString() || ""} 开通${teacher.inviteCode ? `<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code>` : ""}</small></span><span class="teacher-row-actions">${teacher.inviteCode ? `<button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码</button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码</button>` : ""}<button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用" : "启用"}</button><button class="quiet-button danger-button" type="button" data-remove-teacher="${escapeHtml(teacher.id)}">删除</button></span></div>`).join("")
+    ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"} · ${new Date(teacher.createdAt).toLocaleDateString() || ""} 开通${teacher.inviteCode ? `<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code>` : ""}</small></span><span class="teacher-row-actions">${teacher.inviteCode ? `<button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码 <small>Copy</small></button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码 <small>Reset</small></button>` : ""}<button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用 <small>Disable</small>" : "启用 <small>Enable</small>"}</button><button class="quiet-button danger-button" type="button" data-remove-teacher="${escapeHtml(teacher.id)}">删除 <small>Delete</small></button></span></div>`).join("")
     : '<p class="empty-approval">还没有教师账号，请点击“新增教师”。</p>';
 }
 
@@ -1560,7 +1560,7 @@ function renderAdminPublishing() {
     const isOpen = effectiveBookOpen(id);
     const available = effectiveAvailable(id);
     const total = learningBook ? learningBook.lessons.length : 0;
-    return `<div class="admin-row publish-row"><span><strong>《发展汉语·${label}》</strong><small>${learningBook ? `共 ${total} 课 · 当前开放 ${available} 课` : "内容尚未接入，仅可开放入口"}</small></span><span class="publish-controls">${learningBook ? `<label><span>开放课数</span><select data-publish-available="${id}">${Array.from({ length: total }, (_, index) => index + 1).map((count) => `<option value="${count}"${count === available ? " selected" : ""}>${count}课</option>`).join("")}</select></label><button class="quiet-button" type="button" data-action="reset-publish" data-id="${id}">默认</button>` : ""}<button class="switch-button${isOpen ? " on" : ""}" type="button" data-action="toggle-publish" data-id="${id}" role="switch" aria-checked="${isOpen}"><i></i><span>${isOpen ? "已开放" : "未开放"}</span></button></span></div>`;
+    return `<div class="admin-row publish-row"><span><strong>《发展汉语·${label}》</strong><small>${learningBook ? `共 ${total} 课 · 当前开放 ${available} 课` : "内容尚未接入，仅可开放入口"}</small></span><span class="publish-controls">${learningBook ? `<label><span>开放课数</span><select data-publish-available="${id}">${Array.from({ length: total }, (_, index) => index + 1).map((count) => `<option value="${count}"${count === available ? " selected" : ""}>${count}课</option>`).join("")}</select></label><button class="quiet-button" type="button" data-action="reset-publish" data-id="${id}">默认 <small>Default</small></button>` : ""}<button class="switch-button${isOpen ? " on" : ""}" type="button" data-action="toggle-publish" data-id="${id}" role="switch" aria-checked="${isOpen}"><i></i><span>${isOpen ? "已开放" : "未开放"}</span></button></span></div>`;
   }).join("")}</div></div>`).join("");
 }
 
@@ -1577,7 +1577,7 @@ function renderAdminReview() {
       const lessonId = `${learningBook.lessonPrefix}-${index + 1}`;
       const record = state.contentReview[lessonId] || {};
       const badges = (record.languages || []).map((code) => `<i class="lang-badge${record.reviewed ? " reviewed" : ""}">${escapeHtml(languageShortLabels[code] || code)}</i>`).join("");
-      return `<div class="admin-row review-row"><span><strong>第${index + 1}课 · ${escapeHtml(title)}</strong><small>${badges || '<span class="muted">尚未统计语种覆盖</span>'}</small></span><span class="review-controls"><button class="quiet-button" type="button" data-action="refresh-review" data-id="${lessonId}">刷新统计</button><button class="review-toggle${record.reviewed ? " on" : ""}" type="button" data-action="toggle-review" data-id="${lessonId}">${record.reviewed ? "已审核 ✓" : "标记通过"}</button></span></div>`;
+      return `<div class="admin-row review-row"><span><strong>第${index + 1}课 · ${escapeHtml(title)}</strong><small>${badges || '<span class="muted">尚未统计语种覆盖</span>'}</small></span><span class="review-controls"><button class="quiet-button" type="button" data-action="refresh-review" data-id="${lessonId}">刷新统计 <small>Refresh</small></button><button class="review-toggle${record.reviewed ? " on" : ""}" type="button" data-action="toggle-review" data-id="${lessonId}">${record.reviewed ? "已审核 ✓ <small>Done</small>" : "标记通过 <small>Approve</small>"}</button></span></div>`;
     }).join("")}</div></div>`;
   }).join("");
 }
