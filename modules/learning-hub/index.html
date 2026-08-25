@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
   <link rel="stylesheet" href="styles.css?v=20260824-4">
-  <link rel="stylesheet" href="writing-zone.css?v=20260811-6">
+  <link rel="stylesheet" href="writing-zone.css?v=20260826-1">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
 <body>
@@ -526,11 +526,21 @@
         </section>
         <section class="manuscript-column">
           <div class="column-heading"><span>田字格草稿</span><strong id="essayWordCount">0字</strong></div>
+          <div class="cell-edit-toolbar" id="essayCellEditToolbar" hidden>
+            <strong id="essayCellEditLabel">当前选中 / Selected</strong>
+            <div>
+              <button type="button" data-essay-action="edit-selected">修改 <small>Edit</small></button>
+              <button type="button" data-essay-action="insert-before">前面插入 <small>Insert before</small></button>
+              <button type="button" data-essay-action="insert-after">后面插入 <small>Insert after</small></button>
+              <button class="danger-button" type="button" data-essay-action="delete-selected">删除 <small>Delete</small></button>
+              <button type="button" data-essay-action="cancel-selection">取消选择 <small>Cancel</small></button>
+            </div>
+          </div>
           <div class="manuscript-grid" id="essayManuscriptGrid"></div>
           <footer class="manuscript-pagination"><button type="button" data-essay-action="previous-page" aria-label="上一页">‹</button><span id="essayPageLabel">第1页</span><button type="button" data-essay-action="next-page" aria-label="下一页">›</button></footer>
         </section>
       </div>
-      <footer class="essay-writing-footer"><button class="quiet-button" type="button" data-essay-action="undo-cell">撤销上一格 <small>Undo</small></button><span id="essaySaveStatus">尚未保存</span><button class="quiet-button" type="button" data-essay-action="save-draft">保存草稿 <small>Save draft</small></button><button class="primary-button submit-essay-button" type="button" data-essay-action="submit">提交作文 <small>Submit</small></button></footer>
+      <footer class="essay-writing-footer"><button class="quiet-button" type="button" data-essay-action="undo-cell">删除末格 <small>Delete last</small></button><span id="essaySaveStatus">尚未保存</span><button class="quiet-button" type="button" data-essay-action="save-draft">保存草稿 <small>Save draft</small></button><button class="quiet-button ai-preview-button" type="button" data-essay-action="ai-preview">AI预评 <small>AI review</small></button><button class="primary-button submit-essay-button" type="button" data-essay-action="submit">提交教师 <small>Submit to teacher</small></button></footer>
     </div>
   </dialog>
 
@@ -552,7 +562,7 @@
   </dialog>
 
   <div class="writing-ai-overlay" id="writingAiOverlay" hidden>
-    <div><div class="writing-clock" aria-hidden="true"><i class="hour"></i><i class="minute"></i><i class="second"></i><b></b></div><strong>AI正在工作</strong><span id="writingAiStatus">正在整理手写作文</span></div>
+    <div><div class="writing-clock" aria-hidden="true"><i class="hour"></i><i class="minute"></i><i class="second"></i><b></b></div><strong>AI正在工作 <small>AI is working</small></strong><span id="writingAiStatus">正在整理手写作文</span><time id="writingAiElapsed">已等待 00:00 · Elapsed 00:00</time><em id="writingAiHint">请不要重复提交 · Please do not submit again</em></div>
   </div>
 
   <dialog class="course-dialog" id="courseDialog" aria-labelledby="courseDialogTitle">
@@ -586,11 +596,11 @@
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="../../vendor/xlsx.full.min.js"></script>
   <script src="../../config.js?v=20260823-1"></script>
-  <script src="../shared/learning-api-client.js?v=20260824-3"></script>
+  <script src="../shared/learning-api-client.js?v=20260825-1"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260823-2"></script>
   <script src="app.js?v=20260824-3" defer></script>
-  <script src="writing-zone.js?v=20260823-4" defer></script>
+  <script src="writing-zone.js?v=20260826-1" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
     <span><strong>发现新版本</strong><small>点击刷新以更新到最新内容 / New version ready, tap to refresh</small></span>

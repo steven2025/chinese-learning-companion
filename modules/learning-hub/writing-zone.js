@@ -15,6 +15,7 @@
     filter: "all",
     activeEssayId: "",
     selectedCell: null,
+    insertAt: null,
     page: 0,
     drawing: false,
     strokeCount: 0,
@@ -24,6 +25,9 @@
     syncing: false,
     selectedIds: new Set(),
     analysisClassroom: false,
+    feedbackTabs: new Map(),
+    aiStartedAt: 0,
+    aiTimer: null,
   };
 
   const el = {
@@ -52,6 +56,8 @@
     activeCellLabel: document.querySelector("#activeCellLabel"),
     wordCount: document.querySelector("#essayWordCount"),
     manuscript: document.querySelector("#essayManuscriptGrid"),
+    cellEditToolbar: document.querySelector("#essayCellEditToolbar"),
+    cellEditLabel: document.querySelector("#essayCellEditLabel"),
     pageLabel: document.querySelector("#essayPageLabel"),
     saveStatus: document.querySelector("#essaySaveStatus"),
     reviewDialog: document.querySelector("#writingReviewDialog"),
@@ -60,6 +66,8 @@
     reviewContent: document.querySelector("#writingReviewContent"),
     aiOverlay: document.querySelector("#writingAiOverlay"),
     aiStatus: document.querySelector("#writingAiStatus"),
+    aiElapsed: document.querySelector("#writingAiElapsed"),
+    aiHint: document.querySelector("#writingAiHint"),
     teacherPending: document.querySelector("#teacherWritingPending"),
     batchToolbar: document.querySelector("#writingBatchToolbar"),
     selectAll: document.querySelector("#writingSelectAll"),
@@ -147,6 +155,16 @@
       : Number(essay.characterCount || 0);
   }
 
+  function hasCurrentAiReview(essay) {
+    return Boolean(essay?.aiAssessment && (essay.assessmentJobId || essay.aiAssessment?._jobId) && essay.aiReviewStale !== true && Number(essay.aiReviewedRevision || 0) === Number(essay.draftRevision || 1));
+  }
+
+  function markEssayEdited(essay) {
+    essay.draftRevision = Math.max(1, Number(essay.draftRevision || 1)) + 1;
+    essay.aiReviewStale = Boolean(essay.aiAssessment);
+    essay.updatedAt = new Date().toISOString();
+  }
+
   function cloudReady() {
     return Boolean(window.LearningApi?.isConfigured?.() && cloudProfile());
   }
@@ -162,7 +180,7 @@
   function mergeEssay(incoming) {
     const index = localState.essays.findIndex((essay) => essay.id === incoming.id);
     const prior = index >= 0 ? localState.essays[index] : null;
-    const merged = { ...(prior || {}), ...incoming, cells: incoming.cells || prior?.cells || [], strokeCounts: incoming.strokeCounts || prior?.strokeCounts || [], _cloud: true };
+    const merged = { ...(prior || {}), ...incoming, cells: incoming.cells || prior?.cells || [], strokeCounts: incoming.strokeCounts || prior?.strokeCounts || [], draftRevision: Math.max(1, Number(incoming.draftRevision || prior?.draftRevision || 1)), _cloud: true };
     if (index >= 0) localState.essays[index] = merged;
     else localState.essays.push(merged);
     return merged;
@@ -222,10 +240,11 @@
     el.list.innerHTML = filtered.map((essay) => {
       const canWrite = ["draft", "returned"].includes(essay.status);
       const actionLabel = essay.status === "returned" ? "开始改写 <small>Revise</small>" : essay.status === "draft" ? "继续写作 <small>Write</small>" : "查看详情 <small>View</small>";
+      const displayStatus = essay.status === "draft" && hasCurrentAiReview(essay) ? "AI预评完成" : essay.status === "draft" && essay.aiReviewStale ? "AI评价已过期" : statusLabels[essay.status] || essay.status;
       return `<article class="writing-row" data-status="${essay.status}">
         <span class="writing-row-mark" aria-hidden="true">写</span>
         <div class="writing-row-copy"><strong>${safe(essay.title)}</strong><p>${safe(essay.requirements)}</p><small>提交给 ${safe(essay.teacher || "本机草稿")} · ${wordCount(essay)}字 · 第${essay.version || 1}稿 · ${formatDate(essay.updatedAt)}</small></div>
-        <span class="writing-row-status">${statusLabels[essay.status] || essay.status}</span>
+        <span class="writing-row-status">${displayStatus}</span>
         <div class="writing-row-actions">${canWrite ? `<button class="resume-button" type="button" data-writing-open="${essay.id}">${actionLabel}</button>` : `<button type="button" data-writing-review="${essay.id}">${actionLabel}</button>`}</div>
       </article>`;
     }).join("");
@@ -331,6 +350,11 @@
       versions: [],
       aiSupport: {},
       aiAssessment: null,
+      assessmentJobId: "",
+      draftRevision: 1,
+      aiReviewedRevision: 0,
+      aiReviewStale: false,
+      aiPreviewCount: 0,
       teacherFeedback: { evaluation: "", suggestions: "", score: "", published: false },
       createdAt: now,
       updatedAt: now,
@@ -364,6 +388,7 @@
     if (!essay || !["draft", "returned"].includes(essay.status)) return;
     localState.activeEssayId = essay.id;
     localState.selectedCell = null;
+    localState.insertAt = null;
     localState.page = Math.max(0, Math.floor(Math.max(0, essay.cells.length - 1) / PAGE_SIZE));
     localState.fullscreen = false;
     el.canvasWindow.classList.remove("is-fullscreen");
@@ -391,10 +416,29 @@
       const content = cell.type === "image" ? `<img src="${cell.data}" alt="第${index + 1}个手写字">` : `<b>${safe(cell.value)}</b>`;
       return `<button class="manuscript-cell has-content${selected ? " is-selected" : ""}" type="button" data-essay-cell="${index}" aria-label="第${index + 1}格，点击修改">${content}</button>`;
     }).join("");
+    const hasSelection = localState.selectedCell !== null;
+    el.cellEditToolbar.hidden = !hasSelection;
+    if (hasSelection) el.cellEditLabel.textContent = `当前选中：第${localState.selectedCell + 1}格 / Selected: cell ${localState.selectedCell + 1}`;
     el.wordCount.textContent = `${wordCount(essay)}字`;
     el.pageLabel.textContent = `第${localState.page + 1} / ${pageCount}页`;
-    el.activeCellLabel.textContent = localState.selectedCell === null ? `写下第${essay.cells.length + 1}个字` : `修改第${localState.selectedCell + 1}格`;
-    el.saveStatus.textContent = essay.status === "returned" ? "教师已退回，请完成修改后重新提交" : `草稿已记录 · ${formatDate(essay.updatedAt)}`;
+    el.activeCellLabel.textContent = localState.insertAt !== null
+      ? `插入到第${localState.insertAt + 1}格 / Insert at cell ${localState.insertAt + 1}`
+      : localState.selectedCell === null
+        ? `写下第${essay.cells.length + 1}个字`
+        : `修改第${localState.selectedCell + 1}格 / Edit cell ${localState.selectedCell + 1}`;
+    const currentReview = hasCurrentAiReview(essay);
+    el.saveStatus.textContent = essay.aiReviewStale
+      ? "正文已修改，上一次AI评价对应旧稿，请重新预评"
+      : currentReview
+        ? `AI预评完成 · 本稿已预评${Number(essay.aiPreviewCount || 1)}次`
+        : essay.status === "returned" ? "教师已退回，请修改后进行AI预评" : `草稿已记录 · ${formatDate(essay.updatedAt)}`;
+    const previewButton = el.canvasWindow.querySelector('[data-essay-action="ai-preview"]');
+    const submitButton = el.canvasWindow.querySelector('[data-essay-action="submit"]');
+    if (previewButton) previewButton.innerHTML = `${essay.aiAssessment ? "再次AI预评" : "AI预评"} <small>${essay.aiAssessment ? "Review again" : "AI review"}</small>`;
+    if (submitButton) {
+      submitButton.disabled = !currentReview;
+      submitButton.title = currentReview ? "提交当前稿件给教师 / Submit to teacher" : "请先完成当前稿件的AI预评 / Complete AI review first";
+    }
   }
 
   function setupCanvas() {
@@ -450,7 +494,12 @@
       return;
     }
     const cell = { type: "image", data: compactCanvasImage(), strokes: localState.strokeCount };
-    if (localState.selectedCell === null) {
+    if (localState.insertAt !== null) {
+      const index = Math.max(0, Math.min(essay.cells.length, localState.insertAt));
+      essay.cells.splice(index, 0, cell);
+      essay.strokeCounts.splice(index, 0, localState.strokeCount);
+      localState.insertAt = null;
+    } else if (localState.selectedCell === null) {
       if (essay.cells.length >= MAX_CELLS) return showToast(`每篇作文暂时最多${MAX_CELLS}格`);
       essay.cells.push(cell);
       essay.strokeCounts.push(localState.strokeCount);
@@ -459,7 +508,7 @@
       essay.strokeCounts[localState.selectedCell] = localState.strokeCount;
       localState.selectedCell = null;
     }
-    essay.updatedAt = new Date().toISOString();
+    markEssayEdited(essay);
     localState.page = Math.floor((essay.cells.length - 1) / PAGE_SIZE);
     saveEssays();
     clearCanvas();
@@ -468,9 +517,14 @@
 
   function addPunctuation(value) {
     const essay = currentEssay();
-    if (!essay || essay.cells.length >= MAX_CELLS) return;
+    if (!essay || (essay.cells.length >= MAX_CELLS && localState.selectedCell === null && localState.insertAt === null)) return;
     const cell = { type: "punctuation", value, strokes: 0 };
-    if (localState.selectedCell === null) {
+    if (localState.insertAt !== null) {
+      const index = Math.max(0, Math.min(essay.cells.length, localState.insertAt));
+      essay.cells.splice(index, 0, cell);
+      essay.strokeCounts.splice(index, 0, 0);
+      localState.insertAt = null;
+    } else if (localState.selectedCell === null) {
       essay.cells.push(cell);
       essay.strokeCounts.push(0);
     } else {
@@ -478,7 +532,7 @@
       essay.strokeCounts[localState.selectedCell] = 0;
       localState.selectedCell = null;
     }
-    essay.updatedAt = new Date().toISOString();
+    markEssayEdited(essay);
     localState.page = Math.floor((essay.cells.length - 1) / PAGE_SIZE);
     saveEssays();
     clearCanvas();
@@ -490,6 +544,7 @@
     const cell = essay?.cells[index];
     if (!cell) return;
     localState.selectedCell = index;
+    localState.insertAt = null;
     clearCanvas();
     if (cell.type === "image") {
       const image = new Image();
@@ -509,19 +564,44 @@
     essay.cells.splice(index, 1);
     essay.strokeCounts.splice(index, 1);
     localState.selectedCell = null;
-    essay.updatedAt = new Date().toISOString();
+    localState.insertAt = null;
+    markEssayEdited(essay);
     saveEssays();
     clearCanvas();
     renderManuscript();
   }
 
+  function beginInsert(offset) {
+    const essay = currentEssay();
+    if (!essay || localState.selectedCell === null) return;
+    if (essay.cells.length >= MAX_CELLS) return showToast(`每篇作文暂时最多${MAX_CELLS}格`);
+    localState.insertAt = Math.max(0, Math.min(essay.cells.length, localState.selectedCell + offset));
+    localState.selectedCell = null;
+    clearCanvas();
+    renderManuscript();
+    el.canvas.focus?.();
+  }
+
+  function deleteSelectedCell() {
+    if (localState.selectedCell === null) return;
+    undoCell();
+    showToast("已删除选中格 / Selected cell deleted");
+  }
+
+  function cancelCellSelection() {
+    localState.selectedCell = null;
+    localState.insertAt = null;
+    clearCanvas();
+    renderManuscript();
+  }
+
   function draftPayload(essay) {
-    return { schemaVersion: 1, essayId: essay.id, cells: essay.cells, strokeCounts: essay.strokeCounts, characterCount: wordCount(essay), updatedAt: essay.updatedAt };
+    return { schemaVersion: 1, essayId: essay.id, cells: essay.cells, strokeCounts: essay.strokeCounts, characterCount: wordCount(essay), draftRevision: Math.max(1, Number(essay.draftRevision || 1)), updatedAt: essay.updatedAt };
   }
 
   async function uploadAndSaveDraft(essay) {
     const ticket = await window.LearningApi.uploadJson(draftPayload(essay), `writing-${essay.id}-draft`);
-    const result = await window.LearningApi.writingSave({ id: essay.id, title: essay.title, requirements: essay.requirements, teacher: essay.teacher, locale: essay.locale, version: essay.version || 1, characterCount: wordCount(essay), draftObjectKey: ticket.objectKey });
+    const result = await window.LearningApi.writingSave({ id: essay.id, title: essay.title, requirements: essay.requirements, teacher: essay.teacher, locale: essay.locale, version: essay.version || 1, characterCount: wordCount(essay), draftRevision: Math.max(1, Number(essay.draftRevision || 1)), draftObjectKey: ticket.objectKey });
     Object.assign(essay, result.essay, { _cloud: true });
     return ticket;
   }
@@ -605,74 +685,180 @@
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   }
 
+  function confirmRecognizedWriting(recognizedText, manuscriptBlob) {
+    return new Promise((resolve) => {
+      const dialog = document.createElement("dialog");
+      const imageUrl = URL.createObjectURL(manuscriptBlob);
+      dialog.className = "writing-ocr-dialog";
+      dialog.innerHTML = `<form method="dialog" class="writing-ocr-window">
+        <header><div><span>手写识别确认 <small>Recognition confirmation</small></span><h2>请核对识别文本</h2></div><button type="button" data-ocr-action="cancel" aria-label="关闭 / Close">×</button></header>
+        <p class="writing-ocr-notice">请只修正OCR识别错误。需要修改作文内容时，请返回手写稿修改后重新识别。<small>Please correct recognition errors only.</small></p>
+        <details class="writing-ocr-original"><summary>查看手写原稿 <small>View handwriting</small></summary><img src="${imageUrl}" alt="手写作文原稿"></details>
+        <label class="writing-ocr-editor"><span>识别文本 <small>Recognized text</small></span><textarea rows="12" data-ocr-text>${safe(recognizedText)}</textarea></label>
+        <label class="writing-ocr-check"><input type="checkbox" data-ocr-confirm> <span>我已核对，以上文本与我的手写内容一致。<small>I have checked that the text matches my handwriting.</small></span></label>
+        <footer><button class="quiet-button" type="button" data-ocr-action="cancel">返回修改 <small>Back to edit</small></button><button class="primary-button" type="button" data-ocr-action="confirm">确认并获取AI评价 <small>Confirm and review</small></button></footer>
+      </form>`;
+      document.body.appendChild(dialog);
+      let settled = false;
+      const finish = (value) => {
+        if (settled) return;
+        settled = true;
+        URL.revokeObjectURL(imageUrl);
+        closeDialog(dialog);
+        dialog.remove();
+        resolve(value);
+      };
+      dialog.addEventListener("cancel", (event) => { event.preventDefault(); finish(null); });
+      dialog.addEventListener("click", (event) => {
+        const action = event.target.closest("[data-ocr-action]")?.dataset.ocrAction;
+        if (action === "cancel") return finish(null);
+        if (action !== "confirm") return;
+        const text = dialog.querySelector("[data-ocr-text]").value.trim();
+        const checked = dialog.querySelector("[data-ocr-confirm]").checked;
+        if (!text) return showToast("请先核对识别文本");
+        if (!checked) return showToast("请确认文本与手写内容一致");
+        finish(text);
+      });
+      openDialog(dialog);
+      dialog.querySelector("[data-ocr-text]")?.focus();
+    });
+  }
+
   function setAiWorking(active, message = "正在整理手写作文") {
     el.aiOverlay.hidden = !active;
     el.aiStatus.textContent = message;
-  }
-
-  async function submitEssay() {
-    const essay = currentEssay();
-    if (!essay || wordCount(essay) < 5) {
-      showToast("正文至少需要写5个汉字后才能提交");
+    document.querySelectorAll("[data-writing-assist-generate], [data-essay-action='ai-preview'], [data-essay-action='submit'], [data-review-action='publish'], [data-writing-analyze]").forEach((button) => { button.disabled = active; });
+    if (!active) {
+      const submitButton = document.querySelector("[data-essay-action='submit']");
+      if (submitButton) submitButton.disabled = !hasCurrentAiReview(currentEssay());
+      if (localState.aiTimer) window.clearInterval(localState.aiTimer);
+      localState.aiTimer = null;
+      localState.aiStartedAt = 0;
+      if (el.aiElapsed) el.aiElapsed.textContent = "已等待 00:00 · Elapsed 00:00";
       return;
     }
+    if (!localState.aiStartedAt) localState.aiStartedAt = Date.now();
+    const updateElapsed = () => {
+      const seconds = Math.max(0, Math.floor((Date.now() - localState.aiStartedAt) / 1000));
+      const formatted = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+      if (el.aiElapsed) el.aiElapsed.textContent = `已等待 ${formatted} · Elapsed ${formatted}`;
+      if (el.aiHint) el.aiHint.textContent = seconds >= 60
+        ? "处理时间较长，您可以继续等待，请不要重复提交。 · Still working; please do not submit again."
+        : seconds >= 30
+          ? "当前请求较多，AI仍在处理中。 · AI is still processing the request."
+          : "请不要重复提交 · Please do not submit again";
+    };
+    updateElapsed();
+    if (!localState.aiTimer) localState.aiTimer = window.setInterval(updateElapsed, 1000);
+  }
+
+  async function runAiPreview() {
+    const essay = currentEssay();
+    if (!essay || wordCount(essay) < 5) {
+      showToast("正文至少需要写5个汉字后才能进行AI预评");
+      return;
+    }
+    if (!cloudReady()) return showToast("请先登录云服务，再进行AI预评");
     essay.updatedAt = new Date().toISOString();
-    essay.submittedAt = essay.updatedAt;
     setAiWorking(true, "正在生成作文图片");
-    let assessmentJobId = "";
     try {
       const blob = await combineCells(essay.cells);
-      if (cloudReady()) {
-        setAiWorking(true, "正在保存作文草稿");
-        const draftTicket = await uploadAndSaveDraft(essay);
-        setAiWorking(true, "正在识别手写全文并生成多语言评价");
-        essay.aiAssessment = await window.LearningApi.assessArtifact(blob, {
+      setAiWorking(true, "正在保存作文草稿");
+      await uploadAndSaveDraft(essay);
+      let confirmedText = Number(essay.confirmedRevision || 0) === Number(essay.draftRevision || 1) ? String(essay.confirmedText || "").trim() : "";
+      if (!confirmedText) {
+        setAiWorking(true, "正在识别手写全文");
+        const recognition = await window.LearningApi.assessArtifact(blob, {
           kind: "handwriting",
-          artifactId: uid("free-writing"),
+          artifactId: uid("free-writing-ocr"),
           lessonId: "writing-zone",
-          unitType: "practiceHandwriting",
+          unitType: "practiceHandwritingOcr",
           unitId: essay.id,
           referenceText: essay.title,
           locale: essay.locale,
-          metrics: {
-            prompt: `${essay.title}\n${essay.requirements}`,
-            requiredVocabulary: [],
-            writingStructure: essay.aiSupport?.outline || [],
-            keywordGuidance: essay.aiSupport?.expressions || [],
-            referencePoints: [],
-            rubric: ["切题", "结构", "表达", "书写"],
-            characterCount: wordCount(essay),
-            recordedStrokeCounts: essay.strokeCounts,
-          },
-        }, { onProgress: (phase) => {
-          const labels = { preparing: "正在准备作品", uploading: "正在保存手写稿", submitting: "正在提交AI评价", assessing: "正在识别手写全文", advising: "正在生成多语言建议", saving: "正在保存评价" };
-          setAiWorking(true, labels[phase] || "AI正在评价作文");
-        } });
-        assessmentJobId = essay.aiAssessment?._jobId || "";
-        essay.aiError = "";
-        setAiWorking(true, "正在提交给教师");
-        const submitted = await window.LearningApi.writingSubmit({ id: essay.id, title: essay.title, requirements: essay.requirements, teacher: essay.teacher, locale: essay.locale, version: essay.version || 1, characterCount: wordCount(essay), draftObjectKey: draftTicket.objectKey, assessmentJobId, aiError: "" });
-        Object.assign(essay, submitted.essay, { _cloud: true });
-      } else {
-        essay.aiAssessment = null;
-        essay.aiError = "AI云服务尚未登录，教师端暂时只显示手写全文。";
-        essay.status = "submitted";
+          metrics: { ocrOnly: true, characterCount: wordCount(essay) },
+        }, { onProgress: (phase) => setAiWorking(true, phase === "uploading" ? "正在上传手写稿" : phase === "assessing" || phase === "advising" ? "正在识别手写全文" : "正在准备OCR识别") });
+        setAiWorking(false);
+        confirmedText = await confirmRecognizedWriting(recognition.recognizedText || "", blob);
+        if (!confirmedText) {
+          showToast("已保留手写草稿，尚未生成AI评价");
+          return;
+        }
+        essay.ocrText = recognition.recognizedText || "";
+        essay.ocrJobId = recognition?._jobId || "";
+        essay.confirmedText = confirmedText;
+        essay.confirmedRevision = Math.max(1, Number(essay.draftRevision || 1));
       }
+      setAiWorking(true, "正在评价已确认的作文内容");
+      const textBlob = new Blob([JSON.stringify({ text: confirmedText })], { type: "application/json" });
+      const assessment = await window.LearningApi.assessArtifact(textBlob, {
+        kind: "essay",
+        artifactId: uid("free-writing-confirmed"),
+        lessonId: "writing-zone",
+        unitType: "practiceHandwriting",
+        unitId: essay.id,
+        referenceText: confirmedText,
+        locale: essay.locale,
+        metrics: {
+          prompt: `${essay.title}\n${essay.requirements}`,
+          requiredVocabulary: [],
+          writingStructure: essay.aiSupport?.outline || [],
+          keywordGuidance: essay.aiSupport?.expressions || [],
+          referencePoints: [],
+          rubric: ["切题", "结构", "表达", "书写"],
+          characterCount: wordCount(essay),
+          includeHandwritingAdvice: true,
+          writingMetrics: { characterCount: wordCount(essay), recordedStrokeCounts: essay.strokeCounts },
+        },
+      }, { onProgress: (phase) => {
+        const labels = { preparing: "正在准备已确认文本", uploading: "正在保存确认文本", submitting: "正在提交AI预评", assessing: "正在评价作文内容", advising: "正在生成中文及学生语言建议", saving: "正在保存预评" };
+        setAiWorking(true, labels[phase] || "AI正在预评作文");
+      } });
+      const assessmentJobId = assessment?._jobId || "";
+      setAiWorking(true, "正在保存AI预评，尚未发送教师");
+      const preview = await window.LearningApi.writingPreview({ id: essay.id, assessmentJobId, manuscriptJobId: essay.ocrJobId || "", draftRevision: Math.max(1, Number(essay.draftRevision || 1)) });
+      Object.assign(essay, preview.essay, { aiAssessment: assessment, assessmentJobId, aiReviewStale: false, _cloud: true });
+      essay.aiError = "";
     } catch (error) {
       const authLost = cloudAuthFailure(error);
       if (authLost) expireCloudSession();
-      essay.aiError = authLost ? "云端登录已失效，请重新登录后再提交" : (error.message || "AI评价暂时不可用");
-      essay.status = "draft";
-      showToast(`提交未完成：${essay.aiError}`);
+      essay.aiError = authLost ? "云端登录已失效，请重新登录后再预评" : (error.message || "AI预评暂时不可用");
+      showToast(`AI预评未完成：${essay.aiError}`);
     } finally {
       saveEssays();
       setAiWorking(false);
       render();
-      if (essay.status === "submitted") {
+      renderManuscript();
+      if (hasCurrentAiReview(essay)) {
         closeDialog(el.canvasDialog);
-        showToast(`作文已提交给${essay.teacher}老师`);
+        showToast("AI预评已完成，作文尚未发送给教师");
+        void openReview(essay.id);
       }
     }
+  }
+
+  async function submitEssay() {
+    const essay = currentEssay();
+    if (!essay || !hasCurrentAiReview(essay)) return showToast("请先对当前稿件完成AI预评");
+    if (!cloudReady()) return showToast("请先登录云服务，再提交教师");
+    if (!window.confirm(`确认提交给${essay.teacher}老师？\n\n提交后暂时不能继续修改，除非教师退回作文。`)) return;
+    setAiWorking(true, "正在确认最终稿件");
+    try {
+      const draftTicket = await uploadAndSaveDraft(essay);
+      setAiWorking(true, "正在提交最终稿给教师");
+      const submitted = await window.LearningApi.writingSubmit({ id: essay.id, title: essay.title, requirements: essay.requirements, teacher: essay.teacher, locale: essay.locale, version: essay.version || 1, characterCount: wordCount(essay), draftRevision: Math.max(1, Number(essay.draftRevision || 1)), draftObjectKey: draftTicket.objectKey, assessmentJobId: essay.assessmentJobId || essay.aiAssessment?._jobId || "", aiError: "" });
+      Object.assign(essay, submitted.essay, { _cloud: true });
+      essay.submittedAt = essay.submittedAt || new Date().toISOString();
+      saveEssays();
+      closeDialog(el.canvasDialog);
+      closeDialog(el.reviewDialog);
+      render();
+      showToast(`最终稿已提交给${essay.teacher}老师`);
+    } catch (error) {
+      const authLost = cloudAuthFailure(error);
+      if (authLost) expireCloudSession();
+      showToast(authLost ? "云端登录已失效，请重新登录后再提交" : (error.message || "提交教师失败"));
+    } finally { setAiWorking(false); }
   }
 
   function openAssist() {
@@ -732,15 +918,39 @@
     }).join("")}</div>`).join("");
   }
 
-  function adviceMarkup(assessment, showScore) {
+  function localeLabel(locale) {
+    return localeOptions.find(([code]) => code === locale)?.[1] || locale || "中文";
+  }
+
+  function languageTabs(scope, available, selected, localizedIsAi = false) {
+    const locales = Object.keys(available || {}).filter((locale) => available[locale]);
+    if (locales.length < 2) return "";
+    const ordered = ["zh-CN", ...locales.filter((locale) => locale !== "zh-CN")];
+    return `<nav class="feedback-language-tabs" aria-label="反馈语言 / Feedback language">${ordered.map((locale) => `<button class="${locale === selected ? "active" : ""}" type="button" data-feedback-language="${safe(locale)}" data-feedback-scope="${safe(scope)}">${locale === "zh-CN" ? "中文" : safe(localeLabel(locale))}</button>`).join("")}</nav>${localizedIsAi && selected !== "zh-CN" ? '<small class="feedback-language-note">AI辅助翻译 · AI-assisted translation</small>' : ""}`;
+  }
+
+  function adviceMarkup(assessment, showScore, essay, teacherView = false) {
     if (!assessment) return '<div class="ai-feedback-copy"><strong>AI评价尚未生成</strong><p>教师仍可直接查看全文并填写评价。</p></div>';
-    const advice = assessment.advice || {};
+    const scope = `ai:${essay.id}`;
+    const legacyLocale = assessment.feedbackLocale || essay.locale || "zh-CN";
+    const feedback = assessment.feedback && typeof assessment.feedback === "object"
+      ? assessment.feedback
+      : { [legacyLocale]: assessment.advice || {} };
+    const preferred = teacherView ? "zh-CN" : (localState.feedbackTabs.get(scope) || essay.locale || "zh-CN");
+    const selected = feedback[preferred] ? preferred : (feedback["zh-CN"] ? "zh-CN" : Object.keys(feedback)[0]);
+    const advice = feedback[selected] || assessment.advice || {};
+    const handwritingMap = assessment.handwritingFeedback && typeof assessment.handwritingFeedback === "object"
+      ? assessment.handwritingFeedback
+      : assessment.handwritingAdvice ? { "zh-CN": assessment.handwritingAdvice } : {};
+    const handwritingAdvice = handwritingMap[selected] || handwritingMap["zh-CN"] || null;
     const score = Math.round(Number(assessment.scores?.total || 0));
-    return `${showScore ? `<div class="ai-score-panel"><strong>${score}</strong><span>AI参考分，仅供教师批阅参考，学生端不显示。</span></div>` : ""}
+    const tabs = teacherView ? "" : languageTabs(scope, feedback, selected);
+    return `${tabs}${showScore ? `<div class="ai-score-panel"><strong>${score}</strong><span>AI参考分，仅供教师批阅参考，学生端不显示。</span></div>` : ""}
       <div class="ai-feedback-copy"><strong>AI评价</strong><p>${safe(advice.summary || "已完成评价")}</p>
       ${advice.strengths?.length ? `<strong>优点</strong><ul>${advice.strengths.map((item) => `<li>${safe(item)}</li>`).join("")}</ul>` : ""}
       ${advice.priorities?.length ? `<strong>优先修改</strong><ul>${advice.priorities.map((item) => `<li>${safe(item)}</li>`).join("")}</ul>` : ""}
-      ${advice.practiceSteps?.length ? `<strong>修改建议</strong><ul>${advice.practiceSteps.map((item) => `<li>${safe(item)}</li>`).join("")}</ul>` : ""}</div>`;
+      ${advice.practiceSteps?.length ? `<strong>修改建议</strong><ul>${advice.practiceSteps.map((item) => `<li>${safe(item)}</li>`).join("")}</ul>` : ""}</div>
+      ${handwritingAdvice ? `<div class="ai-feedback-copy handwriting-feedback-copy"><strong>手写与版面建议 / Handwriting</strong><p>${safe(handwritingAdvice.summary || "")}</p>${handwritingAdvice.strengths?.length ? `<strong>优点</strong><ul>${handwritingAdvice.strengths.map((item) => `<li>${safe(item)}</li>`).join("")}</ul>` : ""}${handwritingAdvice.priorities?.length ? `<strong>需要注意</strong><ul>${handwritingAdvice.priorities.map((item) => `<li>${safe(item)}</li>`).join("")}</ul>` : ""}${handwritingAdvice.practiceSteps?.length ? `<strong>练习建议</strong><ul>${handwritingAdvice.practiceSteps.map((item) => `<li>${safe(item)}</li>`).join("")}</ul>` : ""}</div>` : ""}`;
   }
 
   function analysisItems(items, kind) {
@@ -801,18 +1011,26 @@
     const manuscript = `<section class="review-manuscript"><div class="review-title-block"><h3>${safe(essay.title)}</h3><p>${safe(essay.requirements)}</p></div>${meta}<div class="review-manuscript-pages">${manuscriptMarkup(essay.cells)}</div></section>`;
     if (roleIsTeacher()) {
       const feedback = essay.teacherFeedback || {};
-      el.reviewContent.innerHTML = `<div class="writing-review-layout">${manuscript}<aside class="review-feedback"><h3>AI原始评价</h3>${adviceMarkup(essay.aiAssessment, true)}${essay.aiError ? `<p class="empty-approval">${safe(essay.aiError)}</p>` : ""}
+      el.reviewContent.innerHTML = `<div class="writing-review-layout">${manuscript}<aside class="review-feedback"><h3>AI中文评价 <small>Chinese AI feedback</small></h3>${adviceMarkup(essay.aiAssessment, true, essay, true)}${essay.aiError ? `<p class="empty-approval">${safe(essay.aiError)}</p>` : ""}
         <form class="teacher-feedback-form" id="teacherFeedbackForm">
-          <label><span>教师评价</span><textarea name="evaluation" placeholder="可修改AI评价或补充教师评价">${safe(feedback.evaluation || "")}</textarea></label>
-          <label><span>修改建议</span><textarea name="suggestions" placeholder="给学生明确、可执行的修改方向">${safe(feedback.suggestions || "")}</textarea></label>
+          <p class="feedback-language-note">请使用中文填写；发布时系统自动生成学生所选语言译文。 / Please write in Chinese.</p>
+          <label><span>教师评价（中文）</span><textarea name="evaluation" placeholder="可修改AI评价或补充教师评价">${safe(feedback.evaluation || "")}</textarea></label>
+          <label><span>修改建议（中文）</span><textarea name="suggestions" placeholder="给学生明确、可执行的修改方向">${safe(feedback.suggestions || "")}</textarea></label>
           <label><span>最终分数</span><input name="score" type="number" min="0" max="100" value="${safe(feedback.score || "")}" placeholder="0—100"></label>
           <div class="teacher-review-actions"><button class="quiet-button" type="button" data-review-action="save">保存批阅 <small>Save</small></button><button class="quiet-button" type="button" data-review-action="return">退回修改 <small>Return</small></button><button class="primary-button" type="button" data-review-action="publish">发布反馈 <small>Publish</small></button></div>
         </form></aside></div>`;
     } else {
       const feedback = essay.teacherFeedback || {};
-      el.reviewContent.innerHTML = `<div class="writing-review-layout">${manuscript}<aside class="review-feedback"><h3>学习建议</h3>${adviceMarkup(essay.aiAssessment, false)}
-        ${feedback.published ? `<div class="student-feedback-panel"><section><h3>教师评价</h3><p>${safe(feedback.evaluation || "暂无文字评价")}</p></section><section><h3>修改建议</h3><p>${safe(feedback.suggestions || "暂无补充建议")}</p></section><section><h3>教师最终分</h3><p>${safe(feedback.score || "未评分")}</p></section></div>` : '<p class="empty-approval">教师尚未发布正式反馈。</p>'}
-        ${essay.status === "returned" ? '<button class="primary-button" type="button" data-writing-revise>开始修改 <small>Revise</small></button>' : ""}</aside></div>`;
+      const teacherScope = `teacher:${essay.id}`;
+      const teacherLanguages = { "zh-CN": { evaluation: feedback.evaluation || "", suggestions: feedback.suggestions || "" }, ...(feedback.translations || {}) };
+      const teacherPreferred = localState.feedbackTabs.get(teacherScope) || essay.locale || "zh-CN";
+      const teacherSelected = teacherLanguages[teacherPreferred] ? teacherPreferred : "zh-CN";
+      const shownTeacherFeedback = teacherLanguages[teacherSelected] || teacherLanguages["zh-CN"];
+      const canRevise = essay.status === "draft" || essay.status === "returned";
+      const canSubmit = canRevise && hasCurrentAiReview(essay);
+      el.reviewContent.innerHTML = `<div class="writing-review-layout">${manuscript}<aside class="review-feedback"><h3>学习建议</h3>${adviceMarkup(essay.aiAssessment, false, essay, false)}
+        ${feedback.published ? `${languageTabs(teacherScope, teacherLanguages, teacherSelected, true)}<div class="student-feedback-panel"><section><h3>教师评价${teacherSelected === "zh-CN" ? "（中文原文）" : ""}</h3><p>${safe(shownTeacherFeedback.evaluation || "暂无文字评价")}</p></section><section><h3>修改建议${teacherSelected === "zh-CN" ? "（中文原文）" : ""}</h3><p>${safe(shownTeacherFeedback.suggestions || "暂无补充建议")}</p></section><section><h3>教师最终分</h3><p>${safe(feedback.score || "未评分")}</p></section></div>` : '<p class="empty-approval">教师尚未发布正式反馈。</p>'}
+        ${canRevise ? `<div class="student-review-actions"><button class="quiet-button" type="button" data-writing-revise>返回修改 <small>Continue editing</small></button><button class="primary-button" type="button" data-writing-submit-final ${canSubmit ? "" : "disabled"}>提交教师 <small>Submit to teacher</small></button></div>${canSubmit ? '<p class="feedback-language-note">AI预评仅供修改参考；点击“提交教师”后教师才会收到作文。</p>' : '<p class="feedback-language-note">修改后的稿件需重新完成AI预评，才能提交教师。</p>'}` : ""}</aside></div>`;
     }
     openDialog(el.reviewDialog);
   }
@@ -828,11 +1046,18 @@
     const essay = currentEssay();
     const values = feedbackValues();
     if (!essay || !values) return;
+    if (action === "publish" && essay.locale !== "zh-CN" && (!cloudReady() || !essay._cloud)) return showToast("生成学生语言译文需要连接云服务，请登录后再发布");
     let savedToCloud = false;
+    let translatedFeedback = null;
     if (cloudReady() && essay._cloud) {
       setAiWorking(true, "正在保存教师批阅");
       try {
-        const result = await window.LearningApi.writingReview({ id: essay.id, action, ...values });
+        if (action === "publish" && essay.locale !== "zh-CN" && (values.evaluation || values.suggestions)) {
+          setAiWorking(true, `正在生成${localeLabel(essay.locale)}译文 · Translating teacher feedback`);
+          translatedFeedback = await window.LearningApi.writingTranslateFeedback({ id: essay.id, evaluation: values.evaluation, suggestions: values.suggestions }, { onProgress: () => setAiWorking(true, "正在翻译教师中文反馈 · Translating Chinese feedback") });
+        }
+        setAiWorking(true, "正在发布教师反馈 · Publishing feedback");
+        const result = await window.LearningApi.writingReview({ id: essay.id, action, ...values, translationJobId: translatedFeedback?._jobId || "" });
         Object.assign(essay, result.essay, { _cloud: true });
         savedToCloud = true;
       } catch (error) {
@@ -841,7 +1066,16 @@
       }
       setAiWorking(false);
     }
-    essay.teacherFeedback = { ...essay.teacherFeedback, ...values, updatedAt: new Date().toISOString(), teacher: state.userName || state.teacherContext?.teacher };
+    essay.teacherFeedback = {
+      ...essay.teacherFeedback,
+      ...values,
+      sourceLocale: "zh-CN",
+      studentLocale: essay.locale || "zh-CN",
+      translations: translatedFeedback && essay.locale !== "zh-CN" ? { [essay.locale]: { evaluation: translatedFeedback.evaluation || "", suggestions: translatedFeedback.suggestions || "" } } : (action === "publish" ? {} : essay.teacherFeedback?.translations || {}),
+      translationSource: translatedFeedback ? "ai" : null,
+      updatedAt: new Date().toISOString(),
+      teacher: state.userName || state.teacherContext?.teacher,
+    };
     if (!savedToCloud && action === "return") {
       essay.status = "returned";
       essay.version = (essay.version || 1) + 1;
@@ -881,11 +1115,17 @@
     else if (action === "confirm-cell") confirmCell();
     else if (action === "undo-cell") undoCell();
     else if (action === "save-draft") saveDraft();
+    else if (action === "ai-preview") void runAiPreview();
     else if (action === "submit") void submitEssay();
     else if (action === "previous-page") changePage(-1);
     else if (action === "next-page") changePage(1);
     else if (action === "toggle-fullscreen") toggleFullscreen();
     else if (action === "assist") openAssist();
+    else if (action === "edit-selected") el.canvas.focus?.();
+    else if (action === "insert-before") beginInsert(0);
+    else if (action === "insert-after") beginInsert(1);
+    else if (action === "delete-selected") deleteSelectedCell();
+    else if (action === "cancel-selection") cancelCellSelection();
   }
 
   function setupDrag() {
@@ -913,6 +1153,12 @@
   }
 
   document.addEventListener("click", (event) => {
+    const feedbackLanguageButton = event.target.closest("[data-feedback-language]");
+    if (feedbackLanguageButton) {
+      localState.feedbackTabs.set(feedbackLanguageButton.dataset.feedbackScope, feedbackLanguageButton.dataset.feedbackLanguage);
+      if (localState.activeEssayId) void openReview(localState.activeEssayId);
+      return;
+    }
     const writingAction = event.target.closest("[data-writing-action]")?.dataset.writingAction;
     if (writingAction === "new") return openSetup();
     if (writingAction === "login") return openAuth("student-login");
@@ -948,7 +1194,9 @@
     if (event.target.closest("[data-writing-revise]")) {
       closeDialog(el.reviewDialog);
       void openCanvas(localState.activeEssayId);
+      return;
     }
+    if (event.target.closest("[data-writing-submit-final]")) return void submitEssay();
   });
 
   el.newButton?.addEventListener("click", openSetup);

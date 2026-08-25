@@ -140,6 +140,14 @@
     return waitForJob(result.jobId, { attempts: 90, interval: 1500, onProgress: options.onProgress });
   }
 
+  async function writingTranslateFeedback(input, options = {}) {
+    const result = await request("/writing/feedback/translate", input);
+    if (result.status === "ready") return { ...(result.content || {}), _jobId: result.jobId || "" };
+    if (!result.jobId) throw new Error("云服务没有返回教师反馈翻译任务编号");
+    const completed = await waitForJob(result.jobId, { attempts: 75, interval: 1500, onProgress: options.onProgress });
+    return { ...(completed || {}), _jobId: result.jobId };
+  }
+
   window.LearningApi = Object.freeze({
     isConfigured,
     token,
@@ -197,10 +205,12 @@
     uploadJson,
     writingAssist,
     writingSave: (input) => request("/writing/save", input),
+    writingPreview: (input) => request("/writing/preview", input),
     writingSubmit: (input) => request("/writing/submit", input),
     writingList: () => request("/writing/list", {}),
     writingDetail: (id) => request("/writing/detail", { id }),
     writingReview: (input) => request("/writing/review", input),
+    writingTranslateFeedback,
     writingAnalyze,
   });
 })();

@@ -117,6 +117,13 @@
 .manuscript-cell b { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; font: 700 24px/1 "KaiTi", serif; }
 .manuscript-cell.has-content { cursor: pointer; }
 .manuscript-cell.is-selected { box-shadow: inset 0 0 0 3px var(--coral); }
+.cell-edit-toolbar { display: grid; gap: 7px; padding: 8px; border: 1px solid #e5b6a9; border-radius: 7px; background: #fff4f0; }
+.cell-edit-toolbar[hidden] { display: none; }
+.cell-edit-toolbar > strong { color: var(--coral-dark); font-size: 10px; }
+.cell-edit-toolbar > div { display: flex; flex-wrap: wrap; gap: 5px; }
+.cell-edit-toolbar button { min-height: 31px; padding: 5px 9px; border: 1px solid #d3dfdd; border-radius: 5px; color: var(--teal-dark); background: #fff; font-size: 10px; font-weight: 750; }
+.cell-edit-toolbar button small { display: block; font-size: 8px; font-weight: 650; opacity: .7; }
+.cell-edit-toolbar .danger-button { color: #a63e2e; border-color: #e5b6a9; background: #fff7f5; }
 .manuscript-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; padding-top: 9px; }
 .manuscript-pagination button { width: 32px; height: 30px; color: var(--teal); border: 1px solid #b4cbc7; border-radius: 5px; background: #fff; font-size: 19px; }
 .manuscript-pagination span { min-width: 70px; color: var(--muted); font-size: 10px; text-align: center; }
@@ -141,6 +148,11 @@
 .ai-feedback-copy { padding: 12px; border-left: 4px solid var(--gold); background: var(--gold-soft); }
 .ai-feedback-copy strong { display: block; font-size: 12px; }
 .ai-feedback-copy p, .ai-feedback-copy li { color: #5d604f; font-size: 11px; line-height: 1.65; }
+.feedback-language-tabs { display: flex; gap: 6px; margin: 0 0 9px; }
+.feedback-language-tabs button { min-height: 32px; padding: 5px 12px; border: 1px solid #c7d8d5; border-radius: 999px; color: var(--teal-dark); background: #fff; font-size: 10px; font-weight: 800; }
+.feedback-language-tabs button.active { color: #fff; border-color: var(--teal); background: var(--teal); }
+.feedback-language-note { display: block; margin: -3px 0 9px; color: var(--muted); font-size: 9px; }
+.handwriting-feedback-copy { margin-top: 9px; border-left-color: var(--teal); background: var(--teal-soft); }
 .teacher-feedback-form { display: grid; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .teacher-feedback-form label { display: grid; gap: 5px; }
 .teacher-feedback-form label span { color: var(--muted); font-size: 10px; font-weight: 750; }
@@ -148,10 +160,30 @@
 .teacher-feedback-form textarea { min-height: 72px; }
 .teacher-review-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 7px; }
 .teacher-review-actions button { min-height: 34px; padding-inline: 11px; font-size: 10px; }
+.student-review-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+.student-review-actions button { min-height: 38px; padding-inline: 14px; }
 .student-feedback-panel { display: grid; gap: 10px; }
 .student-feedback-panel section { padding: 12px; border-left: 4px solid var(--teal); background: var(--teal-soft); }
 .student-feedback-panel h3 { margin: 0 0 7px; font-size: 13px; }
 .student-feedback-panel p { margin: 0; color: #405f60; font-size: 11px; line-height: 1.7; }
+.writing-ocr-dialog { width: min(760px, calc(100% - 24px)); max-width: none; max-height: calc(100vh - 24px); padding: 0; color: var(--ink); border: 0; border-radius: 9px; background: #fff; box-shadow: 0 22px 64px rgba(16,41,45,.28); }
+.writing-ocr-dialog::backdrop { background: rgba(18,44,46,.62); }
+.writing-ocr-window { display: grid; gap: 14px; padding: 18px; }
+.writing-ocr-window > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.writing-ocr-window > header span, .writing-ocr-window > header small { display: block; }
+.writing-ocr-window > header span { color: var(--coral); font-weight: 800; }
+.writing-ocr-window > header h2 { margin: 4px 0 0; font-size: 22px; }
+.writing-ocr-window > header button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: #edf3f1; font-size: 24px; }
+.writing-ocr-notice { margin: 0; padding: 10px 12px; color: #5b4a28; border-left: 4px solid var(--gold); background: #fff7df; line-height: 1.6; }
+.writing-ocr-notice small, .writing-ocr-check small { display: block; color: var(--muted); }
+.writing-ocr-original { padding: 9px 11px; border: 1px solid var(--line); border-radius: 7px; }
+.writing-ocr-original summary { cursor: pointer; font-weight: 750; }
+.writing-ocr-original img { display: block; width: 100%; max-height: 260px; margin-top: 10px; object-fit: contain; background: #f8faf9; }
+.writing-ocr-editor { display: grid; gap: 7px; font-weight: 750; }
+.writing-ocr-editor textarea { width: 100%; min-height: 190px; resize: vertical; padding: 12px; border: 1px solid var(--line-strong); border-radius: 7px; font: 16px/1.8 "Noto Sans SC", sans-serif; }
+.writing-ocr-check { display: flex; align-items: flex-start; gap: 9px; line-height: 1.5; }
+.writing-ocr-check input { margin-top: 4px; }
+.writing-ocr-window > footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 9px; }
 
 .writing-analysis-shell { max-height: calc(100vh - 26px); padding: 18px; overflow: auto; }
 .writing-analysis-dialog.is-classroom .writing-analysis-shell { height: 100%; max-height: none; padding: clamp(18px, 2.5vw, 34px); }
@@ -206,6 +238,9 @@
 .writing-ai-overlay > div { min-width: 250px; display: grid; justify-items: center; gap: 7px; padding: 22px; color: #fff; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; background: var(--teal-dark); box-shadow: 0 22px 65px rgba(0,0,0,.3); }
 .writing-ai-overlay strong { font-size: 14px; }
 .writing-ai-overlay span { color: #c0d9d7; font-size: 10px; }
+.writing-ai-overlay strong small { display: block; margin-top: 2px; font-size: 9px; font-weight: 650; opacity: .72; text-align: center; }
+.writing-ai-overlay time { color: #fff; font: 800 14px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.writing-ai-overlay em { max-width: 300px; color: #c0d9d7; font-size: 9px; font-style: normal; line-height: 1.45; text-align: center; }
 .writing-clock { position: relative; width: 76px; height: 76px; margin-bottom: 5px; border: 5px solid #fff; border-radius: 50%; background: #f8fbfa; box-shadow: inset 0 0 0 3px #b9d4d0, 0 8px 22px rgba(0,0,0,.22); }
 .writing-clock::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, #527674 0deg 1deg, transparent 1deg 30deg); }
 .writing-clock i { position: absolute; left: 50%; bottom: 50%; z-index: 2; width: 3px; border-radius: 3px; background: var(--teal-dark); transform-origin: 50% 100%; }

@@ -255,13 +255,13 @@ const buttonTranslations = new Map(Object.entries({
   "词语": "Vocabulary", "课文": "Text", "练习": "Practice",
   "中文沉浸": "Chinese only", "母语辅助": "Native-language aid", "双语对照": "Bilingual",
   "理解": "Meaning", "跟读": "Repeat", "跟写": "Writing", "小练习": "Quiz", "表达": "Express",
-  "理解题意": "Understand", "思考方向": "Thinking", "相似实例": "Similar example", "母语解释": "Native-language help",
+  "理解题意": "Understand", "题目母语解释": "Native-language explanation", "思考方向": "Thinking", "相似实例": "Similar example", "母语解释": "Native-language help",
   "播放": "Play", "播放本句": "Play sentence", "进入跟读": "Start shadowing",
   "已掌握": "Mastered", "待复习": "Review", "收藏": "Save",
   "打开跟写练习": "Open writing", "重新演示": "Replay demo", "清空": "Clear",
   "确认这个字": "Confirm character", "生成整词图片": "Create word image", "下载图片": "Download image",
   "打开手写板": "Open writing pad", "清空本格": "Clear cell", "确认此字": "Confirm character",
-  "撤销上一格": "Undo last cell", "保存手写答案": "Save handwriting",
+  "撤销上一格": "Undo last cell", "保存手写答案": "Save handwriting", "保存草稿": "Save draft", "完成手写并识别": "Finish and recognize",
   "手写": "Handwrite", "修改手写": "Edit handwriting", "清除手写": "Clear handwriting",
   "键盘输入": "Type answer", "手写作答": "Handwrite", "提交作答": "Submit answer",
   "AI 评估与建议": "AI review", "重新测评": "Assess again", "测评中…": "Assessing…",
@@ -885,7 +885,7 @@ function renderWordUnit(word, index) {
 }
 
 function renderTextUnit(cue, index) {
-  const showTranslation = state.assistMode === "bilingual";
+  const showTranslation = state.assistMode !== "immersion";
   const previousText = state.textCues[index - 1]?.texts?.["zh-CN"];
   const nextText = state.textCues[index + 1]?.texts?.["zh-CN"];
   elements.unitContent.innerHTML = `
@@ -1655,11 +1655,12 @@ function normalizeChoices(choices) {
 
 function handwritingDraft(itemId) {
   if (!state.handwriting[itemId]) {
-    state.handwriting[itemId] = { cells: [], strokeCounts: [], page: 0, selectedCell: null, saved: false, assessment: { status: "idle", result: null, message: "" } };
+    state.handwriting[itemId] = { cells: [], strokeCounts: [], page: 0, selectedCell: null, saved: false, revision: 1, confirmedRevision: 0, confirmedText: "", ocrText: "", assessment: { status: "idle", result: null, message: "" } };
   }
   const draft = state.handwriting[itemId];
   if (!Number.isInteger(draft.page)) draft.page = 0;
   if (!Number.isInteger(draft.selectedCell)) draft.selectedCell = null;
+  if (!Number.isInteger(draft.revision) || draft.revision < 1) draft.revision = 1;
   return draft;
 }
 
@@ -1669,6 +1670,15 @@ function activeWritingDraftKey() {
 
 function activeWritingDraft() {
   return handwritingDraft(activeWritingDraftKey());
+}
+
+function markHandwritingDraftEdited(draft) {
+  draft.revision = Math.max(1, Number(draft.revision || 1)) + 1;
+  draft.confirmedRevision = 0;
+  draft.confirmedText = "";
+  draft.ocrText = "";
+  draft.saved = false;
+  draft.assessment = { status: "idle", result: null, message: "" };
 }
 
 function activityScopeStep(item) {
@@ -1756,11 +1766,18 @@ function renderAssessmentConsent(kind, assessment) {
         ? "assess-practice-keyboard"
         : "assess-practice-handwriting";
   const commandAttribute = kind === "word-writing" ? `data-writing-command="${command}"` : `data-command="${command}"`;
+  const actionLabel = exhausted
+    ? "测评次数已用完"
+    : working
+      ? "测评中…"
+      : kind === "practice-writing"
+        ? assessment?.status === "ready" ? "重新识别与评价" : "完成手写并识别"
+        : assessment?.status === "ready" ? "重新测评" : "AI 评估与建议";
   return `<div class="assessment-consent">
     <div class="assessment-quota ${quota ? "is-limited" : "is-unlimited"}">${quota ? `<strong>本学习点剩余 ${quota.remaining} / 2 次</strong><small>${quota.remaining} of 2 assessments remaining</small>` : unlimitedLabel}</div>
     <label class="assessment-language-select"><span>评价语言 <small>Feedback language</small></span><select data-feedback-language>${feedbackLanguageOptions().map(([value, label]) => `<option value="${value}"${state.feedbackPreference === value ? " selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>
     <label><input type="checkbox" data-assessment-consent="${kind}" ${exhausted ? "disabled" : ""}> <span>同意将本次作品保存到我的 COS 学习记录，并用于 AI 测评<br><small>I agree to save this work to my private COS learning record for AI assessment.</small></span></label>
-    <button class="command-button" type="button" ${commandAttribute} ${working || exhausted ? "disabled" : ""}>${exhausted ? "测评次数已用完" : working ? "测评中…" : assessment?.status === "ready" ? "重新测评" : "AI 评估与建议"}</button>
+    <button class="command-button" type="button" ${commandAttribute} ${working || exhausted ? "disabled" : ""}>${actionLabel}</button>
   </div>${renderAssessmentResult(assessment)}`;
 }
 
@@ -1770,11 +1787,11 @@ function renderHandwritingLauncher(item) {
     <div class="handwriting-launcher">
       <div>
         <strong>${draft.cells.length ? `已完成 ${draft.cells.length} 个字` : "尚未开始手写"}</strong>
-        <span>${draft.saved ? "手写答案已保留" : "可继续打开手写板作答"}</span>
+        <span>${draft.saved ? "手写草稿已保存" : "可继续打开手写板作答"}</span>
       </div>
       <button class="command-button" type="button" data-command="open-practice-writing">打开手写板</button>
     </div>
-    ${draft.saved ? `<div class="answer-feedback"><strong>手写答案已保留</strong><br>确认后可上传到个人学习记录并获得书写建议。</div>${renderAssessmentConsent("practice-writing", draft.assessment)}` : ""}`;
+    ${draft.saved ? `<div class="answer-feedback"><strong>手写草稿已保存</strong><br>完成后可识别正文，核对无误后获得内容与书写建议。</div>${renderAssessmentConsent("practice-writing", draft.assessment)}` : ""}`;
 }
 
 function renderHandwritingWorkspace(item) {
@@ -1835,9 +1852,9 @@ function renderHandwritingWorkspace(item) {
       </div>
       <footer class="practice-writing-footer">
         <button class="quiet-button" type="button" data-command="remove-handwriting" ${draft.cells.length ? "" : "disabled"}>${draft.selectedCell !== null ? "删除选中字" : "撤销上一格"}</button>
-        <button class="command-button" type="button" data-command="save-handwriting">保存手写答案</button>
+        <button class="command-button" type="button" data-command="save-handwriting">保存草稿</button>
       </footer>
-      ${draft.saved ? `<div class="answer-feedback"><strong>手写答案已保留</strong><br>确认后可上传到个人学习记录并获得书写建议。</div>${renderAssessmentConsent("practice-writing", draft.assessment)}` : ""}
+      ${draft.saved ? `<div class="answer-feedback"><strong>手写草稿已保存</strong><br>完成后可识别正文，核对无误后获得内容与书写建议。</div>${renderAssessmentConsent("practice-writing", draft.assessment)}` : ""}
     </div>`;
 }
 
@@ -1973,8 +1990,7 @@ function confirmHandwritingCell() {
     draft.page = Math.floor((draft.cells.length - 1) / 80);
   }
   draft.selectedCell = null;
-  draft.saved = false;
-  draft.assessment = { status: "idle", result: null, message: "" };
+  markHandwritingDraftEdited(draft);
   refreshPracticeWritingPanel();
 }
 
@@ -1990,8 +2006,7 @@ function removeHandwritingCell() {
   }
   draft.selectedCell = null;
   draft.page = Math.min(draft.page, Math.max(0, Math.ceil(draft.cells.length / 80) - 1));
-  draft.saved = false;
-  draft.assessment = { status: "idle", result: null, message: "" };
+  markHandwritingDraftEdited(draft);
   refreshPracticeWritingPanel();
 }
 
@@ -2011,8 +2026,7 @@ function addHandwritingPunctuation(mark) {
   draft.strokeCounts.push(0);
   draft.page = Math.floor((draft.cells.length - 1) / 80);
   draft.selectedCell = null;
-  draft.saved = false;
-  draft.assessment = { status: "idle", result: null, message: "" };
+  markHandwritingDraftEdited(draft);
   refreshPracticeWritingPanel();
 }
 
@@ -2053,11 +2067,7 @@ function getAssistTabs() {
     return [{ key: "understand", label: "母语解释" }];
   }
   if (state.section === "practice") {
-    return [
-      { key: "understand", label: "理解题意" },
-      { key: "hint", label: "思考方向" },
-      { key: "example", label: "相似实例" },
-    ];
+    return [{ key: "understand", label: "题目母语解释" }];
   }
   if (state.section === "vocabulary") {
     return [
@@ -2067,10 +2077,11 @@ function getAssistTabs() {
       { key: "practice", label: "小练习" },
     ];
   }
+  if (state.section === "text") return [{ key: "shadow", label: "跟读" }];
   return [
     { key: "understand", label: "理解" },
     { key: "shadow", label: "跟读" },
-    { key: "practice", label: state.section === "text" ? "表达" : "小练习" },
+    { key: "practice", label: "小练习" },
   ];
 }
 
@@ -2723,8 +2734,7 @@ function renderPracticeAssist() {
       <div class="assist-block">
         <span class="assist-label">${escapeHtml(languageLabels[state.locale] || state.locale)} · 语法解释</span>
         <p class="translation-large">${state.assistMode === "immersion" ? "中文沉浸模式已开启" : escapeHtml(translated || item.explanation)}</p>
-      </div>
-      ${renderDeepAssistPanel({ unitType: "practice-intro", unitId: item.groupId, assistType: "deep-explain" })}`;
+      </div>`;
     return;
   }
   const assistItem = activePracticeStep(item) || item;
@@ -2732,10 +2742,9 @@ function renderPracticeAssist() {
   if (state.assistTab === "understand") {
     elements.assistContent.innerHTML = `
       <div class="assist-block">
-        <span class="assist-label">题目要求</span>
+        <span class="assist-label">题目母语解释</span>
         <p class="translation-large">${escapeHtml(support.promptMeaning || "先确认题目要求你补充、改写还是解释什么内容。")}</p>
-      </div>
-      ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "prompt-meaning" })}`;
+      </div>`;
     return;
   }
   if (state.assistTab === "hint") {
@@ -3826,6 +3835,45 @@ async function combineHandwritingCells(cells) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
 }
 
+function confirmRecognizedPracticeText(recognizedText, manuscriptBlob) {
+  return new Promise((resolve) => {
+    const dialog = document.createElement("dialog");
+    const imageUrl = URL.createObjectURL(manuscriptBlob);
+    dialog.className = "practice-ocr-dialog";
+    dialog.innerHTML = `<form method="dialog" class="practice-ocr-window">
+      <header><div><span>手写识别确认 <small>Recognition confirmation</small></span><h2>请核对识别文本</h2></div><button type="button" data-ocr-action="cancel" aria-label="关闭 / Close">×</button></header>
+      <p class="practice-ocr-notice">请只修正OCR识别错误。需要修改答案内容时，请返回田字格修改后重新识别。<small>Please correct recognition errors only. Return to the grid if you need to revise your answer.</small></p>
+      <details class="practice-ocr-original"><summary>查看手写原稿 <small>View handwriting</small></summary><img src="${imageUrl}" alt="手写答案原稿"></details>
+      <label class="practice-ocr-editor"><span>识别文本 <small>Recognized text</small></span><textarea rows="10" data-ocr-text>${escapeHtml(recognizedText)}</textarea></label>
+      <label class="practice-ocr-check"><input type="checkbox" data-ocr-confirm> <span>我已核对，以上文本与我的手写内容一致。<small>I have checked that the text matches my handwriting.</small></span></label>
+      <footer><button class="secondary-button" type="button" data-ocr-action="cancel">返回修改 <small>Back to edit</small></button><button class="primary-button" type="button" data-ocr-action="confirm">确认并获取AI评价 <small>Confirm and review</small></button></footer>
+    </form>`;
+    document.body.appendChild(dialog);
+    let settled = false;
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      URL.revokeObjectURL(imageUrl);
+      if (dialog.open) dialog.close();
+      dialog.remove();
+      resolve(value);
+    };
+    dialog.addEventListener("cancel", (event) => { event.preventDefault(); finish(null); });
+    dialog.addEventListener("click", (event) => {
+      const action = event.target.closest("[data-ocr-action]")?.dataset.ocrAction;
+      if (action === "cancel") return finish(null);
+      if (action !== "confirm") return;
+      const text = dialog.querySelector("[data-ocr-text]").value.trim();
+      if (!text) return showToast("请先核对识别文本");
+      if (!dialog.querySelector("[data-ocr-confirm]").checked) return showToast("请确认文本与手写内容一致");
+      finish(text);
+    });
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+    dialog.querySelector("[data-ocr-text]")?.focus();
+  });
+}
+
 async function assessPracticeHandwriting() {
   const item = currentItem();
   const draft = activeWritingDraft();
@@ -3833,32 +3881,67 @@ async function assessPracticeHandwriting() {
   let ownsAiWork = false;
   try {
     requireAssessmentReady("practice-writing");
-    if (!draft.saved || !draft.cells.length) throw new Error("请先保存手写答案");
+    if (!draft.saved || !draft.cells.length) throw new Error("请先保存手写草稿");
     enforceWritingCooldown(`practice:${item.id}`);
     draft.assessment = { status: "working", phase: "preparing", result: null, message: "" };
     setAiWork(true, "preparing");
     ownsAiWork = true;
     refreshPracticeWritingPanel();
     const [blob, layout] = await Promise.all([combineHandwritingCells(draft.cells), Promise.all(draft.cells.map(analyzeWritingImage))]);
-    const result = await window.LearningApi.assessArtifact(blob, {
-      kind: "handwriting",
-      artifactId: window.crypto?.randomUUID?.() || `practice-writing-${Date.now()}`,
+    let confirmedText = Number(draft.confirmedRevision || 0) === Number(draft.revision || 1) ? String(draft.confirmedText || "").trim() : "";
+    if (!confirmedText) {
+      const recognition = await window.LearningApi.assessArtifact(blob, {
+        kind: "handwriting",
+        artifactId: window.crypto?.randomUUID?.() || `practice-writing-ocr-${Date.now()}`,
+        lessonId: LESSON_ID,
+        unitType: "practiceHandwritingOcr",
+        unitId: item.id,
+        referenceText: item.referenceText || scopeStep?.prompt || `第${item.questionNumber}题手写作文`,
+        locale: effectiveFeedbackLocale(),
+        metrics: { ocrOnly: true, characterCount: draft.cells.length },
+      }, { onProgress: (phase) => {
+        const displayPhase = phase === "uploading" ? "uploading" : "assessing";
+        draft.assessment.phase = displayPhase;
+        setAiWork(true, displayPhase);
+        refreshPracticeWritingPanel();
+      } });
+      setAiWork(false);
+      ownsAiWork = false;
+      confirmedText = await confirmRecognizedPracticeText(recognition.recognizedText || "", blob);
+      if (!confirmedText) {
+        draft.assessment = { status: "idle", result: null, message: "手写草稿已保留，尚未生成AI评价" };
+        refreshPracticeWritingPanel();
+        return;
+      }
+      draft.ocrText = recognition.recognizedText || "";
+      draft.confirmedText = confirmedText;
+      draft.confirmedRevision = Math.max(1, Number(draft.revision || 1));
+    }
+    draft.assessment = { status: "working", phase: "assessing", result: null, message: "" };
+    setAiWork(true, "assessing");
+    ownsAiWork = true;
+    refreshPracticeWritingPanel();
+    const assistItem = scopeStep || item;
+    const support = assistItem.support || item.support || {};
+    const textBlob = new Blob([JSON.stringify({ text: confirmedText })], { type: "application/json" });
+    const result = await window.LearningApi.assessArtifact(textBlob, {
+      kind: "essay",
+      artifactId: window.crypto?.randomUUID?.() || `practice-writing-confirmed-${Date.now()}`,
       lessonId: LESSON_ID,
       unitType: "practiceHandwriting",
       unitId: item.id,
-      referenceText: item.referenceText || scopeStep?.prompt || `第${item.questionNumber}题手写作文`,
+      referenceText: confirmedText,
       locale: effectiveFeedbackLocale(),
       metrics: {
         questionNumber: item.questionNumber,
         prompt: scopeStep?.prompt || item.prompt,
-        requiredVocabulary: item.requiredVocabulary || [],
-        writingStructure: item.writingStructure || [],
-        keywordGuidance: item.keywordGuidance || [],
-        referencePoints: item.answer?.referencePoints || [],
-        rubric: item.answer?.rubric || [],
-        characterCount: draft.cells.length,
-        recordedStrokeCounts: draft.strokeCounts,
-        layout,
+        requiredVocabulary: assistItem.requiredVocabulary || item.requiredVocabulary || [],
+        writingStructure: assistItem.writingStructure || support.writingStructure || item.writingStructure || item.support?.writingStructure || [],
+        keywordGuidance: assistItem.keywordGuidance || support.keywordGuidance || item.keywordGuidance || item.support?.keywordGuidance || [],
+        referencePoints: assistItem.answer?.referencePoints || item.answer?.referencePoints || [],
+        rubric: assistItem.answer?.rubric || item.answer?.rubric || [],
+        includeHandwritingAdvice: true,
+        writingMetrics: { characterCount: draft.cells.length, recordedStrokeCounts: draft.strokeCounts, layout },
       },
     }, { onProgress: (phase) => {
       const displayPhase = assessmentPhaseFor("handwritten-essay", phase);
@@ -3869,7 +3952,7 @@ async function assessPracticeHandwriting() {
     draft.assessment = { status: "ready", result, message: "" };
     recordSubjectivePractice(item, "assessment", "handwriting", draft.cells.length, result.scores);
   } catch (error) {
-    draft.assessment = { status: "error", result: null, message: error.message || "书写测评失败" };
+    draft.assessment = { status: "error", result: null, message: error.message || "手写识别或内容评价失败" };
   }
   if (ownsAiWork) setAiWork(false);
   refreshPracticeWritingPanel();
