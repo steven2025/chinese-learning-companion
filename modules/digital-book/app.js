@@ -270,6 +270,7 @@ const buttonTranslations = new Map(Object.entries({
   "暂不跟读，进入练习": "Skip to practice", "第一段": "Paragraph 1", "第二段": "Paragraph 2",
   "第三段": "Paragraph 3", "第四段": "Paragraph 4", "第五段": "Paragraph 5", "第六段": "Paragraph 6",
   "第七段": "Paragraph 7", "第八段": "Paragraph 8",
+  "显示拼音": "Show Pinyin", "显示翻译": "Show translation", "第几段跟读稿": "Paragraph script",
   "上一个": "Previous", "下一个": "Next", "关闭": "Close", "全屏": "Full screen", "恢复": "Restore",
   "开始跟读": "Start recording", "开始段落跟读": "Record paragraph", "停止录音": "Stop recording",
   "试听录音": "Play recording", "播放课文": "Play model", "连续播放": "Continuous play", "循环当前单元": "Loop unit",
@@ -760,6 +761,7 @@ function render() {
 
   elements.previous.disabled = isFirstUnit();
   elements.next.disabled = isLastUnit();
+  elements.next.hidden = item.unitType === "paragraphReading";
   elements.unitContent.classList.toggle(
     "paragraph-reading-shell",
     item.unitType === "paragraphReading",
@@ -919,24 +921,32 @@ function renderParagraphReadingUnit() {
   const recordingComplete = Boolean(state.recordingUrl);
   elements.unitContent.innerHTML = `
     <div class="paragraph-reading-unit">
-      <span class="unit-order">课文学习 · 最后一页</span>
-      <h2>跟读段落</h2>
-      <p class="paragraph-reading-prompt">每段不超过 120 个汉字。AI 会在朗读后给出建议，请按照教材课文朗读。</p>
+      <header class="paragraph-reading-intro">
+        <span class="unit-order">课文学习 · 段落跟读 <small>Paragraph reading</small></span>
+        <h2>跟读段落</h2>
+        <p class="paragraph-reading-prompt">选择段落，打开跟读稿后播放或录音跟读。<small>Select a paragraph, then listen or record.</small></p>
+      </header>
       <nav class="paragraph-tabs" aria-label="选择跟读段落">
-        ${state.textParagraphs.map((item, index) => `<button type="button" data-reading-paragraph="${index}" class="${index === state.readingParagraphIndex ? "active" : ""}" aria-current="${index === state.readingParagraphIndex ? "true" : "false"}">${paragraphOrdinal(index)}</button>`).join("")}
-      </nav>
-      <div class="paragraph-summary">
-        <strong>${paragraphOrdinal(paragraph.index)}</strong>
-        <span>课文第 ${paragraph.startIndex + 1}–${paragraph.endIndex + 1} 句 · ${paragraph.charCount} 个汉字</span>
-      </div>
-      <div class="paragraph-reader-launcher">
-        <div>
-          <strong>独立跟读稿</strong>
-          <span>连续显示本段课文，可累加拼音和${escapeHtml(languageLabels[state.locale] || state.locale)}翻译。</span>
-          <small>${recordingComplete ? "录音已完成，可打开跟读稿试听或提交测评。" : escapeHtml(state.recordingStatus)}</small>
+        <button type="button" class="paragraph-tab-arrow" data-reading-paragraph-step="-1" aria-label="上一段 / Previous paragraph" ${state.readingParagraphIndex === 0 ? "disabled" : ""}>‹</button>
+        <div class="paragraph-tab-track">
+          ${state.textParagraphs.map((item, index) => `<button type="button" data-reading-paragraph="${index}" class="paragraph-tab${index === state.readingParagraphIndex ? " active" : ""}" aria-current="${index === state.readingParagraphIndex ? "true" : "false"}"><strong>${paragraphOrdinal(index)}</strong><small>Paragraph ${index + 1}</small></button>`).join("")}
         </div>
-        <button class="command-button" type="button" data-command="open-paragraph-reader">打开跟读稿</button>
-      </div>
+        <button type="button" class="paragraph-tab-arrow" data-reading-paragraph-step="1" aria-label="下一段 / Next paragraph" ${state.readingParagraphIndex === state.textParagraphs.length - 1 ? "disabled" : ""}>›</button>
+      </nav>
+      <article class="paragraph-reader-launcher">
+        <div class="paragraph-launcher-icon" aria-hidden="true">读</div>
+        <div class="paragraph-launcher-copy">
+          <span class="paragraph-launcher-kicker">${paragraphOrdinal(paragraph.index)} · Paragraph ${paragraph.index + 1}</span>
+          <strong>${paragraphOrdinal(paragraph.index)}跟读稿</strong>
+          <span>课文第 ${paragraph.startIndex + 1}–${paragraph.endIndex + 1} 句 · ${paragraph.charCount} 个汉字</span>
+          <small>${recordingComplete ? "录音已完成，可试听或提交测评。" : escapeHtml(state.recordingStatus)}</small>
+        </div>
+        <div class="paragraph-launcher-settings" role="group" aria-label="跟读稿显示设置">
+          <button type="button" data-bilingualized="true" class="paragraph-setting-chip${state.paragraphDisplay.pinyin ? " active" : ""}" data-launcher-paragraph-display="pinyin" aria-pressed="${state.paragraphDisplay.pinyin}"><span>显示拼音</span><small>Show Pinyin</small></button>
+          <button type="button" data-bilingualized="true" class="paragraph-setting-chip${state.paragraphDisplay.translation ? " active" : ""}" data-launcher-paragraph-display="translation" aria-pressed="${state.paragraphDisplay.translation}"><span>显示${escapeHtml(languageLabels[state.locale] || state.locale)}翻译</span><small>Show translation</small></button>
+        </div>
+        <button class="command-button paragraph-launcher-open" type="button" data-command="open-paragraph-reader"><span>打开跟读稿</span><small>Open script</small><b aria-hidden="true">›</b></button>
+      </article>
       <div class="paragraph-reading-choice">
         <button class="quiet-button${choice === "skipped" ? " active" : ""}" type="button" data-command="skip-paragraph-reading">暂不跟读，进入练习</button>
       </div>
@@ -964,7 +974,7 @@ function renderParagraphReaderPanel() {
   elements.paragraphReaderContent.innerHTML = `
     <div class="paragraph-reader-shell">
       <header class="paragraph-reader-header" data-paragraph-reader-drag-handle>
-        <div><span>课文跟读 · ${paragraphOrdinal(paragraph.index)}</span><h2 id="paragraphReaderTitle">段落跟读稿</h2></div>
+        <div><span>课文跟读 · ${paragraphOrdinal(paragraph.index)} · Paragraph ${paragraph.index + 1}</span><h2 id="paragraphReaderTitle">${paragraphOrdinal(paragraph.index)}跟读稿</h2><small>第 ${paragraph.startIndex + 1}–${paragraph.endIndex + 1} 句 · ${paragraph.charCount} 个汉字</small></div>
         <div class="paragraph-reader-window-actions">
           <button type="button" data-paragraph-reader-command="fullscreen" aria-label="${state.paragraphReaderFullscreen ? "恢复窗口 / Restore window" : "全屏显示 / Full screen"}" title="${state.paragraphReaderFullscreen ? "恢复 / Restore" : "全屏 / Full screen"}">${state.paragraphReaderFullscreen ? "❐" : "⛶"}</button>
           <button type="button" data-paragraph-reader-command="close" aria-label="关闭跟读稿 / Close reading script" title="关闭 / Close">×</button>
@@ -1035,7 +1045,8 @@ function toggleParagraphDisplay(option) {
   if (!["pinyin", "translation"].includes(option)) return;
   state.paragraphDisplay[option] = !state.paragraphDisplay[option];
   localStorage.setItem("digitalBookParagraphDisplay", JSON.stringify(state.paragraphDisplay));
-  renderParagraphReaderPanel();
+  if (state.paragraphReaderOpen) renderParagraphReaderPanel();
+  else renderParagraphReadingUnit();
   initializeVoiceOrbs();
 }
 
@@ -4117,6 +4128,22 @@ function bindEvents() {
   elements.previous.addEventListener("click", () => moveUnit(-1));
   elements.next.addEventListener("click", () => moveUnit(1));
   elements.unitContent.addEventListener("click", (event) => {
+    const launcherDisplay = event.target.closest("[data-launcher-paragraph-display]")?.dataset.launcherParagraphDisplay;
+    if (launcherDisplay) {
+      toggleParagraphDisplay(launcherDisplay);
+      return;
+    }
+    const paragraphStep = event.target.closest("[data-reading-paragraph-step]")?.dataset.readingParagraphStep;
+    if (paragraphStep !== undefined) {
+      const nextIndex = Math.max(0, Math.min(state.textParagraphs.length - 1, state.readingParagraphIndex + Number(paragraphStep)));
+      if (nextIndex !== state.readingParagraphIndex) {
+        stopAudio();
+        resetRecordingForUnit();
+        state.readingParagraphIndex = nextIndex;
+        render();
+      }
+      return;
+    }
     const paragraphIndex = event.target.closest("[data-reading-paragraph]")?.dataset.readingParagraph;
     if (paragraphIndex !== undefined) {
       stopAudio();
