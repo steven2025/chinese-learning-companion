@@ -401,8 +401,9 @@ async function loadData() {
   }
 
   state.words = metadata.entries.map((entry, index) => {
-    const cueId = entry.id.replace(/^word-/, "vocab-");
-    const cue = wordCues.find((candidate) => candidate.id === cueId || candidate.text === entry.hanzi) || wordCues[index];
+    const cue = wordCues.find((candidate) => candidate.wordId === entry.id)
+      || wordCues.find((candidate) => String(candidate.texts?.["zh-CN"] || candidate.text || "").trim() === String(entry.hanzi || "").trim())
+      || wordCues[index];
     return {
       ...entry,
       translations: { ...(entry.translations || {}), ...(contentTranslations.vocabulary?.[entry.id] || {}) },
