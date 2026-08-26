@@ -49,6 +49,11 @@ const LESSONS = Object.freeze({
     topic: "老舍小时候的故事",
     paragraphRanges: [[0, 4], [5, 12], [13, 21], [22, 39], [40, 47], [48, 60], [61, 67], [68, 71]],
   }),
+  "zjzh-1-5": Object.freeze({
+    number: 5,
+    topic: "没有规矩，不成方圆",
+    paragraphRanges: [],
+  }),
 });
 const requestedLessonId = new URLSearchParams(window.location.search).get("lesson");
 const LESSON_ID = LESSONS[requestedLessonId] ? requestedLessonId : "zjzh-1-1";
@@ -261,8 +266,9 @@ const buttonTranslations = new Map(Object.entries({
   "已掌握": "Mastered", "待复习": "Review", "收藏": "Save",
   "打开跟写练习": "Open writing", "重新演示": "Replay demo", "清空": "Clear",
   "确认这个字": "Confirm character", "生成整词图片": "Create word image", "下载图片": "Download image",
-  "打开手写板": "Open writing pad", "清空本格": "Clear cell", "确认此字": "Confirm character",
-  "撤销上一格": "Undo last cell", "保存手写答案": "Save handwriting", "保存草稿": "Save draft", "完成手写并识别": "Finish and recognize",
+  "打开手写板": "Open writing pad", "清空本格": "Clear cell", "确认此字": "Confirm character", "确认修改": "Confirm change", "取消修改": "Cancel change",
+  "修改此字": "Edit character", "前面插入": "Insert before", "后面插入": "Insert after", "删除此字": "Delete character", "取消选择": "Cancel selection", "取消插入": "Cancel insert",
+  "撤销上一格": "Undo last cell", "删除选中字": "Delete selected", "保存手写答案": "Save handwriting", "保存草稿": "Save draft", "完成手写并识别": "Finish and recognize",
   "手写": "Handwrite", "修改手写": "Edit handwriting", "清除手写": "Clear handwriting",
   "键盘输入": "Type answer", "手写作答": "Handwrite", "提交作答": "Submit answer",
   "AI 评估与建议": "AI review", "重新测评": "Assess again", "测评中…": "Assessing…",
@@ -554,6 +560,7 @@ function buildPracticeUnits(practiceData, translations) {
           translatedGroup.explanation ||
           translatedGroup.examples?.length ||
           group.choices?.length ||
+          (LESSON_ID === "zjzh-1-5" && group.learningPage) ||
           (!["writing", "reading"].includes(section.kind) && (group.instruction || group.introduction))
         );
         if (needsIntroPage) {
@@ -570,6 +577,7 @@ function buildPracticeUnits(practiceData, translations) {
             examples: translatedGroup.examples || [],
             choices: group.choices || [],
             instruction: group.instruction || group.introduction || "",
+            ...(LESSON_ID === "zjzh-1-5" ? { learningPage: group.learningPage || null } : {}),
           });
         }
         const numberedItems = (group.items || []).map((item) => {
@@ -586,6 +594,7 @@ function buildPracticeUnits(practiceData, translations) {
             groupTitle: group.title,
             choices: item.choices || group.choices || section.choices || [],
             requiredVocabulary: item.requiredVocabulary || item.referenceWords || [],
+            ...(LESSON_ID === "zjzh-1-5" ? { sharedWordBank: item.wordBank || group.sharedWordBank || [], groupPresentationMode: group.presentationMode || "single-item", groupNavigationMode: group.navigationMode || "item-tabs" } : {}),
           };
         });
         const activities = groupPracticeActivities(numberedItems);
@@ -815,6 +824,23 @@ function renderSectionTitle(item) {
 }
 
 function renderPracticeIntro(item) {
+  if (LESSON_ID === "zjzh-1-5" && item.learningPage?.type === "wordFamilyExplore") {
+    const center = item.learningPage.centerCharacter || "词";
+    const words = item.learningPage.words || [];
+    elements.unitContent.innerHTML = `
+      <div class="practice-intro-unit lesson5-practice-unit lesson5-word-family-intro">
+        <span class="unit-order">词族探索 · ${escapeHtml(item.groupTitle)}</span>
+        <h2>从“${escapeHtml(center)}”出发理解一组词</h2>
+        <p>先观察这些词和中心汉字的意义关系，再进入逐题填空。</p>
+        <div class="lesson5-word-family-map">
+          <strong>${escapeHtml(center)}</strong>
+          <div>${words.map((word) => `<button type="button" class="lesson5-block is-teal" data-lesson5-word-preview="${escapeAttribute(word)}">${escapeHtml(word)}</button>`).join("")}</div>
+        </div>
+        <p class="lesson5-inline-note" data-lesson5-word-note>点击词块查看并朗读，具体词义可在母语辅助中展开。</p>
+        ${renderContextualAssistButtons()}
+      </div>`;
+    return;
+  }
   const choices = normalizeChoices(item.choices);
   const showInstruction =
     item.instruction &&
@@ -1051,6 +1077,133 @@ function toggleParagraphDisplay(option) {
   initializeVoiceOrbs();
 }
 
+const LESSON5_CUSTOM_PRACTICE_TYPES = new Set([
+  "sentenceRewrite", "constrainedSentenceCompletion", "progressiveDialogue",
+  "scenarioTableSentenceBuilder", "radicalCharacterBuilder", "contextualWordBank",
+  "classifierChoice", "sharedWordBankFill", "guidedProduction", "openReflection"
+]);
+
+function lesson5PracticeNavigation(item) {
+  if (LESSON_ID !== "zjzh-1-5" || !item.groupId) return "";
+  const siblings = (state.units.practice || []).map((unit, unitIndex) => ({ unit, unitIndex })).filter(({ unit }) => unit.unitType === "practiceItem" && unit.groupId === item.groupId);
+  if (siblings.length < 2) return "";
+  return `<nav class="lesson5-item-navigation" aria-label="小题导航 / Question navigation">
+    <span>${escapeHtml(item.groupTitle || item.sectionTitle)} · ${siblings.findIndex(({ unit }) => unit.id === item.id) + 1}/${siblings.length}</span>
+    <div>${siblings.map(({ unit, unitIndex }, index) => {
+      const answered = Boolean(String(state.answers[unit.id] || "").trim()) || Object.keys(state.answers).some((key) => key.startsWith(`${unit.id}:`) && String(state.answers[key] || "").trim());
+      return `<button type="button" class="${unit.id === item.id ? "is-current" : ""} ${answered ? "is-complete" : ""}" data-lesson5-unit-index="${unitIndex}" aria-label="第${index + 1}小题${answered ? "，已作答" : ""}">${escapeHtml(unit.displayNumber || String(index + 1))}${answered ? " ✓" : ""}</button>`;
+    }).join("")}</div>
+  </nav>`;
+}
+
+function lesson5Value(item, field = "answer") {
+  return String(state.answers[field === "answer" ? item.id : `${item.id}:${field}`] || "");
+}
+
+function lesson5Field(item, field, placeholder, options = {}) {
+  const value = lesson5Value(item, field);
+  const tag = options.multiline ? "textarea" : "input";
+  const attributes = `data-lesson5-field="${escapeAttribute(field)}" data-lesson5-drop-target="${escapeAttribute(field)}" placeholder="${escapeAttribute(placeholder)}"`;
+  return tag === "textarea" ? `<textarea ${attributes}>${escapeHtml(value)}</textarea>` : `<input ${attributes} value="${escapeAttribute(value)}" autocomplete="off">`;
+}
+
+function lesson5Blocks(words, color = "teal") {
+  return `<div class="lesson5-block-pool">${(words || []).filter(Boolean).map((word) => `<button type="button" draggable="true" class="lesson5-block is-${color}" data-lesson5-choice="${escapeAttribute(word)}">${escapeHtml(word)}</button>`).join("")}</div>`;
+}
+
+function lesson5SavedFeedback(item) {
+  if (!state.submitted[item.id]) return "";
+  const reference = item.answerStatus === "teacher-confirmed" ? item.referenceAnswer : null;
+  if (!reference?.answers?.length) {
+    return `<div class="answer-feedback is-neutral"><strong>答案已保存 <small>Answer saved</small></strong><p>本题参考答案仍待教师确认；当前不做机械正误判断。</p></div>`;
+  }
+  const kind = reference.kind || "reference";
+  const submitted = lesson5SubmittedText(item);
+  const exact = kind === "standard" && reference.answers.some((answer) => normalizeAnswer(answer) === normalizeAnswer(submitted));
+  const heading = exact ? "作答正确" : (kind === "standard" ? "已提交，请对照检查" : "已提交，答案不唯一");
+  const english = exact ? "Correct" : (kind === "standard" ? "Submitted — compare your answer" : "Submitted — answers may vary");
+  const label = kind === "framework" ? "参考思路" : (kind === "standard" ? "参考答案" : "参考表达");
+  return `<div class="answer-feedback ${exact ? "" : "is-neutral"}">
+    <strong>${heading} <small>${english}</small></strong>
+    <details class="lesson5-reference-answer">
+      <summary>查看${label} <small>View reference</small></summary>
+      <div>${reference.answers.map((answer) => `<p>${escapeHtml(answer)}</p>`).join("")}${reference.note ? `<small>${escapeHtml(reference.note)}</small>` : ""}</div>
+    </details>
+  </div>`;
+}
+
+function lesson5SubmittedText(item) {
+  if (item.type === "radicalCharacterBuilder") return `${lesson5Value(item, "character")}—${lesson5Value(item, "word")}`;
+  if (item.type === "scenarioTableSentenceBuilder") return lesson5Value(item, "sentence");
+  if (item.type === "guidedProduction") return [lesson5Value(item, "comparison"), lesson5Value(item, "country-rule"), lesson5Value(item, "comparison-example")].filter(Boolean).join("；");
+  if (item.type === "progressiveDialogue" && item.blanks?.length) return item.blanks.map((blank) => lesson5Value(item, `blank-${blank.id}`)).filter(Boolean).join("；");
+  return lesson5Value(item, "answer");
+}
+
+function renderLesson5PracticeUnit(item) {
+  const navigation = lesson5PracticeNavigation(item);
+  const target = `<span class="practice-target">${escapeHtml(item.displayNumber || String(item.questionNumber))} · ${escapeHtml(item.groupTitle || item.sectionTitle)}</span>`;
+  let body = "";
+  if (item.type === "guidedProduction") {
+    const comparison = lesson5Value(item, "comparison");
+    body = `<div class="lesson5-guided-comparison">
+      <section><span>第1步 <small>Step 1</small></span><h3>先判断和中国的情况是否相同</h3>
+        <div class="lesson5-comparison-options">${[["基本相同", "Mostly the same"], ["有些相同", "Partly the same"], ["很不一样", "Very different"]].map(([value, en]) => `<button type="button" class="lesson5-block is-${comparison === value ? "coral" : "teal"}" data-lesson5-set-field="comparison" data-lesson5-set-value="${value}">${value}<small>${en}</small></button>`).join("")}</div>
+      </section>
+      <section><span>第2步 <small>Step 2</small></span><h3>说说你们国家的规矩或习惯</h3>${lesson5Field(item, "country-rule", "先写一条具体的规矩或习惯", { multiline: true })}</section>
+      <section><span>第3步 <small>Step 3</small></span><h3>举例说明相同点或不同点</h3>${lesson5Field(item, "comparison-example", "举一个生活中的例子，再说明你的看法", { multiline: true })}</section>
+    </div>`;
+  } else if (["sentenceRewrite", "constrainedSentenceCompletion", "openReflection"].includes(item.type)) {
+    const targetPattern = item.targetPattern || (item.referenceWords || []).join(" · ");
+    body = `${targetPattern ? `<div class="lesson5-target-pattern"><span>必须使用</span><strong>${escapeHtml(targetPattern)}</strong></div>` : ""}
+      ${lesson5Field(item, "answer", "在这里完成本题 / Write your answer here", { multiline: true })}`;
+  } else if (item.type === "radicalCharacterBuilder") {
+    body = `<div class="lesson5-radical-builder">
+      <button type="button" draggable="true" class="lesson5-block is-gold is-large" data-lesson5-choice="${escapeAttribute(item.radical || "忄")}">${escapeHtml(item.radical || "忄")}</button>
+      <span>＋</span><b class="lesson5-base-character">${escapeHtml(item.baseCharacter || "")}</b><span>→</span>
+      ${lesson5Field(item, "character", "新字")}
+      <span>→</span>${lesson5Field(item, "word", "组词")}
+    </div>`;
+  } else if (["contextualWordBank", "sharedWordBankFill", "classifierChoice"].includes(item.type)) {
+    const bank = item.sharedWordBank?.length ? item.sharedWordBank : normalizeChoices(item.choices);
+    body = `${bank.length ? lesson5Blocks(bank, item.type === "classifierChoice" ? "gold" : "teal") : `<p class="lesson5-inline-note">本题候选词块将在教师确认答案后补充，也可以先直接输入。</p>`}
+      <label class="lesson5-drop-answer"><span>我的答案 <small>My answer</small></span>${lesson5Field(item, "answer", "点击词块、拖到这里或直接输入")}</label>`;
+  } else if (item.type === "scenarioTableSentenceBuilder") {
+    const scenario = item.scenario || {};
+    const field = (name, label, value, color) => `<label class="lesson5-scenario-field is-${color}"><span>${label}</span>${value ? `<strong>${escapeHtml(value)}</strong>` : lesson5Field(item, name, `补充${label}`)}</label>`;
+    body = `<div class="lesson5-scenario-grid">
+        ${field("situation", "情况", scenario.situation, "purple")}
+        ${field("cause", "原因", scenario.cause, "purple")}
+        ${field("result", "结果", scenario.result, "coral")}
+      </div>
+      ${lesson5Blocks(item.targetPatterns || ["因为", "因", "而"], "gold")}
+      <label class="lesson5-sentence-builder"><span>组成完整句子 <small>Build the complete sentence</small></span>${lesson5Field(item, "sentence", "用“因（为）……而……”写完整句子", { multiline: true })}</label>`;
+  } else if (item.type === "progressiveDialogue") {
+    const blanks = item.blanks || [];
+    if (!blanks.length) {
+      body = lesson5Field(item, "answer", "补全当前对话 / Complete the dialogue", { multiline: true });
+    } else {
+      const active = Math.max(0, Math.min(blanks.length - 1, Number(state.activityStepIndex[item.id] || 0)));
+      const activeId = String(blanks[active].id);
+      const dialogue = escapeHtml(item.prompt).replace(/\[\[(\d+)\]\]/g, (_, id) => {
+        const value = lesson5Value(item, `blank-${id}`);
+        return id === activeId ? `<mark class="lesson5-dialogue-current">第${id}空</mark>` : `<button type="button" class="lesson5-dialogue-blank ${value ? "is-complete" : ""}" data-lesson5-dialogue-step="${Math.max(0, blanks.findIndex((blank) => String(blank.id) === id))}">${escapeHtml(value || `第${id}空`)}</button>`;
+      }).replace(/\n/g, "<br>");
+      body = `<article class="lesson5-dialogue-script">${dialogue}</article>
+        <nav class="lesson5-dialogue-steps">${blanks.map((blank, index) => `<button type="button" class="${index === active ? "is-current" : ""}" data-lesson5-dialogue-step="${index}">${index + 1}${lesson5Value(item, `blank-${blank.id}`) ? " ✓" : ""}</button>`).join("")}</nav>
+        <label class="lesson5-dialogue-answer"><span>补充第${escapeHtml(activeId)}空</span>${lesson5Field(item, `blank-${activeId}`, "根据上下文完成这一处", { multiline: true })}</label>`;
+    }
+  }
+  elements.unitContent.innerHTML = `<div class="practice-unit lesson5-practice-unit lesson5-type-${escapeAttribute(item.type)}">
+    ${navigation}${target}
+    ${item.type === "guidedProduction" ? `<div class="lesson5-task-question"><strong>比较任务</strong><p>${escapeHtml(item.prompt)}</p></div>` : `<h2 class="practice-prompt">${escapeHtml(item.prompt)}</h2>`}
+    ${renderContextualAssistButtons()}
+    <div class="lesson5-interaction-area">${body}</div>
+    <div class="answer-actions lesson5-answer-actions"><button class="quiet-button" type="button" data-command="clear-answer">清空 <small>Clear</small></button><button class="command-button" type="button" data-command="lesson5-submit">提交答案 <small>Submit answer</small></button></div>
+    ${lesson5SavedFeedback(item)}
+  </div>`;
+}
+
 function renderPracticeUnit(item, index) {
   if (item.unitType === "practiceActivity") {
     renderPracticeActivity(item);
@@ -1074,6 +1227,10 @@ function renderPracticeUnit(item, index) {
   }
   if (item.type === "readingCloze") {
     renderReadingCloze(item);
+    return;
+  }
+  if (LESSON_ID === "zjzh-1-5" && LESSON5_CUSTOM_PRACTICE_TYPES.has(item.type)) {
+    renderLesson5PracticeUnit(item);
     return;
   }
   const answer = state.answers[item.id] || "";
@@ -1596,12 +1753,13 @@ function resetInteractivePractice() {
 function renderReadingCloze(item) {
   const selections = state.clozeAnswers[item.id] || {};
   const submitted = Boolean(state.submitted[item.id]);
+  const lesson5AnswerPending = LESSON_ID === "zjzh-1-5" && item.answerStatus !== "teacher-confirmed";
   const correct = Object.fromEntries((item.blanks || []).map((blank) => [String(blank.id), blank.answer]));
   const activeBlank = state.activeClozeBlank || String((item.blanks || []).find((blank) => !selections[blank.id])?.id || item.blanks?.[0]?.id || "");
   state.activeClozeBlank = activeBlank;
   const passage = escapeHtml(item.passage || "").replace(/\[\[(\d+)\]\]/g, (_, blankId) => {
     const selected = selections[blankId] || "";
-    const resultClass = submitted ? (selected === correct[blankId] ? "is-correct" : "is-incorrect") : "";
+    const resultClass = submitted && !lesson5AnswerPending ? (selected === correct[blankId] ? "is-correct" : "is-incorrect") : "";
     const blankLabel = `第${blankId}空，${selected ? `已选择${selected}` : "尚未选择"}`;
     return `<button type="button" class="cloze-blank ${blankId === activeBlank ? "is-active" : ""} ${resultClass}" data-cloze-blank="${blankId}" aria-label="${escapeAttribute(blankLabel)}"><span class="cloze-blank-number">（${blankId}）</span><strong>${escapeHtml(selected || "请选择")}</strong></button>`;
   }).replace(/\n/g, "<br>");
@@ -1627,7 +1785,9 @@ function renderReadingCloze(item) {
         <button class="quiet-button" type="button" data-command="reset-cloze">重新填写</button>
         <button class="command-button" type="button" data-command="submit-cloze" ${completed < (item.blanks || []).length ? "disabled" : ""}>提交答案</button>
       </div>
-      ${submitted ? `<div class="answer-feedback ${correctCount === item.blanks.length ? "" : "needs-work"}"><strong>${correctCount === item.blanks.length ? "全部正确" : `答对 ${correctCount} / ${item.blanks.length} 空`}</strong><p>${escapeHtml(item.answer?.explanation || "请结合上下文重新检查。")}</p><ol>${item.blanks.map((blank) => `<li>第${escapeHtml(blank.id)}空：你的答案 ${escapeHtml(selections[blank.id] || "未填")}${selections[blank.id] === blank.answer ? "，正确" : "，请重新判断上下文"}</li>`).join("")}</ol></div>` : ""}
+      ${submitted ? (lesson5AnswerPending
+        ? `<div class="answer-feedback is-neutral"><strong>答案已保存</strong><p>本题答案仍待教师确认，当前不会显示错误判断。</p></div>`
+        : `<div class="answer-feedback ${correctCount === item.blanks.length ? "" : "needs-work"}"><strong>${correctCount === item.blanks.length ? "全部正确" : `答对 ${correctCount} / ${item.blanks.length} 空`}</strong><p>${escapeHtml(item.answer?.explanation || "请结合上下文重新检查。")}</p><ol>${item.blanks.map((blank) => `<li>第${escapeHtml(blank.id)}空：你的答案 ${escapeHtml(selections[blank.id] || "未填")}${selections[blank.id] === blank.answer ? "，正确" : "，请重新判断上下文"}</li>`).join("")}</ol><details class="lesson5-reference-answer"><summary>查看参考答案 <small>View reference answer</small></summary><div><p>${item.blanks.map((blank) => `${escapeHtml(blank.id)}：${escapeHtml(blank.answer)}`).join("　")}</p></div></details></div>`) : ""}
     </div>`;
 }
 
@@ -1667,11 +1827,12 @@ function normalizeChoices(choices) {
 
 function handwritingDraft(itemId) {
   if (!state.handwriting[itemId]) {
-    state.handwriting[itemId] = { cells: [], strokeCounts: [], page: 0, selectedCell: null, saved: false, revision: 1, confirmedRevision: 0, confirmedText: "", ocrText: "", assessment: { status: "idle", result: null, message: "" } };
+    state.handwriting[itemId] = { cells: [], strokeCounts: [], page: 0, selectedCell: null, insertAt: null, saved: false, revision: 1, confirmedRevision: 0, confirmedText: "", ocrText: "", assessment: { status: "idle", result: null, message: "" } };
   }
   const draft = state.handwriting[itemId];
   if (!Number.isInteger(draft.page)) draft.page = 0;
   if (!Number.isInteger(draft.selectedCell)) draft.selectedCell = null;
+  if (!Number.isInteger(draft.insertAt)) draft.insertAt = null;
   if (!Number.isInteger(draft.revision) || draft.revision < 1) draft.revision = 1;
   return draft;
 }
@@ -1818,7 +1979,7 @@ function renderHandwritingWorkspace(item) {
     const index = pageStart + offset;
     const image = draft.cells[index];
     const selected = draft.selectedCell === index;
-    return `<button class="manuscript-cell${image ? " has-writing" : ""}${selected ? " is-selected" : ""}" type="button" ${image ? `data-manuscript-cell="${index}"` : "disabled"} aria-label="${image ? `第${index + 1}格，点击重写` : `第${index + 1}格，空白`}">${image ? `<img src="${escapeAttribute(image)}" alt="第${index + 1}格手写笔迹">` : ""}</button>`;
+    return `<button class="manuscript-cell${image ? " has-writing" : ""}${selected ? " is-selected" : ""}" type="button" ${image ? `data-manuscript-cell="${index}"` : "disabled"} aria-label="${image ? `第${index + 1}格，点击选择后修改、插入或删除` : `第${index + 1}格，空白`}">${image ? `<img src="${escapeAttribute(image)}" alt="第${index + 1}格手写笔迹">` : ""}</button>`;
   }).join("");
   return `
     <header class="practice-writing-panel-header" data-writing-drag-handle>
@@ -1832,9 +1993,9 @@ function renderHandwritingWorkspace(item) {
       </div>
     </header>
     <div class="handwriting-workspace practice-writing-panel-body">
-      <div class="practice-writing-layout">
+      <div class="practice-writing-layout${LESSON_ID === "zjzh-1-5" ? " lesson5-writing-layout" : ""}">
         <section class="single-character-studio">
-          <header><span>单字书写</span><strong>${draft.selectedCell !== null ? `正在重写第 ${draft.selectedCell + 1} 格` : "请在田字格内书写"}</strong></header>
+          <header><span>单字书写 <small>Character writing</small></span><strong>${draft.insertAt !== null ? `正在插入第 ${draft.insertAt + 1} 格 · Insert at cell ${draft.insertAt + 1}` : draft.selectedCell !== null ? `正在重写第 ${draft.selectedCell + 1} 格 · Editing cell ${draft.selectedCell + 1}` : "请在田字格内书写 · Write in the grid"}</strong></header>
           <div class="handwriting-active-grid">
             <div class="handwriting-grid-lines" aria-hidden="true"></div>
             <canvas id="practiceHandwritingCanvas" width="600" height="600" aria-label="单字手写田字格"></canvas>
@@ -1842,7 +2003,7 @@ function renderHandwritingWorkspace(item) {
           <div class="handwriting-actions">
             <button class="quiet-button" type="button" data-command="clear-handwriting">清空本格</button>
             <button class="command-button" type="button" data-command="confirm-handwriting">${draft.selectedCell !== null ? "确认修改" : "确认此字"}</button>
-            ${draft.selectedCell !== null ? `<button class="quiet-button" type="button" data-command="cancel-handwriting-edit">取消修改</button>` : ""}
+            ${draft.selectedCell !== null ? `<button class="quiet-button" type="button" data-command="cancel-handwriting-edit">取消修改</button>` : draft.insertAt !== null ? `<button class="quiet-button" type="button" data-command="cancel-handwriting-insert">取消插入</button>` : ""}
           </div>
           <div class="punctuation-tools" aria-label="常用标点">
             <span>常用标点 <small>Punctuation</small></span>
@@ -1859,7 +2020,15 @@ function renderHandwritingWorkspace(item) {
             </div>
           </header>
           <div class="manuscript-page" aria-label="第${draft.page + 1}页田字稿纸">${manuscriptCells}</div>
-          <p>点击已有字格可重新书写。确认的新字会进入下一个空格。</p>
+          ${draft.selectedCell !== null ? `<div class="manuscript-edit-toolbar" role="toolbar" aria-label="字格编辑工具 / Character editing tools">
+            <span>已选第 ${draft.selectedCell + 1} 格 <small>Cell ${draft.selectedCell + 1} selected</small></span>
+            <button class="quiet-button" type="button" data-command="edit-selected-handwriting">修改此字</button>
+            <button class="quiet-button" type="button" data-command="insert-handwriting-before">前面插入</button>
+            <button class="quiet-button" type="button" data-command="insert-handwriting-after">后面插入</button>
+            <button class="danger-button" type="button" data-command="delete-selected-handwriting">删除此字</button>
+            <button class="quiet-button" type="button" data-command="cancel-handwriting-edit">取消选择</button>
+          </div>` : ""}
+          <p>点击已有字格后，可修改、前后插入或删除。新字默认进入下一个空格。<small>Select a written cell to edit, insert or delete.</small></p>
         </section>
       </div>
       <footer class="practice-writing-footer">
@@ -1993,7 +2162,12 @@ function confirmHandwritingCell() {
   if (!canvas || !state.handwritingStrokeCount) return;
   const draft = activeWritingDraft();
   const image = canvas.toDataURL("image/png");
-  if (draft.selectedCell !== null && draft.selectedCell < draft.cells.length) {
+  if (draft.insertAt !== null) {
+    const insertAt = Math.max(0, Math.min(draft.cells.length, draft.insertAt));
+    draft.cells.splice(insertAt, 0, image);
+    draft.strokeCounts.splice(insertAt, 0, state.handwritingStrokeCount);
+    draft.page = Math.floor(insertAt / 80);
+  } else if (draft.selectedCell !== null && draft.selectedCell < draft.cells.length) {
     draft.cells[draft.selectedCell] = image;
     draft.strokeCounts[draft.selectedCell] = state.handwritingStrokeCount;
   } else {
@@ -2002,6 +2176,7 @@ function confirmHandwritingCell() {
     draft.page = Math.floor((draft.cells.length - 1) / 80);
   }
   draft.selectedCell = null;
+  draft.insertAt = null;
   markHandwritingDraftEdited(draft);
   refreshPracticeWritingPanel();
 }
@@ -2017,6 +2192,7 @@ function removeHandwritingCell() {
     draft.strokeCounts.pop();
   }
   draft.selectedCell = null;
+  draft.insertAt = null;
   draft.page = Math.min(draft.page, Math.max(0, Math.ceil(draft.cells.length / 80) - 1));
   markHandwritingDraftEdited(draft);
   refreshPracticeWritingPanel();
@@ -2034,10 +2210,22 @@ function addHandwritingPunctuation(mark) {
   context.textAlign = "center";
   context.textBaseline = "middle";
   context.fillText(mark, 300, 335);
-  draft.cells.push(canvas.toDataURL("image/png"));
-  draft.strokeCounts.push(0);
-  draft.page = Math.floor((draft.cells.length - 1) / 80);
+  const image = canvas.toDataURL("image/png");
+  if (draft.insertAt !== null) {
+    const insertAt = Math.max(0, Math.min(draft.cells.length, draft.insertAt));
+    draft.cells.splice(insertAt, 0, image);
+    draft.strokeCounts.splice(insertAt, 0, 0);
+    draft.page = Math.floor(insertAt / 80);
+  } else if (draft.selectedCell !== null && draft.selectedCell < draft.cells.length) {
+    draft.cells[draft.selectedCell] = image;
+    draft.strokeCounts[draft.selectedCell] = 0;
+  } else {
+    draft.cells.push(image);
+    draft.strokeCounts.push(0);
+    draft.page = Math.floor((draft.cells.length - 1) / 80);
+  }
   draft.selectedCell = null;
+  draft.insertAt = null;
   markHandwritingDraftEdited(draft);
   refreshPracticeWritingPanel();
 }
@@ -3404,8 +3592,9 @@ function submitCloze() {
   state.answers[item.id] = (item.blanks || []).map((blank) => selections[blank.id]).join(",");
   localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
   localStorage.setItem(storageKeys.practiceSubmitted, JSON.stringify(state.submitted));
+  const answersReady = !(LESSON_ID === "zjzh-1-5" && item.answerStatus !== "teacher-confirmed");
   const correctCount = (item.blanks || []).filter((blank) => selections[blank.id] === blank.answer).length;
-  recordObjectivePractice(item, item.blanks?.length ? correctCount / item.blanks.length * 100 : 0);
+  if (answersReady) recordObjectivePractice(item, item.blanks?.length ? correctCount / item.blanks.length * 100 : 0);
   renderReadingCloze(item);
   bilingualizeButtons(elements.unitContent);
 }
@@ -3887,6 +4076,12 @@ function suspiciousPracticeOcr(text, expectedCharacters) {
   return expectedCharacters >= 4 && (compact.length < Math.max(2, Math.floor(expectedCharacters * 0.35)) || compact.length > expectedCharacters * 4);
 }
 
+function normalizePracticeOcrText(text) {
+  // Each Tian-grid cell represents one character. OCR may return one character
+  // per line, so restore the manuscript's left-to-right cell order.
+  return String(text || "").replace(/\s+/gu, "").trim();
+}
+
 function confirmRecognizedPracticeText(recognizedText, manuscriptBlob, expectedRevision) {
   return new Promise((resolve) => {
     const dialog = document.createElement("dialog");
@@ -4004,14 +4199,15 @@ async function assessPracticeHandwriting() {
       } });
       setAiWork(false);
       ownsAiWork = false;
-      if (suspiciousPracticeOcr(recognition.recognizedText, draft.cells.length)) throw new Error("OCR识别结果异常，已停止内容评价；请重新识别手写稿");
-      confirmedText = await confirmRecognizedPracticeText(recognition.recognizedText || "", manuscriptBlob, draft.revision);
+      const normalizedRecognizedText = normalizePracticeOcrText(recognition.recognizedText);
+      if (suspiciousPracticeOcr(normalizedRecognizedText, draft.cells.length)) throw new Error("OCR识别结果异常，已停止内容评价；请重新识别手写稿");
+      confirmedText = await confirmRecognizedPracticeText(normalizedRecognizedText, manuscriptBlob, draft.revision);
       if (!confirmedText) {
         draft.assessment = { status: "idle", result: null, message: "手写草稿已保留，尚未生成AI评价" };
         refreshPracticeWritingPanel();
         return;
       }
-      draft.ocrText = recognition.recognizedText || "";
+      draft.ocrText = normalizedRecognizedText;
       draft.confirmedText = confirmedText;
       draft.confirmedRevision = Math.max(1, Number(draft.revision || 1));
     }
@@ -4102,6 +4298,18 @@ async function assessPracticeKeyboard() {
   renderPracticeUnit(item, currentIndex());
 }
 
+function submitLesson5Practice() {
+  const item = currentItem();
+  if (LESSON_ID !== "zjzh-1-5") return;
+  const hasAnswer = Boolean(String(state.answers[item.id] || "").trim()) || Object.keys(state.answers).some((key) => key.startsWith(`${item.id}:`) && String(state.answers[key] || "").trim());
+  if (!hasAnswer) return showToast("请先完成当前小题 / Please answer this question first");
+  state.submitted[item.id] = true;
+  localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+  localStorage.setItem(storageKeys.practiceSubmitted, JSON.stringify(state.submitted));
+  renderPracticeUnit(item, currentIndex());
+  bilingualizeButtons(elements.unitContent);
+}
+
 function handleCommand(command) {
   if (command === "check-interactive") {
     checkInteractivePractice();
@@ -4130,6 +4338,8 @@ function handleCommand(command) {
     toggleWordStatus(command);
   } else if (command === "submit-answer") {
     submitPractice();
+  } else if (command === "lesson5-submit") {
+    submitLesson5Practice();
   } else if (command === "submit-cloze") {
     submitCloze();
   } else if (command === "reset-cloze") {
@@ -4138,6 +4348,12 @@ function handleCommand(command) {
     const item = currentItem();
     if (item.unitType === "practiceActivity") {
       clearPracticeActivity(item);
+    } else if (LESSON_ID === "zjzh-1-5" && LESSON5_CUSTOM_PRACTICE_TYPES.has(item.type)) {
+      Object.keys(state.answers).filter((key) => key === item.id || key.startsWith(`${item.id}:`)).forEach((key) => delete state.answers[key]);
+      delete state.submitted[item.id];
+      localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+      localStorage.setItem(storageKeys.practiceSubmitted, JSON.stringify(state.submitted));
+      renderPracticeUnit(item, currentIndex());
     } else {
       structuredFillKeys(item).forEach((key) => delete state.answers[key]);
       state.answers[item.id] = "";
@@ -4164,6 +4380,23 @@ function handleCommand(command) {
   } else if (command === "cancel-handwriting-edit") {
     activeWritingDraft().selectedCell = null;
     refreshPracticeWritingPanel();
+  } else if (command === "cancel-handwriting-insert") {
+    activeWritingDraft().insertAt = null;
+    refreshPracticeWritingPanel();
+  } else if (command === "edit-selected-handwriting") {
+    activeWritingDraft().insertAt = null;
+    clearHandwritingCanvas();
+    refreshPracticeWritingPanel();
+  } else if (command === "insert-handwriting-before" || command === "insert-handwriting-after") {
+    const draft = activeWritingDraft();
+    if (draft.selectedCell !== null) {
+      draft.insertAt = draft.selectedCell + (command === "insert-handwriting-after" ? 1 : 0);
+      draft.selectedCell = null;
+      clearHandwritingCanvas();
+      refreshPracticeWritingPanel();
+    }
+  } else if (command === "delete-selected-handwriting") {
+    if (activeWritingDraft().selectedCell !== null) removeHandwritingCell();
   } else if (command === "previous-handwriting-page" || command === "next-handwriting-page") {
     const draft = activeWritingDraft();
     const direction = command === "next-handwriting-page" ? 1 : -1;
@@ -4215,6 +4448,49 @@ function bindEvents() {
   elements.previous.addEventListener("click", () => moveUnit(-1));
   elements.next.addEventListener("click", () => moveUnit(1));
   elements.unitContent.addEventListener("click", (event) => {
+    const lesson5UnitIndex = event.target.closest("[data-lesson5-unit-index]")?.dataset.lesson5UnitIndex;
+    if (lesson5UnitIndex !== undefined) {
+      stopAudio();
+      closeAssistWindow();
+      state.indices.practice = Number(lesson5UnitIndex);
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const lesson5DialogueStep = event.target.closest("[data-lesson5-dialogue-step]")?.dataset.lesson5DialogueStep;
+    if (lesson5DialogueStep !== undefined) {
+      const item = currentItem();
+      state.activityStepIndex[item.id] = Number(lesson5DialogueStep);
+      renderPracticeUnit(item, currentIndex());
+      return;
+    }
+    const lesson5SetField = event.target.closest("[data-lesson5-set-field]")?.dataset.lesson5SetField;
+    if (lesson5SetField !== undefined) {
+      const control = event.target.closest("[data-lesson5-set-field]");
+      const item = currentItem();
+      state.answers[`${item.id}:${lesson5SetField}`] = control.dataset.lesson5SetValue || "";
+      delete state.submitted[item.id];
+      localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+      renderPracticeUnit(item, currentIndex());
+      return;
+    }
+    const lesson5Choice = event.target.closest("[data-lesson5-choice]")?.dataset.lesson5Choice;
+    if (lesson5Choice !== undefined) {
+      const item = currentItem();
+      const preferredField = item.type === "scenarioTableSentenceBuilder" ? "sentence" : "answer";
+      const key = preferredField === "answer" ? item.id : `${item.id}:${preferredField}`;
+      state.answers[key] = item.type === "scenarioTableSentenceBuilder" ? `${state.answers[key] || ""}${lesson5Choice}` : lesson5Choice;
+      delete state.submitted[item.id];
+      localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+      renderPracticeUnit(item, currentIndex());
+      return;
+    }
+    const lesson5WordPreview = event.target.closest("[data-lesson5-word-preview]")?.dataset.lesson5WordPreview;
+    if (lesson5WordPreview !== undefined) {
+      const note = elements.unitContent.querySelector("[data-lesson5-word-note]");
+      if (note) note.innerHTML = `<strong>${escapeHtml(lesson5WordPreview)}</strong>　可进入母语辅助查看词义；进入下一页后在语境中选择使用。`;
+      return;
+    }
     const launcherDisplay = event.target.closest("[data-launcher-paragraph-display]")?.dataset.launcherParagraphDisplay;
     if (launcherDisplay) {
       toggleParagraphDisplay(launcherDisplay);
@@ -4301,6 +4577,15 @@ function bindEvents() {
     if (command) handleCommand(command);
   });
   elements.unitContent.addEventListener("input", (event) => {
+    const lesson5Field = event.target.dataset.lesson5Field;
+    if (lesson5Field) {
+      const item = currentItem();
+      const key = lesson5Field === "answer" ? item.id : `${item.id}:${lesson5Field}`;
+      state.answers[key] = event.target.value;
+      delete state.submitted[item.id];
+      localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+      return;
+    }
     const activityInput = event.target.dataset.activityInput;
     if (activityInput) {
       state.answers[activityInput] = event.target.value;
@@ -4333,6 +4618,31 @@ function bindEvents() {
     if (!interactiveKey) return;
     state.answers[`${currentItem().id}:${interactiveKey}`] = event.target.value;
     localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+  });
+  elements.unitContent.addEventListener("dragstart", (event) => {
+    const choice = event.target.closest("[data-lesson5-choice]")?.dataset.lesson5Choice;
+    if (choice === undefined || !event.dataTransfer) return;
+    event.dataTransfer.setData("text/plain", choice);
+    event.dataTransfer.effectAllowed = "copy";
+  });
+  elements.unitContent.addEventListener("dragover", (event) => {
+    if (!event.target.closest("[data-lesson5-drop-target]")) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  });
+  elements.unitContent.addEventListener("drop", (event) => {
+    const target = event.target.closest("[data-lesson5-drop-target]");
+    if (!target || !event.dataTransfer) return;
+    event.preventDefault();
+    const value = event.dataTransfer.getData("text/plain");
+    if (!value) return;
+    const item = currentItem();
+    const field = target.dataset.lesson5Field || target.dataset.lesson5DropTarget || "answer";
+    const key = field === "answer" ? item.id : `${item.id}:${field}`;
+    state.answers[key] = target.tagName === "TEXTAREA" ? `${target.value || ""}${value}` : value;
+    delete state.submitted[item.id];
+    localStorage.setItem(storageKeys.practiceAnswers, JSON.stringify(state.answers));
+    renderPracticeUnit(item, currentIndex());
   });
   elements.assistTabs.addEventListener("click", (event) => {
     const tab = event.target.closest("[data-assist-tab]")?.dataset.assistTab;
@@ -4396,6 +4706,7 @@ function bindEvents() {
     if (manuscriptCell !== undefined) {
       const draft = activeWritingDraft();
       draft.selectedCell = Number(manuscriptCell);
+      draft.insertAt = null;
       refreshPracticeWritingPanel();
       return;
     }
