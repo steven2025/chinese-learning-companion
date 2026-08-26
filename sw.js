@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v87";
+const CACHE_VERSION = "diandian-chinese-v88";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -19,10 +19,10 @@ const APP_SHELL = [
   "./modules/learning-hub/index.html",
   "./modules/learning-hub/templates/student-import-template.xlsx",
   "./modules/learning-hub/styles.css?v=20260824-4",
-  "./modules/learning-hub/writing-zone.css?v=20260826-1",
+  "./modules/learning-hub/writing-zone.css?v=20260826-2",
   "./modules/learning-hub/practice-analytics.css?v=20260811-6",
   "./modules/learning-hub/app.js?v=20260824-3",
-  "./modules/learning-hub/writing-zone.js?v=20260826-1",
+  "./modules/learning-hub/writing-zone.js?v=20260826-2",
   "./modules/learning-hub/practice-analytics.js?v=20260823-2",
   "./modules/character-hit/index.html",
   "./modules/character-hit/styles.css?v=20260818-2",
@@ -34,9 +34,9 @@ const APP_SHELL = [
   "./modules/hanzi-challenge/index.html",
   "./modules/pinyin-generator/index.html",
   "./modules/digital-book/index.html",
-  "./modules/digital-book/styles.css?v=20260826-3",
+  "./modules/digital-book/styles.css?v=20260826-4",
   "./modules/digital-book/pronunciation.css?v=20260824-1",
-  "./modules/digital-book/app.js?v=20260826-4",
+  "./modules/digital-book/app.js?v=20260826-5",
   "./modules/digital-book/pronunciation.js?v=20260824-1"
 ];
 
