@@ -255,7 +255,7 @@ const buttonTranslations = new Map(Object.entries({
   "词语": "Vocabulary", "课文": "Text", "练习": "Practice",
   "中文沉浸": "Chinese only", "母语辅助": "Native-language aid", "双语对照": "Bilingual",
   "理解": "Meaning", "跟读": "Repeat", "跟写": "Writing", "小练习": "Quiz", "表达": "Express",
-  "理解题意": "Understand", "题目母语解释": "Native-language explanation", "思考方向": "Thinking", "相似实例": "Similar example", "母语解释": "Native-language help",
+  "理解题意": "Understand", "题目翻译": "Question translation", "AI帮我理解": "Explain with AI", "给我一点提示": "Give me a hint", "生成完整题目解释": "Explain the full question", "生成渐进提示": "Generate a hint", "查看相似实例": "View a similar example", "题目母语解释": "Native-language explanation", "思考方向": "Thinking", "相似实例": "Similar example", "母语解释": "Native-language help",
   "播放": "Play", "播放本句": "Play sentence", "进入跟读": "Start shadowing",
   "已掌握": "Mastered", "待复习": "Review", "收藏": "Save",
   "打开跟写练习": "Open writing", "重新演示": "Replay demo", "清空": "Clear",
@@ -2078,7 +2078,10 @@ function getAssistTabs() {
     return [{ key: "understand", label: "母语解释" }];
   }
   if (state.section === "practice") {
-    return [{ key: "understand", label: "题目母语解释" }];
+    return [
+      { key: "understand", label: "题目翻译" },
+      { key: "hint", label: "给我一点提示" },
+    ];
   }
   if (state.section === "vocabulary") {
     return [
@@ -2753,20 +2756,38 @@ function renderPracticeAssist() {
   if (state.assistTab === "understand") {
     elements.assistContent.innerHTML = `
       <div class="assist-block">
-        <span class="assist-label">题目母语解释</span>
-        <p class="translation-large">${escapeHtml(support.promptMeaning || "先确认题目要求你补充、改写还是解释什么内容。")}</p>
-      </div>`;
+        <span class="assist-label">已有母语说明 · ${escapeHtml(languageLabels[state.locale] || state.locale)}</span>
+        <p class="translation-large">${escapeHtml(support.promptMeaning || "暂时没有完整的本地母语说明，请使用下方 AI 完整解释。")}</p>
+      </div>
+      ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "prompt-meaning" }, {
+        idleLabel: "AI帮我理解",
+        idleText: "AI 将用所选母语解释题目要求、完整题干、对话或选项，并说明关键词和容易误解的地方；不会直接给出本题答案。",
+        buttonLabel: "生成完整题目解释",
+        readyLabel: "完整题目解释",
+      })}`;
     return;
   }
   if (state.assistTab === "hint") {
     elements.assistContent.innerHTML = `
       <div class="assist-block">
-        <span class="assist-label">思考方向</span>
+        <span class="assist-label">已有思考提示</span>
         <p>${escapeHtml(support.thinkingHint || "先从题干中的人物、时间、动作和结果寻找线索。")}</p>
         ${support.writingStructure?.length ? `<strong>参考结构</strong><ol>${support.writingStructure.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ol>` : ""}
         ${support.keywordGuidance?.length ? `<strong>关键词语</strong><div class="word-bank">${support.keywordGuidance.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}</div>` : ""}
       </div>
-      ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "thinking-hint" })}`;
+      ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "thinking-hint" }, {
+        idleLabel: "需要更多帮助时",
+        idleText: "AI 会先给方向和线索，不填写空格、不选择答案。",
+        buttonLabel: "生成渐进提示",
+        readyLabel: "渐进提示",
+      })}
+      ${renderDeepAssistPanel({ unitType: "practice", unitId: assistItem.id, assistType: "similar-example" }, {
+        idleLabel: "仍然不明白？",
+        idleText: "查看同一知识点、但人物和情境不同的例题，不会替你完成原题。",
+        buttonLabel: "查看相似实例",
+        readyLabel: "相似实例",
+        secondary: true,
+      })}`;
     return;
   }
   const example = support.similarExample;
@@ -2792,13 +2813,18 @@ function deepAssistKey(request) {
   return `${request.unitType}:${request.unitId}:${request.assistType}:${state.locale}`;
 }
 
-function renderDeepAssistPanel(request) {
+function renderDeepAssistPanel(request, options = {}) {
   if (!window.LearningApi?.isConfigured()) return "";
   const record = state.deepAssist[deepAssistKey(request)] || {};
-  if (record.status === "loading") return '<div class="assist-block deep-assist-block"><span class="assist-label">AI深度解释</span><p>正在生成并检查解释…</p></div>';
-  if (record.status === "error") return `<div class="assist-block deep-assist-block"><span class="assist-label">AI深度解释</span><p>${escapeHtml(record.message)}</p><button class="quiet-button" type="button" data-command="deep-assist" data-deep-request="${escapeAttribute(JSON.stringify(request))}">重新尝试</button></div>`;
-  if (record.status === "ready") return `<div class="assist-block deep-assist-block"><span class="assist-label">AI深度解释 · ${escapeHtml(languageLabels[state.locale] || state.locale)}</span>${renderDeepAssistValue(record.result)}</div>`;
-  return `<div class="assist-block deep-assist-block"><span class="assist-label">需要更深入时</span><p>查看本学习点的语境、结构、易错点或分步提示。首次生成后将保存并供后续学习者复用。</p><button class="command-button" type="button" data-command="deep-assist" data-deep-request="${escapeAttribute(JSON.stringify(request))}">AI深度解释</button></div>`;
+  const idleLabel = options.idleLabel || "需要更深入时";
+  const idleText = options.idleText || "查看本学习点的语境、结构、易错点或分步提示。首次生成后将保存并供后续学习者复用。";
+  const buttonLabel = options.buttonLabel || "AI深度解释";
+  const readyLabel = options.readyLabel || "AI深度解释";
+  const secondaryClass = options.secondary ? " is-secondary" : "";
+  if (record.status === "loading") return `<div class="assist-block deep-assist-block${secondaryClass}"><span class="assist-label">${escapeHtml(readyLabel)}</span>${mechanicalClock("deepAssist", true)}<p class="assist-wait-note">正在生成并检查内容，请稍候，不要重复点击。</p></div>`;
+  if (record.status === "error") return `<div class="assist-block deep-assist-block${secondaryClass}"><span class="assist-label">${escapeHtml(readyLabel)}</span><p>${escapeHtml(record.message)}</p><button class="quiet-button" type="button" data-command="deep-assist" data-deep-request="${escapeAttribute(JSON.stringify(request))}">重新尝试</button></div>`;
+  if (record.status === "ready") return `<div class="assist-block deep-assist-block${secondaryClass}"><span class="assist-label">${escapeHtml(readyLabel)} · ${escapeHtml(languageLabels[state.locale] || state.locale)}</span>${renderDeepAssistValue(record.result)}</div>`;
+  return `<div class="assist-block deep-assist-block${secondaryClass}"><span class="assist-label">${escapeHtml(idleLabel)}</span><p>${escapeHtml(idleText)}</p><button class="${options.secondary ? "quiet-button" : "command-button"}" type="button" data-command="deep-assist" data-deep-request="${escapeAttribute(JSON.stringify(request))}">${escapeHtml(buttonLabel)}</button></div>`;
 }
 
 function renderDeepAssistValue(value) {
@@ -2808,7 +2834,7 @@ function renderDeepAssistValue(value) {
 }
 
 function deepAssistLabel(key) {
-  return ({ summary: "简明说明", contextMeaning: "本课语境", collocations: "常用搭配", contrast: "辨析", errorWarning: "易错提醒", examples: "相似例句", translation: "母语解释", segments: "句子分块", grammarPoints: "语法要点", contextRole: "上下文作用", expressionTip: "表达建议", taskMeaning: "题目要求", vocabularyReminder: "参考词汇提醒", suggestedStructure: "参考结构", keyRequirements: "关键要求", protectedTerms: "目标词语", steps: "思考步骤", checklist: "检查清单", prompt: "相似题目", answer: "实例答案", explanation: "实例解析", differenceFromOriginal: "与原题区别", zh: "中文", meaning: "含义", structure: "结构", usageNotes: "使用提示" })[key] || key;
+  return ({ summary: "简明说明", contextMeaning: "本课语境", collocations: "常用搭配", contrast: "辨析", errorWarning: "易错提醒", examples: "相似例句", translation: "母语解释", segments: "句子分块", grammarPoints: "语法要点", contextRole: "上下文作用", expressionTip: "表达建议", taskMeaning: "题目要求", promptTranslation: "完整题干", optionTranslations: "选项或可选内容", languageNotes: "关键词与易错点", vocabularyReminder: "参考词汇提醒", suggestedStructure: "参考结构", keyRequirements: "关键要求", protectedTerms: "目标词语", steps: "思考步骤", checklist: "检查清单", prompt: "相似题目", answer: "实例答案", explanation: "实例解析", differenceFromOriginal: "与原题区别", zh: "中文", meaning: "含义", structure: "结构", usageNotes: "使用提示" })[key] || key;
 }
 
 async function requestDeepAssist(request) {

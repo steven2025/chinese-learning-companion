@@ -415,6 +415,9 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .assist-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
 .assist-block { min-width: 0; }
 .deep-assist-block { grid-column: 1 / -1; padding-top: 14px; border-top: 2px solid #d7e9e5; }
+.deep-assist-block.is-secondary { margin-top: 2px; border-top-style: dashed; background: #f8fbfa; }
+.deep-assist-block .ai-mechanical-clock { justify-content: flex-start; margin: 12px 0 8px; }
+.deep-assist-block .assist-wait-note { color: #687879; font-size: 13px; }
 .deep-assist-block > ul { margin: 8px 0 0; padding-left: 20px; }
 .deep-assist-block li { margin: 5px 0; line-height: 1.55; }
 .deep-assist-row { padding: 8px 0; border-bottom: 1px solid #e4ecea; }
