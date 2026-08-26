@@ -166,14 +166,23 @@
 .student-feedback-panel section { padding: 12px; border-left: 4px solid var(--teal); background: var(--teal-soft); }
 .student-feedback-panel h3 { margin: 0 0 7px; font-size: 13px; }
 .student-feedback-panel p { margin: 0; color: #405f60; font-size: 11px; line-height: 1.7; }
-.writing-ocr-dialog { width: min(760px, calc(100% - 24px)); max-width: none; max-height: calc(100vh - 24px); padding: 0; color: var(--ink); border: 0; border-radius: 9px; background: #fff; box-shadow: 0 22px 64px rgba(16,41,45,.28); }
+.writing-ocr-dialog { width: min(760px, calc(100% - 24px)); min-width: 320px; min-height: 120px; max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); padding: 0; color: var(--ink); border: 0; border-radius: 9px; background: #fff; box-shadow: 0 22px 64px rgba(16,41,45,.28); resize: both; overflow: auto; }
 .writing-ocr-dialog::backdrop { background: rgba(18,44,46,.62); }
+.writing-ocr-dialog.is-floating { position: fixed; inset: auto; margin: 0; z-index: 1100; }
+.writing-ocr-dialog.is-maximized { inset: 8px !important; width: auto !important; height: auto !important; max-width: none; max-height: none; resize: none; }
+.writing-ocr-dialog.is-minimized { inset: auto 12px 12px auto !important; width: min(360px, calc(100vw - 24px)) !important; min-width: 0; height: auto !important; min-height: 0; resize: none; overflow: hidden; }
+.writing-ocr-dialog.is-minimized .writing-ocr-body, .writing-ocr-dialog.is-minimized footer { display: none; }
+.writing-ocr-dialog.is-minimized .writing-ocr-window { padding: 10px 12px; }
+.writing-ocr-dialog.is-minimized h2 { font-size: 16px; }
+.writing-ocr-dialog.is-stale { outline: 4px solid var(--gold); }
 .writing-ocr-window { display: grid; gap: 14px; padding: 18px; }
-.writing-ocr-window > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.writing-ocr-window > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; cursor: move; user-select: none; }
 .writing-ocr-window > header span, .writing-ocr-window > header small { display: block; }
 .writing-ocr-window > header span { color: var(--coral); font-weight: 800; }
 .writing-ocr-window > header h2 { margin: 4px 0 0; font-size: 22px; }
-.writing-ocr-window > header button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: #edf3f1; font-size: 24px; }
+.writing-ocr-window > header .ocr-window-controls { display: flex; gap: 6px; }
+.writing-ocr-window > header button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: #edf3f1; font-size: 20px; }
+.writing-ocr-body { display: grid; gap: 14px; min-height: 0; }
 .writing-ocr-notice { margin: 0; padding: 10px 12px; color: #5b4a28; border-left: 4px solid var(--gold); background: #fff7df; line-height: 1.6; }
 .writing-ocr-notice small, .writing-ocr-check small { display: block; color: var(--muted); }
 .writing-ocr-original { padding: 9px 11px; border: 1px solid var(--line); border-radius: 7px; }
@@ -265,6 +274,8 @@
   .writing-review-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
+  .writing-ocr-dialog { width: calc(100% - 16px); min-width: 0; resize: none; }
+  .writing-ocr-dialog.is-floating:not(.is-minimized):not(.is-maximized) { left: 8px !important; top: 8px !important; max-height: calc(100vh - 16px); }
   .mobile-navigation { grid-template-columns: repeat(6, 1fr); }
   .writing-page-heading { min-height: 68px; }
   .writing-page-heading p { display: none; }

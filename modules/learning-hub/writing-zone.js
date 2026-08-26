@@ -434,7 +434,9 @@
         : essay.status === "returned" ? "教师已退回，请修改后进行AI预评" : `草稿已记录 · ${formatDate(essay.updatedAt)}`;
     const previewButton = el.canvasWindow.querySelector('[data-essay-action="ai-preview"]');
     const submitButton = el.canvasWindow.querySelector('[data-essay-action="submit"]');
-    if (previewButton) previewButton.innerHTML = `${essay.aiAssessment ? "再次AI预评" : "AI预评"} <small>${essay.aiAssessment ? "Review again" : "AI review"}</small>`;
+    if (previewButton) previewButton.innerHTML = currentReview
+      ? "查看已有AI预评 <small>View saved review</small>"
+      : `${essay.aiAssessment ? "重新AI预评" : "AI预评"} <small>${essay.aiAssessment ? "Review revised draft" : "AI review"}</small>`;
     if (submitButton) {
       submitButton.disabled = !currentReview;
       submitButton.title = currentReview ? "提交当前稿件给教师 / Submit to teacher" : "请先完成当前稿件的AI预评 / Complete AI review first";
@@ -656,24 +658,27 @@
     context.restore();
   }
 
-  async function combineCells(cells) {
-    const columns = 10;
-    const rows = Math.max(8, Math.ceil(cells.length / columns));
-    const size = 100;
+  async function combineCells(cells, options = {}) {
+    const cleanForOcr = options.cleanForOcr === true;
+    const columns = Math.max(1, Math.min(10, cells.length));
+    const rows = cleanForOcr ? Math.max(1, Math.ceil(cells.length / columns)) : Math.max(8, Math.ceil(cells.length / columns));
+    const size = cleanForOcr ? 132 : 100;
+    const gap = cleanForOcr ? 16 : 0;
     const canvas = document.createElement("canvas");
-    canvas.width = columns * size;
-    canvas.height = rows * size;
+    canvas.width = cleanForOcr ? gap + columns * (size + gap) : columns * size;
+    canvas.height = cleanForOcr ? gap + rows * (size + gap) : rows * size;
     const context = canvas.getContext("2d");
     context.fillStyle = "#fff";
     context.fillRect(0, 0, canvas.width, canvas.height);
-    for (let index = 0; index < rows * columns; index += 1) drawGrid(context, (index % columns) * size, Math.floor(index / columns) * size, size);
+    if (!cleanForOcr) for (let index = 0; index < rows * columns; index += 1) drawGrid(context, (index % columns) * size, Math.floor(index / columns) * size, size);
     for (let index = 0; index < cells.length; index += 1) {
       const cell = cells[index];
-      const x = (index % columns) * size;
-      const y = Math.floor(index / columns) * size;
+      const x = (cleanForOcr ? gap : 0) + (index % columns) * (size + gap);
+      const y = (cleanForOcr ? gap : 0) + Math.floor(index / columns) * (size + gap);
       if (cell.type === "image") {
         const image = await loadImage(cell.data);
-        context.drawImage(image, x + 4, y + 4, size - 8, size - 8);
+        const padding = cleanForOcr ? 3 : 4;
+        context.drawImage(image, x + padding, y + padding, size - padding * 2, size - padding * 2);
       } else {
         context.fillStyle = "#10292d";
         context.font = '700 58px "KaiTi", serif';
@@ -685,20 +690,29 @@
     return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
   }
 
-  function confirmRecognizedWriting(recognizedText, manuscriptBlob) {
+  function suspiciousWritingOcr(text, expectedCharacters) {
+    const normalized = String(text || "").trim();
+    if (!normalized) return true;
+    const arithmeticRows = normalized.split(/\r?\n/).filter((line) => /^\s*\d+\s*[-+−]\s*\d+\s*=\s*\d+\s*$/.test(line));
+    if (arithmeticRows.length >= 3) return true;
+    const compact = normalized.replace(/\s/g, "");
+    return expectedCharacters >= 4 && (compact.length < Math.max(2, Math.floor(expectedCharacters * 0.35)) || compact.length > expectedCharacters * 4);
+  }
+
+  function confirmRecognizedWriting(recognizedText, manuscriptBlob, expectedRevision) {
     return new Promise((resolve) => {
       const dialog = document.createElement("dialog");
       const imageUrl = URL.createObjectURL(manuscriptBlob);
       dialog.className = "writing-ocr-dialog";
       dialog.innerHTML = `<form method="dialog" class="writing-ocr-window">
-        <header><div><span>手写识别确认 <small>Recognition confirmation</small></span><h2>请核对识别文本</h2></div><button type="button" data-ocr-action="cancel" aria-label="关闭 / Close">×</button></header>
-        <p class="writing-ocr-notice">请只修正OCR识别错误。需要修改作文内容时，请返回手写稿修改后重新识别。<small>Please correct recognition errors only.</small></p>
+        <header data-ocr-drag-handle><div><span>手写识别确认 <small>Recognition confirmation</small></span><h2>请核对识别文本</h2></div><nav class="ocr-window-controls" aria-label="窗口控制 / Window controls"><button type="button" data-ocr-action="minimize" aria-label="缩小 / Minimize" title="缩小 / Minimize">—</button><button type="button" data-ocr-action="maximize" aria-label="放大 / Maximize" title="放大 / Maximize">□</button><button type="button" data-ocr-action="cancel" aria-label="关闭 / Close" title="关闭 / Close">×</button></nav></header>
+        <div class="writing-ocr-body"><p class="writing-ocr-notice">请只修正OCR识别错误。可以缩小或移动本窗口，对照手写稿修改；原稿一旦改变，需要重新识别。<small>Please correct recognition errors only. You may move or minimize this window while checking the manuscript.</small></p>
         <details class="writing-ocr-original"><summary>查看手写原稿 <small>View handwriting</small></summary><img src="${imageUrl}" alt="手写作文原稿"></details>
         <label class="writing-ocr-editor"><span>识别文本 <small>Recognized text</small></span><textarea rows="12" data-ocr-text>${safe(recognizedText)}</textarea></label>
-        <label class="writing-ocr-check"><input type="checkbox" data-ocr-confirm> <span>我已核对，以上文本与我的手写内容一致。<small>I have checked that the text matches my handwriting.</small></span></label>
+        <label class="writing-ocr-check"><input type="checkbox" data-ocr-confirm> <span>我已核对，以上文本与我的手写内容一致。<small>I have checked that the text matches my handwriting.</small></span></label></div>
         <footer><button class="quiet-button" type="button" data-ocr-action="cancel">返回修改 <small>Back to edit</small></button><button class="primary-button" type="button" data-ocr-action="confirm">确认并获取AI评价 <small>Confirm and review</small></button></footer>
       </form>`;
-      document.body.appendChild(dialog);
+      (el.canvasDialog || document.body).appendChild(dialog);
       let settled = false;
       const finish = (value) => {
         if (settled) return;
@@ -712,14 +726,51 @@
       dialog.addEventListener("click", (event) => {
         const action = event.target.closest("[data-ocr-action]")?.dataset.ocrAction;
         if (action === "cancel") return finish(null);
+        if (action === "minimize") {
+          dialog.classList.toggle("is-minimized");
+          dialog.classList.remove("is-maximized");
+          event.target.textContent = dialog.classList.contains("is-minimized") ? "▣" : "—";
+          event.target.title = dialog.classList.contains("is-minimized") ? "恢复 / Restore" : "缩小 / Minimize";
+          return;
+        }
+        if (action === "maximize") {
+          dialog.classList.toggle("is-maximized");
+          dialog.classList.remove("is-minimized");
+          event.target.textContent = dialog.classList.contains("is-maximized") ? "❐" : "□";
+          event.target.title = dialog.classList.contains("is-maximized") ? "恢复 / Restore" : "放大 / Maximize";
+          return;
+        }
         if (action !== "confirm") return;
+        if (Number(currentEssay()?.draftRevision || 1) !== Number(expectedRevision || 1)) {
+          dialog.classList.add("is-stale");
+          return showToast("手写原稿已经修改，请关闭本窗口后重新识别");
+        }
         const text = dialog.querySelector("[data-ocr-text]").value.trim();
         const checked = dialog.querySelector("[data-ocr-confirm]").checked;
         if (!text) return showToast("请先核对识别文本");
         if (!checked) return showToast("请确认文本与手写内容一致");
         finish(text);
       });
-      openDialog(dialog);
+      if (typeof dialog.show === "function") dialog.show();
+      else dialog.setAttribute("open", "");
+      dialog.classList.add("is-floating");
+      const rect = dialog.getBoundingClientRect();
+      dialog.style.left = `${Math.max(12, (window.innerWidth - rect.width) / 2)}px`;
+      dialog.style.top = `${Math.max(12, (window.innerHeight - rect.height) / 2)}px`;
+      const dragHandle = dialog.querySelector("[data-ocr-drag-handle]");
+      let drag = null;
+      dragHandle?.addEventListener("pointerdown", (event) => {
+        if (event.target.closest("button") || window.innerWidth <= 700 || dialog.classList.contains("is-maximized")) return;
+        const current = dialog.getBoundingClientRect();
+        drag = { id: event.pointerId, x: event.clientX - current.left, y: event.clientY - current.top };
+        dragHandle.setPointerCapture(event.pointerId);
+      });
+      dragHandle?.addEventListener("pointermove", (event) => {
+        if (!drag || drag.id !== event.pointerId) return;
+        dialog.style.left = `${Math.max(0, Math.min(window.innerWidth - 220, event.clientX - drag.x))}px`;
+        dialog.style.top = `${Math.max(0, Math.min(window.innerHeight - 64, event.clientY - drag.y))}px`;
+      });
+      ["pointerup", "pointercancel"].forEach((name) => dragHandle?.addEventListener(name, () => { drag = null; }));
       dialog.querySelector("[data-ocr-text]")?.focus();
     });
   }
@@ -759,16 +810,24 @@
       return;
     }
     if (!cloudReady()) return showToast("请先登录云服务，再进行AI预评");
+    if (hasCurrentAiReview(essay)) {
+      showToast("本稿已经完成识别和AI预评，正在使用已有结果");
+      renderManuscript();
+      return;
+    }
     essay.updatedAt = new Date().toISOString();
     setAiWorking(true, "正在生成作文图片");
     try {
-      const blob = await combineCells(essay.cells);
+      const [manuscriptBlob, ocrBlob] = await Promise.all([
+        combineCells(essay.cells),
+        combineCells(essay.cells, { cleanForOcr: true }),
+      ]);
       setAiWorking(true, "正在保存作文草稿");
       await uploadAndSaveDraft(essay);
       let confirmedText = Number(essay.confirmedRevision || 0) === Number(essay.draftRevision || 1) ? String(essay.confirmedText || "").trim() : "";
       if (!confirmedText) {
         setAiWorking(true, "正在识别手写全文");
-        const recognition = await window.LearningApi.assessArtifact(blob, {
+        const recognition = await window.LearningApi.assessArtifact(ocrBlob, {
           kind: "handwriting",
           artifactId: uid("free-writing-ocr"),
           lessonId: "writing-zone",
@@ -779,7 +838,8 @@
           metrics: { ocrOnly: true, characterCount: wordCount(essay) },
         }, { onProgress: (phase) => setAiWorking(true, phase === "uploading" ? "正在上传手写稿" : phase === "assessing" || phase === "advising" ? "正在识别手写全文" : "正在准备OCR识别") });
         setAiWorking(false);
-        confirmedText = await confirmRecognizedWriting(recognition.recognizedText || "", blob);
+        if (suspiciousWritingOcr(recognition.recognizedText, wordCount(essay))) throw new Error("OCR识别结果异常，已停止内容评价；请重新识别手写稿");
+        confirmedText = await confirmRecognizedWriting(recognition.recognizedText || "", manuscriptBlob, essay.draftRevision);
         if (!confirmedText) {
           showToast("已保留手写草稿，尚未生成AI评价");
           return;
