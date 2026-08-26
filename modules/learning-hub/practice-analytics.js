@@ -9,6 +9,7 @@
     "zjzh-1-2": "第2课 · 和时间赛跑",
     "zjzh-1-3": "第3课 · 租房那些事",
     "zjzh-1-4": "第4课 · 老舍小时候的故事",
+    "zjzh-1-5": "第5课 · 我在中国学规矩",
   };
   const elements = {
     panel: document.querySelector("#teacherPracticePanel"),

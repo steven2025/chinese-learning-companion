@@ -79,9 +79,9 @@ const learningBooks = Object.freeze({
   },
   "intermediate-comprehensive-1": {
     lessonPrefix: "zjzh-1",
-    lessons: ["你咋不早说", "和时间赛跑", "租房那些事", "老舍小时候的故事", "第5课", "第6课", "第7课", "第8课", "第9课", "第10课", "第11课", "第12课", "第13课", "第14课"],
-    available: 4,
-    countLabel: "共14课 · 已开放4课",
+    lessons: ["你咋不早说", "和时间赛跑", "租房那些事", "老舍小时候的故事", "我在中国学规矩", "第6课", "第7课", "第8课", "第9课", "第10课", "第11课", "第12课", "第13课", "第14课"],
+    available: 5,
+    countLabel: "共14课 · 已开放5课",
     contentLabel: "词汇、课文、练习",
     cover: "中级<br>综合Ⅰ",
   },
