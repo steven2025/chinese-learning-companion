@@ -2002,14 +2002,23 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
   .word-side-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .word-side-tools .assist-action { min-width: 0; }
 }
-.practice-ocr-dialog { width: min(760px, calc(100% - 24px)); max-width: none; max-height: calc(100vh - 24px); padding: 0; color: #173d3d; border: 0; border-radius: 14px; background: #fff; box-shadow: 0 22px 64px rgba(16,41,45,.28); }
+.practice-ocr-dialog { width: min(760px, calc(100% - 24px)); min-width: 320px; min-height: 120px; max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); padding: 0; color: #173d3d; border: 0; border-radius: 14px; background: #fff; box-shadow: 0 22px 64px rgba(16,41,45,.28); resize: both; overflow: auto; }
 .practice-ocr-dialog::backdrop { background: rgba(18,44,46,.62); }
+.practice-ocr-dialog.is-floating { position: fixed; inset: auto; margin: 0; z-index: 1100; }
+.practice-ocr-dialog.is-maximized { inset: 8px !important; width: auto !important; height: auto !important; max-width: none; max-height: none; resize: none; }
+.practice-ocr-dialog.is-minimized { inset: auto 12px 12px auto !important; width: min(360px, calc(100vw - 24px)) !important; min-width: 0; height: auto !important; min-height: 0; resize: none; overflow: hidden; }
+.practice-ocr-dialog.is-minimized .practice-ocr-body, .practice-ocr-dialog.is-minimized footer { display: none; }
+.practice-ocr-dialog.is-minimized .practice-ocr-window { padding: 10px 12px; }
+.practice-ocr-dialog.is-minimized h2 { font-size: 16px; }
+.practice-ocr-dialog.is-stale { outline: 4px solid #d9a019; }
 .practice-ocr-window { display: grid; gap: 14px; padding: 18px; }
-.practice-ocr-window > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.practice-ocr-window > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; cursor: move; user-select: none; }
 .practice-ocr-window > header span, .practice-ocr-window > header small { display: block; }
 .practice-ocr-window > header span { color: #db513b; font-weight: 800; }
 .practice-ocr-window > header h2 { margin: 4px 0 0; font-size: 22px; }
-.practice-ocr-window > header button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: #edf3f1; font-size: 24px; cursor: pointer; }
+.practice-ocr-window > header .ocr-window-controls { display: flex; gap: 6px; }
+.practice-ocr-window > header button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: #edf3f1; font-size: 20px; cursor: pointer; }
+.practice-ocr-body { display: grid; gap: 14px; min-height: 0; }
 .practice-ocr-notice { margin: 0; padding: 10px 12px; color: #5b4a28; border-left: 4px solid #b87a00; background: #fff7df; line-height: 1.6; }
 .practice-ocr-notice small, .practice-ocr-check small { display: block; color: #657b7c; }
 .practice-ocr-original { padding: 10px 12px; border: 1px solid #d7e2df; border-radius: 10px; }
@@ -2025,6 +2034,8 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
 .practice-ocr-window > footer small { display: block; }
 
 @media (max-width: 640px) {
+  .practice-ocr-dialog { width: calc(100% - 16px); min-width: 0; resize: none; }
+  .practice-ocr-dialog.is-floating:not(.is-minimized):not(.is-maximized) { left: 8px !important; top: 8px !important; max-height: calc(100vh - 16px); }
   .practice-ocr-window { padding: 14px; }
   .practice-ocr-window > header h2 { font-size: 19px; }
   .practice-ocr-editor textarea { min-height: 150px; font-size: 17px; }

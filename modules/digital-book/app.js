@@ -238,6 +238,7 @@ const assessmentPhaseLabels = {
   reviewingWriting: ["AI 写作评价中", "Reviewing writing"],
   reviewingHandwriting: ["AI 书写评价中", "Reviewing handwriting"],
   reviewingHandwrittenEssay: ["手写识别与写作评价中", "Recognizing and reviewing handwriting"],
+  recognizingHandwriting: ["手写OCR识别中", "Recognizing handwriting"],
   deepAssist: ["AI 深度解释中", "Preparing AI explanation"],
   advising: ["正在生成母语建议", "Preparing feedback"],
   saving: ["正在保存结果", "Saving results"],
@@ -3849,40 +3850,54 @@ async function assessWordWriting() {
   initializeWordWritingCharacter();
 }
 
-async function combineHandwritingCells(cells) {
-  const columns = 10;
-  const rows = Math.max(8, Math.ceil(cells.length / columns));
-  const cellSize = 180;
+async function combineHandwritingCells(cells, options = {}) {
+  const cleanForOcr = options.cleanForOcr === true;
+  const columns = Math.max(1, Math.min(10, cells.length));
+  const rows = cleanForOcr ? Math.max(1, Math.ceil(cells.length / columns)) : Math.max(8, Math.ceil(cells.length / columns));
+  const cellSize = cleanForOcr ? 150 : 180;
+  const gap = cleanForOcr ? 18 : 0;
   const canvas = document.createElement("canvas");
-  canvas.width = Math.max(600, columns * cellSize);
-  canvas.height = Math.max(800, rows * cellSize);
+  canvas.width = cleanForOcr ? gap + columns * (cellSize + gap) : Math.max(600, columns * cellSize);
+  canvas.height = cleanForOcr ? gap + rows * (cellSize + gap) : Math.max(800, rows * cellSize);
   const context = canvas.getContext("2d");
   context.fillStyle = "#fff";
   context.fillRect(0, 0, canvas.width, canvas.height);
   const images = await Promise.all(cells.map(loadWritingImage));
-  const left = Math.floor((canvas.width - columns * cellSize) / 2);
-  for (let index = 0; index < rows * columns; index += 1) {
-    drawTianGrid(context, left + (index % columns) * cellSize, Math.floor(index / columns) * cellSize, cellSize);
+  const left = cleanForOcr ? gap : Math.floor((canvas.width - columns * cellSize) / 2);
+  if (!cleanForOcr) {
+    for (let index = 0; index < rows * columns; index += 1) {
+      drawTianGrid(context, left + (index % columns) * cellSize, Math.floor(index / columns) * cellSize, cellSize);
+    }
   }
   images.forEach((image, index) => {
-    const x = left + (index % columns) * cellSize;
-    const y = Math.floor(index / columns) * cellSize;
-    context.drawImage(image, x, y, cellSize, cellSize);
+    const x = left + (index % columns) * (cellSize + gap);
+    const y = (cleanForOcr ? gap : 0) + Math.floor(index / columns) * (cellSize + gap);
+    const padding = cleanForOcr ? 5 : 0;
+    context.drawImage(image, x + padding, y + padding, cellSize - padding * 2, cellSize - padding * 2);
   });
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
 }
 
-function confirmRecognizedPracticeText(recognizedText, manuscriptBlob) {
+function suspiciousPracticeOcr(text, expectedCharacters) {
+  const normalized = String(text || "").trim();
+  if (!normalized) return true;
+  const arithmeticRows = normalized.split(/\r?\n/).filter((line) => /^\s*\d+\s*[-+−]\s*\d+\s*=\s*\d+\s*$/.test(line));
+  if (arithmeticRows.length >= 3) return true;
+  const compact = normalized.replace(/\s/g, "");
+  return expectedCharacters >= 4 && (compact.length < Math.max(2, Math.floor(expectedCharacters * 0.35)) || compact.length > expectedCharacters * 4);
+}
+
+function confirmRecognizedPracticeText(recognizedText, manuscriptBlob, expectedRevision) {
   return new Promise((resolve) => {
     const dialog = document.createElement("dialog");
     const imageUrl = URL.createObjectURL(manuscriptBlob);
     dialog.className = "practice-ocr-dialog";
     dialog.innerHTML = `<form method="dialog" class="practice-ocr-window">
-      <header><div><span>手写识别确认 <small>Recognition confirmation</small></span><h2>请核对识别文本</h2></div><button type="button" data-ocr-action="cancel" aria-label="关闭 / Close">×</button></header>
-      <p class="practice-ocr-notice">请只修正OCR识别错误。需要修改答案内容时，请返回田字格修改后重新识别。<small>Please correct recognition errors only. Return to the grid if you need to revise your answer.</small></p>
+      <header data-ocr-drag-handle><div><span>手写识别确认 <small>Recognition confirmation</small></span><h2>请核对识别文本</h2></div><nav class="ocr-window-controls" aria-label="窗口控制 / Window controls"><button type="button" data-ocr-action="minimize" aria-label="缩小 / Minimize" title="缩小 / Minimize">—</button><button type="button" data-ocr-action="maximize" aria-label="放大 / Maximize" title="放大 / Maximize">□</button><button type="button" data-ocr-action="cancel" aria-label="关闭 / Close" title="关闭 / Close">×</button></nav></header>
+      <div class="practice-ocr-body"><p class="practice-ocr-notice">请只修正OCR识别错误。可以缩小或移动本窗口，对照田字格修改；原稿一旦改变，需要重新识别。<small>Please correct recognition errors only. You may move or minimize this window while checking the grid.</small></p>
       <details class="practice-ocr-original"><summary>查看手写原稿 <small>View handwriting</small></summary><img src="${imageUrl}" alt="手写答案原稿"></details>
       <label class="practice-ocr-editor"><span>识别文本 <small>Recognized text</small></span><textarea rows="10" data-ocr-text>${escapeHtml(recognizedText)}</textarea></label>
-      <label class="practice-ocr-check"><input type="checkbox" data-ocr-confirm> <span>我已核对，以上文本与我的手写内容一致。<small>I have checked that the text matches my handwriting.</small></span></label>
+      <label class="practice-ocr-check"><input type="checkbox" data-ocr-confirm> <span>我已核对，以上文本与我的手写内容一致。<small>I have checked that the text matches my handwriting.</small></span></label></div>
       <footer><button class="secondary-button" type="button" data-ocr-action="cancel">返回修改 <small>Back to edit</small></button><button class="primary-button" type="button" data-ocr-action="confirm">确认并获取AI评价 <small>Confirm and review</small></button></footer>
     </form>`;
     document.body.appendChild(dialog);
@@ -3899,14 +3914,50 @@ function confirmRecognizedPracticeText(recognizedText, manuscriptBlob) {
     dialog.addEventListener("click", (event) => {
       const action = event.target.closest("[data-ocr-action]")?.dataset.ocrAction;
       if (action === "cancel") return finish(null);
+      if (action === "minimize") {
+        dialog.classList.toggle("is-minimized");
+        dialog.classList.remove("is-maximized");
+        event.target.textContent = dialog.classList.contains("is-minimized") ? "▣" : "—";
+        event.target.title = dialog.classList.contains("is-minimized") ? "恢复 / Restore" : "缩小 / Minimize";
+        return;
+      }
+      if (action === "maximize") {
+        dialog.classList.toggle("is-maximized");
+        dialog.classList.remove("is-minimized");
+        event.target.textContent = dialog.classList.contains("is-maximized") ? "❐" : "□";
+        event.target.title = dialog.classList.contains("is-maximized") ? "恢复 / Restore" : "放大 / Maximize";
+        return;
+      }
       if (action !== "confirm") return;
+      if (Number(activeWritingDraft().revision || 1) !== Number(expectedRevision || 1)) {
+        dialog.classList.add("is-stale");
+        return showToast("手写原稿已经修改，请关闭本窗口后重新识别");
+      }
       const text = dialog.querySelector("[data-ocr-text]").value.trim();
       if (!text) return showToast("请先核对识别文本");
       if (!dialog.querySelector("[data-ocr-confirm]").checked) return showToast("请确认文本与手写内容一致");
       finish(text);
     });
-    if (typeof dialog.showModal === "function") dialog.showModal();
+    if (typeof dialog.show === "function") dialog.show();
     else dialog.setAttribute("open", "");
+    dialog.classList.add("is-floating");
+    const rect = dialog.getBoundingClientRect();
+    dialog.style.left = `${Math.max(12, (window.innerWidth - rect.width) / 2)}px`;
+    dialog.style.top = `${Math.max(12, (window.innerHeight - rect.height) / 2)}px`;
+    const dragHandle = dialog.querySelector("[data-ocr-drag-handle]");
+    let drag = null;
+    dragHandle?.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("button") || window.innerWidth <= 700 || dialog.classList.contains("is-maximized")) return;
+      const current = dialog.getBoundingClientRect();
+      drag = { id: event.pointerId, x: event.clientX - current.left, y: event.clientY - current.top };
+      dragHandle.setPointerCapture(event.pointerId);
+    });
+    dragHandle?.addEventListener("pointermove", (event) => {
+      if (!drag || drag.id !== event.pointerId) return;
+      dialog.style.left = `${Math.max(0, Math.min(window.innerWidth - 220, event.clientX - drag.x))}px`;
+      dialog.style.top = `${Math.max(0, Math.min(window.innerHeight - 64, event.clientY - drag.y))}px`;
+    });
+    ["pointerup", "pointercancel"].forEach((name) => dragHandle?.addEventListener(name, () => { drag = null; }));
     dialog.querySelector("[data-ocr-text]")?.focus();
   });
 }
@@ -3919,15 +3970,24 @@ async function assessPracticeHandwriting() {
   try {
     requireAssessmentReady("practice-writing");
     if (!draft.saved || !draft.cells.length) throw new Error("请先保存手写草稿");
+    if (draft.assessment?.status === "ready" && Number(draft.confirmedRevision || 0) === Number(draft.revision || 1)) {
+      showToast("本稿已经完成识别和评价，正在使用已有结果");
+      refreshPracticeWritingPanel();
+      return;
+    }
     enforceWritingCooldown(`practice:${item.id}`);
     draft.assessment = { status: "working", phase: "preparing", result: null, message: "" };
     setAiWork(true, "preparing");
     ownsAiWork = true;
     refreshPracticeWritingPanel();
-    const [blob, layout] = await Promise.all([combineHandwritingCells(draft.cells), Promise.all(draft.cells.map(analyzeWritingImage))]);
+    const [manuscriptBlob, ocrBlob, layout] = await Promise.all([
+      combineHandwritingCells(draft.cells),
+      combineHandwritingCells(draft.cells, { cleanForOcr: true }),
+      Promise.all(draft.cells.map(analyzeWritingImage)),
+    ]);
     let confirmedText = Number(draft.confirmedRevision || 0) === Number(draft.revision || 1) ? String(draft.confirmedText || "").trim() : "";
     if (!confirmedText) {
-      const recognition = await window.LearningApi.assessArtifact(blob, {
+      const recognition = await window.LearningApi.assessArtifact(ocrBlob, {
         kind: "handwriting",
         artifactId: window.crypto?.randomUUID?.() || `practice-writing-ocr-${Date.now()}`,
         lessonId: LESSON_ID,
@@ -3937,14 +3997,15 @@ async function assessPracticeHandwriting() {
         locale: effectiveFeedbackLocale(),
         metrics: { ocrOnly: true, characterCount: draft.cells.length },
       }, { onProgress: (phase) => {
-        const displayPhase = phase === "uploading" ? "uploading" : "assessing";
+        const displayPhase = phase === "uploading" ? "uploading" : "recognizingHandwriting";
         draft.assessment.phase = displayPhase;
         setAiWork(true, displayPhase);
         refreshPracticeWritingPanel();
       } });
       setAiWork(false);
       ownsAiWork = false;
-      confirmedText = await confirmRecognizedPracticeText(recognition.recognizedText || "", blob);
+      if (suspiciousPracticeOcr(recognition.recognizedText, draft.cells.length)) throw new Error("OCR识别结果异常，已停止内容评价；请重新识别手写稿");
+      confirmedText = await confirmRecognizedPracticeText(recognition.recognizedText || "", manuscriptBlob, draft.revision);
       if (!confirmedText) {
         draft.assessment = { status: "idle", result: null, message: "手写草稿已保留，尚未生成AI评价" };
         refreshPracticeWritingPanel();
@@ -3954,8 +4015,8 @@ async function assessPracticeHandwriting() {
       draft.confirmedText = confirmedText;
       draft.confirmedRevision = Math.max(1, Number(draft.revision || 1));
     }
-    draft.assessment = { status: "working", phase: "assessing", result: null, message: "" };
-    setAiWork(true, "assessing");
+    draft.assessment = { status: "working", phase: "reviewingHandwrittenEssay", result: null, message: "" };
+    setAiWork(true, "reviewingHandwrittenEssay");
     ownsAiWork = true;
     refreshPracticeWritingPanel();
     const assistItem = scopeStep || item;
