@@ -321,7 +321,7 @@ button { cursor: pointer; }
   .record-row { grid-template-columns: 88px 1fr; }
   .record-row b { grid-column: 2; }
   .mobile-navigation { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; height: 62px; display: grid; grid-template-columns: repeat(4, 1fr); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--line); background: #fff; }
-  .mobile-navigation button { display: grid; place-items: center; align-content: center; gap: 2px; color: var(--muted); border: 0; background: transparent; }
+  .mobile-navigation button, .mobile-navigation a { display: grid; place-items: center; align-content: center; gap: 2px; color: var(--muted); border: 0; background: transparent; text-decoration: none; }
   .mobile-navigation span { font-size: 17px; }
   .mobile-navigation b { font-size: 10px; }
   .mobile-navigation button.active { color: var(--teal); }
