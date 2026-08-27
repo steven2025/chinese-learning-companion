@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07110f">
+  <title>点点老师 · 和老师对话</title>
+  <link rel="stylesheet" href="styles.css?v=20260827-1">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <a class="round" href="../learning-hub/" aria-label="返回学习中心">‹</a>
+      <div class="brand"><strong>点点老师</strong><span id="lessonLabel">为你准备中文对话</span></div>
+      <button class="round" id="transcriptToggle" type="button" aria-label="显示对话记录">记</button>
+    </header>
+    <section class="stage" aria-live="polite">
+      <div class="orb-wrap" id="teacherOrb" data-orb-theme="green"><div class="halo"></div><canvas aria-label="点点老师语音状态"></canvas></div>
+      <div class="status" id="status">准备开始</div>
+      <div class="prompt" id="prompt">登录学生账号后，点麦克风开始和老师对话。</div>
+      <div class="word-card" id="wordCard" hidden><div class="hanzi" id="hanzi"></div><div class="pinyin" id="pinyin"></div><div class="meaning" id="meaning"></div></div>
+      <section class="transcript" id="transcript" hidden><ol id="transcriptRows"></ol></section>
+    </section>
+    <footer class="controls">
+      <div class="quick"><button data-action="repeat">再说一遍</button><button data-action="slower">慢一点</button><button data-action="hint">提示</button></div>
+      <div class="main-actions"><button class="minor" id="keyboard" aria-label="文字输入">⌨</button><button class="mic" id="mic" aria-label="开始对话">●</button><button class="minor" id="end" aria-label="结束对话">×</button></div>
+      <div class="caption" id="caption">需要麦克风权限 · 对话音频实时传输，不写入前端</div>
+    </footer>
+  </main>
+  <dialog id="textDialog"><form method="dialog"><label>输入你想说的话<textarea id="textInput" maxlength="500"></textarea></label><div><button value="cancel">取消</button><button id="sendText" value="default">发送</button></div></form></dialog>
+  <script src="../../config.js?v=20260827-2"></script>
+  <script src="../shared/learning-api-client.js?v=20260827-1"></script>
+  <script src="../shared/voice-orb.js?v=20260801-1"></script>
+  <script src="app.js?v=20260827-1"></script>
+</body>
+</html>
