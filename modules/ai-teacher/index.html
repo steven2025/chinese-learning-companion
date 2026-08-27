@@ -7,6 +7,7 @@
   <title>点点老师 · 和老师对话</title>
   <link rel="stylesheet" href="styles.css?v=20260827-1">
   <style>.assist-options{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 16px;margin:10px 0 0;padding:8px 12px;border:1px solid rgba(206,255,238,.13);border-radius:12px;color:#9bb5ad;font-size:12px}.assist-options legend{padding:0 6px;color:#68f0c1;font-size:11px}.assist-options label{display:flex;align-items:center;gap:5px}.assist-options input{accent-color:#68f0c1}.hanzi{font-size:clamp(30px,7vw,48px);font-weight:800;letter-spacing:.08em;color:#f4fbf8;text-shadow:0 2px 12px rgba(104,240,193,.22)}.pinyin{font-size:16px;font-weight:700;letter-spacing:.05em}</style>
+  <style>.quick button small{margin-left:4px;font-size:10px;opacity:.8}.mic span{display:block;font-size:16px;font-weight:800;line-height:1.15}.mic span small{font-size:10px;opacity:.85}</style>
 </head>
 <body>
   <main class="app">
@@ -24,8 +25,8 @@
       <section class="transcript" id="transcript" hidden><ol id="transcriptRows"></ol></section>
     </section>
     <footer class="controls">
-      <div class="quick"><button data-action="repeat">再说一遍</button><button data-action="slower">慢一点</button><button data-action="hint">提示</button></div>
-      <div class="main-actions"><button class="minor" id="keyboard" aria-label="文字输入">⌨</button><button class="mic" id="mic" aria-label="开始对话">●</button><button class="minor" id="end" aria-label="结束对话">×</button></div>
+      <div class="quick"><button data-action="repeat">再说一遍 <small>Repeat</small></button><button data-action="slower">慢一点 <small>Slower</small></button><button data-action="hint">提示 <small>Hint</small></button></div>
+      <div class="main-actions"><button class="minor" id="keyboard" aria-label="文字输入 / Text input">⌨</button><button class="mic" id="mic" aria-label="开始对话 / Start conversation"><span id="micLabel">开始<br><small>Start</small></span></button><button class="minor" id="end" aria-label="结束对话 / End conversation">×</button></div>
       <div class="caption" id="caption">需要麦克风权限 · 对话音频实时传输，不写入前端</div>
     </footer>
   </main>
