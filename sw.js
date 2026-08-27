@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v98";
+const CACHE_VERSION = "diandian-chinese-v99";
 const APP_SHELL = [
   "./",
   "./index.html",
