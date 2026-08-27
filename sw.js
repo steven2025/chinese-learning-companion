@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v9";
+const CACHE_VERSION = "diandian-chinese-v96";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -15,11 +15,20 @@ const APP_SHELL = [
   "./icons/icon-512.png",
   "./icons/maskable-192.png",
   "./icons/maskable-512.png",
-  "./modules/shared/learning-api-client.js",
-  "./modules/shared/voice-orb.js",
+  "./modules/shared/learning-api-client.js?v=20260825-1",
+  "./modules/shared/voice-orb.js?v=20260801-1",
+  "./modules/ai-teacher/index.html",
+  "./modules/ai-teacher/styles.css?v=20260827-1",
+  "./modules/ai-teacher/app.js?v=20260827-1",
+  "./modules/shared/draggable.js?v=20260823-1",
   "./modules/learning-hub/index.html",
-  "./modules/learning-hub/styles.css",
-  "./modules/learning-hub/app.js",
+  "./modules/learning-hub/templates/student-import-template.xlsx",
+  "./modules/learning-hub/styles.css?v=20260824-4",
+  "./modules/learning-hub/writing-zone.css?v=20260826-2",
+  "./modules/learning-hub/practice-analytics.css?v=20260811-6",
+  "./modules/learning-hub/app.js?v=20260826-1",
+  "./modules/learning-hub/writing-zone.js?v=20260826-2",
+  "./modules/learning-hub/practice-analytics.js?v=20260826-1",
   "./modules/character-hit/index.html",
   "./modules/character-hit/styles.css",
   "./modules/character-hit/app.js",
@@ -32,10 +41,10 @@ const APP_SHELL = [
   "./modules/character-hit/assets/audio/victory.wav",
   "./data/games/character-hit/zjzh-1-1.json",
   "./modules/digital-book/index.html",
-  "./modules/digital-book/styles.css",
-  "./modules/digital-book/app.js",
-  "./modules/digital-book/book-data.js",
-  "./modules/digital-book/stroke-data.js"
+  "./modules/digital-book/styles.css?v=20260826-10",
+  "./modules/digital-book/pronunciation.css?v=20260824-1",
+  "./modules/digital-book/app.js?v=20260826-10",
+  "./modules/digital-book/pronunciation.js?v=20260824-1"
 ];
 
 self.addEventListener("install", event => {
