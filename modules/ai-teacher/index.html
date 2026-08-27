@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#07110f">
   <title>点点老师 · 和老师对话</title>
   <link rel="stylesheet" href="styles.css?v=20260827-1">
+  <style>.assist-options{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 16px;margin:10px 0 0;padding:8px 12px;border:1px solid rgba(206,255,238,.13);border-radius:12px;color:#9bb5ad;font-size:12px}.assist-options legend{padding:0 6px;color:#68f0c1;font-size:11px}.assist-options label{display:flex;align-items:center;gap:5px}.assist-options input{accent-color:#68f0c1}.hanzi{font-size:clamp(30px,7vw,48px);font-weight:800;letter-spacing:.08em;color:#f4fbf8;text-shadow:0 2px 12px rgba(104,240,193,.22)}.pinyin{font-size:16px;font-weight:700;letter-spacing:.05em}</style>
 </head>
 <body>
   <main class="app">
@@ -18,6 +19,7 @@
       <div class="orb-wrap" id="teacherOrb" data-orb-theme="green"><div class="halo"></div><canvas aria-label="点点老师语音状态"></canvas></div>
       <div class="status" id="status">准备开始</div>
       <div class="prompt" id="prompt">登录学生账号后，点麦克风开始和老师对话。</div>
+      <fieldset class="assist-options" aria-label="中文辅助选项"><legend>中文辅助 · Chinese support</legend><label><input type="checkbox" id="zhSupport"> 中文辅助 / Chinese help</label><label><input type="checkbox" id="pinyinSupport"> 汉字上方显示拼音 / Pinyin above characters</label></fieldset>
       <div class="word-card" id="wordCard" hidden><div class="hanzi" id="hanzi"></div><div class="pinyin" id="pinyin"></div><div class="meaning" id="meaning"></div></div>
       <section class="transcript" id="transcript" hidden><ol id="transcriptRows"></ol></section>
     </section>
