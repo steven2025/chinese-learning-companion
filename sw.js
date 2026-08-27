@@ -1,20 +1,25 @@
-const CACHE_VERSION = "diandian-chinese-v94";
+const CACHE_VERSION = "diandian-chinese-v96";
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./config.js",
   "./manifest.webmanifest",
-  "./config.js?v=20260823-1",
-  "./vendor/hanzi-writer.min.js?v=20260731-16",
-  "./vendor/xlsx.full.min.js",
-  "./icons/favicon-32.png",
-  "./icons/apple-touch-icon-180.png",
-  "./icons/icon-96.png",
+  "./vendor/hanzi-writer.min.js",
+  "./data/lessons/zjzh-1-1/vocabulary-audio.json",
+  "./data/lessons/zjzh-1-1/vocabulary-metadata.json",
+  "./data/lessons/zjzh-1-1/text-audio.json",
+  "./data/lessons/zjzh-1-1/book-pages.json",
+  "./data/lessons/zjzh-1-1/lesson-practice.json",
+  "./data/lessons/zjzh-1-1/practice-intro-translations.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/maskable-192.png",
   "./icons/maskable-512.png",
   "./modules/shared/learning-api-client.js?v=20260825-1",
   "./modules/shared/voice-orb.js?v=20260801-1",
+  "./modules/ai-teacher/index.html",
+  "./modules/ai-teacher/styles.css?v=20260827-1",
+  "./modules/ai-teacher/app.js?v=20260827-1",
   "./modules/shared/draggable.js?v=20260823-1",
   "./modules/learning-hub/index.html",
   "./modules/learning-hub/templates/student-import-template.xlsx",
@@ -25,14 +30,16 @@ const APP_SHELL = [
   "./modules/learning-hub/writing-zone.js?v=20260826-2",
   "./modules/learning-hub/practice-analytics.js?v=20260826-1",
   "./modules/character-hit/index.html",
-  "./modules/character-hit/styles.css?v=20260818-2",
-  "./modules/character-hit/app.js?v=20260818-3",
+  "./modules/character-hit/styles.css",
+  "./modules/character-hit/app.js",
   "./modules/character-hit/assets/scene.svg",
-  "./modules/word-link/index.html",
-  "./modules/word-link/styles.css?v=20260818-2",
-  "./modules/word-link/app.js?v=20260818-4",
-  "./modules/hanzi-challenge/index.html",
-  "./modules/pinyin-generator/index.html",
+  "./modules/character-hit/assets/audio/launch.wav",
+  "./modules/character-hit/assets/audio/correct.wav",
+  "./modules/character-hit/assets/audio/shatter.wav",
+  "./modules/character-hit/assets/audio/place.wav",
+  "./modules/character-hit/assets/audio/stage.wav",
+  "./modules/character-hit/assets/audio/victory.wav",
+  "./data/games/character-hit/zjzh-1-1.json",
   "./modules/digital-book/index.html",
   "./modules/digital-book/styles.css?v=20260826-10",
   "./modules/digital-book/pronunciation.css?v=20260824-1",
@@ -80,11 +87,6 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
-  const isAudio = /\.(mp3|m4a|wav)$/i.test(url.pathname);
-  if (request.headers.has("range") || isAudio) {
-    event.respondWith(fetch(request));
-    return;
-  }
   if (request.mode === "navigate") {
     event.respondWith(networkFirst(request));
     return;
