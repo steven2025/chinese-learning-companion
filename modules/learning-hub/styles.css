@@ -648,8 +648,8 @@ button { cursor: pointer; }
 }
 
 /* ---- bilingual button subtitles ---- */
-.primary-navigation button b small { display: block; font-size: 10px; font-weight: 650; color: #8aa1a3; }
-.primary-navigation button.active b small { color: #c3e2df; }
+.primary-navigation button b small, .primary-navigation a b small { display: block; font-size: 10px; font-weight: 650; color: #8aa1a3; }
+.primary-navigation button.active b small, .primary-navigation a.active b small { color: #c3e2df; }
 .mobile-navigation button b small { display: block; font-size: 8px; font-weight: 600; opacity: .8; }
 .logout-button b small { display: block; font-size: 9px; font-weight: 600; opacity: .8; }
 .auth-tabs button small { margin-left: 4px; font-size: 9px; font-weight: 650; opacity: .8; }
