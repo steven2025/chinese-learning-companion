@@ -2036,6 +2036,16 @@ function escapeHtml(value) {
 }
 
 document.addEventListener("click", (event) => {
+  const navToggle = event.target.closest("#navToggle");
+  if (navToggle) {
+    const shell = document.querySelector(".app-shell");
+    const collapsed = shell?.classList.toggle("nav-collapsed") || false;
+    navToggle.setAttribute("aria-expanded", String(!collapsed));
+    navToggle.setAttribute("aria-label", collapsed ? "展开导航 / Expand navigation" : "收起导航 / Collapse navigation");
+    navToggle.title = collapsed ? "展开导航 / Expand navigation" : "收起导航 / Collapse navigation";
+    navToggle.textContent = collapsed ? "☰" : "×";
+    return;
+  }
   if (event.target.closest("[data-pwa-install]")) { void requestAppInstall(); return; }
   if (event.target.closest("[data-pwa-refresh]")) { window.location.reload(); return; }
   if (event.target.closest("[data-pwa-dismiss]")) {

@@ -162,6 +162,7 @@ const state = {
   audioUrlPromises: {},
   audioMessage: "",
   audioMode: "single",
+  audioDockOpen: false,
   audioSegment: null,
   loopCurrent: false,
   mediaRecorder: null,
@@ -218,6 +219,8 @@ const elements = {
   audioTime: document.querySelector("#audioTime"),
   audioStatus: document.querySelector("#audioStatus"),
   audioLabel: document.querySelector("#audioLabel"),
+  audioDock: document.querySelector(".audio-dock"),
+  audioDockToggle: document.querySelector("#audioDockToggle"),
   speed: document.querySelector("#speedSelect"),
   assistTabs: document.querySelector("#assistTabs"),
   assistZone: document.querySelector(".assist-zone"),
@@ -3393,7 +3396,10 @@ function syncParagraphCueHighlight(time) {
 
 function updateAudioLabels() {
   const playable = Boolean(audioSourceForSection());
-  document.querySelector(".audio-dock").hidden = !playable;
+  elements.audioDockToggle.hidden = !playable;
+  elements.audioDock.hidden = !playable || !state.audioDockOpen;
+  elements.audioDockToggle.setAttribute("aria-expanded", String(Boolean(state.audioDockOpen)));
+  elements.audioDockToggle.classList.toggle("is-open", Boolean(state.audioDockOpen));
   if (!playable) return;
   const item = currentItem();
   const label =
@@ -4806,6 +4812,10 @@ function bindEvents() {
     if (state.aiWork.active) return;
     if (!elements.audio.paused) stopAudio();
     else void playCurrent("single");
+  });
+  elements.audioDockToggle.addEventListener("click", () => {
+    state.audioDockOpen = !state.audioDockOpen;
+    updateAudioLabels();
   });
   elements.continuous.addEventListener("click", () => {
     if (state.aiWork.active) return;

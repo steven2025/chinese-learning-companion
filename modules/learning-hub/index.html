@@ -8,13 +8,14 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260824-4">
+  <link rel="stylesheet" href="styles.css?v=20260828-1">
   <link rel="stylesheet" href="writing-zone.css?v=20260826-2">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
+      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="true" aria-controls="primarySidebar" aria-label="收起导航 / Collapse navigation" title="收起导航 / Collapse navigation">☰</button>
       <a class="brand" href="./" aria-label="点点汉语学习中心">
         <img src="../../icons/icon-96.png" alt="">
         <span><strong>点点汉语</strong><small>智能中文伴学平台</small></span>
@@ -39,7 +40,7 @@
       </button>
     </header>
 
-    <aside class="sidebar" aria-label="主导航">
+    <aside class="sidebar" id="primarySidebar" aria-label="主导航">
       <nav class="primary-navigation">
         <button class="active" type="button" data-view="home"><span aria-hidden="true">⌂</span><b>首页<small>Home</small></b></button>
         <button type="button" data-view="courses"><span aria-hidden="true">册</span><b>我的课程<small>My courses</small></b></button>
@@ -601,7 +602,7 @@
   <script src="../shared/learning-api-client.js?v=20260825-1"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260826-1"></script>
-  <script src="app.js?v=20260826-1" defer></script>
+  <script src="app.js?v=20260828-1" defer></script>
   <script src="writing-zone.js?v=20260826-2" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>

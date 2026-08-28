@@ -2373,3 +2373,36 @@ html.ai-working .audio-dock button, html.ai-working .voice-orb-button, html.ai-w
   .lesson5-word-family-map { grid-template-columns: 1fr; justify-items: center; padding: 18px; }
   .lesson5-word-family-map > div { justify-content: center; }
 }
+
+/* Compact audio control and stable side navigation. */
+.lesson-column { position: relative; }
+.audio-dock-toggle { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; align-self: start; padding: 7px 13px; color: var(--teal); border: 1px solid #a9c6c1; border-radius: 999px; background: #fff; box-shadow: 0 5px 14px rgba(23,49,48,.08); text-align: left; }
+.audio-dock-toggle > span:first-child { font-size: 19px; }
+.audio-dock-toggle strong, .audio-dock-toggle small { display: block; }
+.audio-dock-toggle strong { font-size: 12px; }
+.audio-dock-toggle small { margin-top: 1px; color: var(--muted); font-size: 9px; }
+.audio-dock-toggle > b { margin-left: 3px; font-size: 15px; transition: transform .18s ease; }
+.audio-dock-toggle.is-open > b { transform: rotate(180deg); }
+.audio-dock[hidden] { display: none !important; }
+.unit-shell { position: relative; }
+.unit-navigation { position: relative; min-height: 44px; }
+.unit-navigation button { min-width: 44px; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border-radius: 50%; }
+.unit-navigation .bilingual-button-label { display: none; }
+.unit-navigation .button-icon { font-size: 30px; line-height: 1; }
+.unit-navigation button:first-child { justify-self: start; }
+.unit-navigation button:last-child { justify-self: end; }
+@media (min-width: 901px) {
+  .unit-navigation { position: absolute; inset: 50% 0 auto; transform: translateY(-50%); pointer-events: none; margin: 0; }
+  .unit-navigation button, .unit-navigation strong { pointer-events: auto; }
+  .unit-navigation strong { position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); }
+  .unit-shell { padding-inline: 52px; }
+}
+@media (max-width: 900px) { .unit-navigation { margin-top: 12px; } }
+@media (max-width: 560px) { .audio-dock-toggle { width: 100%; } }
+
+@media (min-width: 901px) {
+  .unit-navigation { display: block; width: 100%; height: 0; }
+  .unit-navigation button:first-child { position: absolute; left: 0; top: 0; }
+  .unit-navigation button:last-child { position: absolute; right: 0; top: 0; }
+  .unit-navigation strong { top: 54px; }
+}
