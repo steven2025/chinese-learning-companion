@@ -305,7 +305,7 @@
 .pron-knowledge > header > span small { margin-left: 5px; }
 .pron-knowledge > header h2 { margin: 1px 0 0; font-size: 22px; letter-spacing: 0; }
 .pron-knowledge > header p { margin: 0; color: var(--pron-muted); font-size: 12px; }
-.pron-knowledge-copy { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 1180px; margin: 6px auto 0; border-top: 1px solid var(--pron-line); border-left: 1px solid var(--pron-line); }
+.pron-knowledge-copy { display: grid; grid-template-columns: minmax(0, 1fr); width: min(100%, 1180px); max-width: none; margin: 6px auto 0; border-top: 1px solid var(--pron-line); border-left: 1px solid var(--pron-line); }
 .pron-knowledge-copy section { position: relative; min-width: 0; padding: 4px 28px 4px 8px; border-right: 1px solid var(--pron-line); border-bottom: 1px solid var(--pron-line); }
 .pron-knowledge-copy p { margin: 0; line-height: 1.35; }
 .pron-knowledge-copy p.zh { font-size: 13px; font-weight: 750; }
@@ -982,6 +982,51 @@
   .pron-focus-content h2 { font-size: clamp(124px, 10vw, 150px); }
   .beginner-text-focus { min-height: clamp(250px, 32dvh, 330px); }
   .beginner-sentence-focus { min-height: clamp(270px, 34dvh, 350px); }
+}
+
+/* Keep the explanation together on wide screens and keep pronunciation actions
+   beside the large pinyin even when legacy grid rules are present. */
+@media (min-width: 901px) {
+  .pron-knowledge-copy section {
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pron-knowledge-copy section::-webkit-scrollbar { display: none; }
+  .pron-focus-stage > .pron-focus-actions {
+    position: absolute !important;
+    top: 50% !important;
+    left: calc(50% + 70px) !important;
+    right: auto !important;
+    z-index: 4;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch;
+    justify-content: center;
+    gap: 8px;
+    width: 148px;
+    margin: 0 !important;
+    padding: 0;
+    transform: translateY(-50%);
+  }
+  .pron-focus-stage > .pron-focus-actions .pron-action {
+    width: 148px !important;
+    min-width: 148px !important;
+    min-height: 52px;
+    padding: 6px 10px;
+    white-space: nowrap !important;
+    overflow: visible;
+  }
+  .pron-focus-stage > .pron-focus-actions .pron-action,
+  .pron-focus-stage > .pron-focus-actions .pron-action strong,
+  .pron-focus-stage > .pron-focus-actions .pron-action small,
+  .pron-focus-stage > .pron-focus-actions .bilingual-button-label {
+    white-space: nowrap !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .pron-knowledge-copy section { white-space: normal; overflow-x: visible; }
 }
 
 @media (min-width: 761px) and (max-width: 1440px) and (any-pointer: coarse) and (orientation: portrait) {
