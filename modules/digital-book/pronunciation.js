@@ -598,6 +598,20 @@
     }).join("")}</div>`;
   }
 
+  function renderKnowledgeParagraphs(unit) {
+    const paragraphs = (unit.paragraphs || []).filter((paragraph) => paragraph?.texts);
+    if (!paragraphs.length) return "";
+    // The explanatory recording is one continuous passage. Keep its text as one
+    // readable block while preserving every cue in its original playback order.
+    const cueIds = paragraphs.flatMap((paragraph) => paragraph.cueIds?.length ? paragraph.cueIds : paragraph.cueId ? [paragraph.cueId] : []);
+    const zhText = paragraphs.map((paragraph) => paragraph.texts["zh-CN"] || "").filter(Boolean).join(" ");
+    const nativeText = paragraphs.map((paragraph) => localize(paragraph.texts)).filter(Boolean).join(" ");
+    const hasLocaleText = paragraphs.some((paragraph) => Boolean(paragraph.texts[state.locale]));
+    const localeLabel = languageNames[state.locale] || "English";
+    const fallbackNote = state.locale !== "en" && !hasLocaleText ? ` <small class="pron-translation-fallback">（${escapeHtml(localeLabel)}暂无独立译文，显示英文 / English fallback）</small>` : "";
+    return `<div class="pron-knowledge-copy"><section class="pron-knowledge-explanation"><p class="zh">${escapeHtml(zhText)}</p><p class="translation"><span class="pron-translation-label">${escapeHtml(localeLabel)}:</span> ${escapeHtml(nativeText)}${fallbackNote}</p>${cueIds.length ? `<button type="button" data-pron-play="${escapeHtml(cueIds.join(","))}" aria-label="播放完整语音解释 / Play full explanation">▶</button>` : ""}</section></div>`;
+  }
+
   function renderKnowledge(unit) {
     const translationClass = state.assistMode === "bilingual" ? " bilingual" : "";
     const examples = unit.examples || [];
@@ -605,7 +619,7 @@
     return `${renderChapterNavigation(unit)}<article class="pron-knowledge${translationClass}">
       <header><span>语音知识 <small>Phonetic Notes</small></span><h2>${escapeHtml(localize(unit.title, "zh-CN"))}</h2><p>${escapeHtml(localize(unit.title, "en"))}</p></header>
       ${comparisonButtons(unit)}
-      ${unit.paragraphs ? `<div class="pron-knowledge-copy">${unit.paragraphs.map((paragraph) => `<section><p class="zh">${escapeHtml(paragraph.texts["zh-CN"] || "")}</p>${state.assistMode !== "immersion" ? `<p class="translation">${escapeHtml(localize(paragraph.texts))}</p>` : ""}${(paragraph.cueIds?.length || paragraph.cueId) ? `<button type="button" data-pron-play="${paragraph.cueIds?.length ? paragraph.cueIds.join(",") : paragraph.cueId}" aria-label="播放本段">▶</button>` : ""}</section>`).join("")}</div>` : ""}
+      ${renderKnowledgeParagraphs(unit)}
       ${examples.length ? `<div class="pron-example-grid">${examples.map((example) => `<section><h3>${escapeHtml(example.display)}</h3>${example.hanzi && example.hanzi !== example.display ? `<p class="pron-example-hanzi">${escapeHtml(example.hanzi)}</p>` : ""}${renderDecomposition(example)}${renderToneCurve(example.tone, true)}<div class="pron-example-actions">${example.cueId ? `<button type="button" data-pron-play="${example.cueId}">▶ 播放 <small>Play</small></button>` : ""}<button type="button" data-knowledge-repeat="${escapeHtml(example.id)}">● 跟读测评 <small>Repeat</small></button></div></section>`).join("")}</div>` : ""}
       ${unit.items ? `<section class="pron-chart-section"><div class="pron-chart-grid">${unit.items.map((item) => `<button type="button" class="${itemKey(item) === itemKey(selected || {}) ? "active" : ""}" data-pron-select="${escapeHtml(itemKey(item))}"><strong>${escapeHtml(item.display)}</strong><span>选择 <small>Select</small></span></button>`).join("")}</div>${selected ? renderFocusStage(unit, null, selected) : ""}</section>` : ""}
     </article>`;
