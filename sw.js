@@ -1,16 +1,14 @@
-const CACHE_VERSION = "diandian-chinese-v112";
+const CACHE_VERSION = "diandian-chinese-v113";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./config.js",
   "./manifest.webmanifest",
-  "./vendor/hanzi-writer.min.js",
-  "./data/lessons/zjzh-1-1/vocabulary-audio.json",
-  "./data/lessons/zjzh-1-1/vocabulary-metadata.json",
-  "./data/lessons/zjzh-1-1/text-audio.json",
-  "./data/lessons/zjzh-1-1/book-pages.json",
-  "./data/lessons/zjzh-1-1/lesson-practice.json",
-  "./data/lessons/zjzh-1-1/practice-intro-translations.json",
+  "./config.js?v=20260827-2",
+  "./vendor/hanzi-writer.min.js?v=20260731-16",
+  "./vendor/xlsx.full.min.js",
+  "./icons/favicon-32.png",
+  "./icons/apple-touch-icon-180.png",
+  "./icons/icon-96.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/maskable-192.png",
@@ -30,20 +28,18 @@ const APP_SHELL = [
   "./modules/learning-hub/writing-zone.js?v=20260826-2",
   "./modules/learning-hub/practice-analytics.js?v=20260826-1",
   "./modules/character-hit/index.html",
-  "./modules/character-hit/styles.css",
-  "./modules/character-hit/app.js",
+  "./modules/character-hit/styles.css?v=20260818-2",
+  "./modules/character-hit/app.js?v=20260818-3",
   "./modules/character-hit/assets/scene.svg",
-  "./modules/character-hit/assets/audio/launch.wav",
-  "./modules/character-hit/assets/audio/correct.wav",
-  "./modules/character-hit/assets/audio/shatter.wav",
-  "./modules/character-hit/assets/audio/place.wav",
-  "./modules/character-hit/assets/audio/stage.wav",
-  "./modules/character-hit/assets/audio/victory.wav",
-  "./data/games/character-hit/zjzh-1-1.json",
+  "./modules/word-link/index.html",
+  "./modules/word-link/styles.css?v=20260818-2",
+  "./modules/word-link/app.js?v=20260818-4",
+  "./modules/hanzi-challenge/index.html",
+  "./modules/pinyin-generator/index.html",
   "./modules/digital-book/index.html",
-  "./modules/digital-book/styles.css?v=20260828-2",
-  "./modules/digital-book/pronunciation.css?v=20260828-7",
-  "./modules/digital-book/app.js?v=20260828-2",
+  "./modules/digital-book/styles.css?v=20260828-1",
+  "./modules/digital-book/pronunciation.css?v=20260828-8",
+  "./modules/digital-book/app.js?v=20260828-1",
   "./modules/digital-book/pronunciation.js?v=20260824-1"
 ];
 
@@ -87,6 +83,11 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
+  const isAudio = /\.(mp3|m4a|wav)$/i.test(url.pathname);
+  if (request.headers.has("range") || isAudio) {
+    event.respondWith(fetch(request));
+    return;
+  }
   if (request.mode === "navigate") {
     event.respondWith(networkFirst(request));
     return;
