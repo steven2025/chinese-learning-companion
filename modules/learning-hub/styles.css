@@ -60,10 +60,17 @@ button { cursor: pointer; }
 .sidebar { position: sticky; top: 66px; height: calc(100vh - 66px); display: flex; flex-direction: column; padding: 18px 12px; border-right: 1px solid var(--line); background: #fbfcfb; }
 .primary-navigation { display: grid; gap: 4px; }
 .primary-navigation button[hidden] { display: none !important; }
-.primary-navigation button, .primary-navigation a { min-height: 46px; display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 8px; padding: 0 12px; color: #466064; border: 0; border-radius: 6px; background: transparent; text-align: left; }
-.primary-navigation button span, .primary-navigation a span { width: 30px; height: 30px; display: grid; place-items: center; color: #668184; border: 1px solid #d6e0de; border-radius: 6px; background: #fff; font-size: 14px; }
-.primary-navigation button b, .primary-navigation a b { font-size: 14px; }
-.primary-navigation button:hover, .primary-navigation a:hover { background: #eef3f1; }
+.primary-navigation .teacher-chat-nav { min-height: 46px; display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 8px; padding: 0 12px; color: #466064; border-radius: 6px; text-decoration: none; }
+.primary-navigation .teacher-chat-nav > span { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid #d6e0de; border-radius: 6px; background: #fff; }
+.primary-navigation .teacher-chat-nav b { font-size: 14px; }
+.primary-navigation .teacher-chat-nav small { display: block; color: #8aa1a3; font-size: 10px; }
+.mobile-navigation .teacher-chat-nav { display: grid; place-items: center; align-content: center; gap: 2px; color: var(--muted); text-decoration: none; }
+.mobile-navigation .teacher-chat-nav span { font-size: 17px; }
+.mobile-navigation .teacher-chat-nav b { font-size: 10px; }
+.primary-navigation button { min-height: 46px; display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 8px; padding: 0 12px; color: #466064; border: 0; border-radius: 6px; background: transparent; text-align: left; }
+.primary-navigation button span { width: 30px; height: 30px; display: grid; place-items: center; color: #668184; border: 1px solid #d6e0de; border-radius: 6px; background: #fff; font-size: 14px; }
+.primary-navigation button b { font-size: 14px; }
+.primary-navigation button:hover { background: #eef3f1; }
 .primary-navigation button.active { color: #fff; background: var(--teal); }
 .primary-navigation button.active span { color: var(--teal); border-color: #fff; }
 .main-content { min-width: 0; padding: 28px 34px 52px; }
@@ -321,7 +328,7 @@ button { cursor: pointer; }
   .record-row { grid-template-columns: 88px 1fr; }
   .record-row b { grid-column: 2; }
   .mobile-navigation { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; height: 62px; display: grid; grid-template-columns: repeat(4, 1fr); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--line); background: #fff; }
-  .mobile-navigation button, .mobile-navigation a { display: grid; place-items: center; align-content: center; gap: 2px; color: var(--muted); border: 0; background: transparent; text-decoration: none; }
+  .mobile-navigation button { display: grid; place-items: center; align-content: center; gap: 2px; color: var(--muted); border: 0; background: transparent; }
   .mobile-navigation span { font-size: 17px; }
   .mobile-navigation b { font-size: 10px; }
   .mobile-navigation button.active { color: var(--teal); }
@@ -340,6 +347,45 @@ button { cursor: pointer; }
   .pwa-install-action { grid-column: 2; justify-self: start; min-height: 34px; margin-top: -2px; }
   .pwa-install-dismiss { grid-column: 3; grid-row: 1; }
   .pwa-update-banner { left: 14px; right: 14px; bottom: 76px; width: auto; grid-template-columns: minmax(0, 1fr) auto; }
+}
+
+/* Stable, collapsible shell navigation */
+.nav-toggle {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: #d8eeeb;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 8px;
+  background: rgba(255,255,255,.08);
+  font-size: 21px;
+  line-height: 1;
+}
+.nav-toggle:hover { background: rgba(255,255,255,.16); }
+.app-shell { grid-template-columns: 220px minmax(0, 1fr); }
+.topbar { grid-template-columns: 38px 182px minmax(280px, 1fr) auto auto auto; }
+.app-shell.nav-collapsed { grid-template-columns: 76px minmax(0, 1fr); }
+.app-shell.nav-collapsed .topbar { grid-template-columns: 38px 54px minmax(280px, 1fr) auto auto auto; }
+.app-shell.nav-collapsed .brand span { display: none; }
+.app-shell.nav-collapsed .brand { justify-content: center; }
+.app-shell.nav-collapsed .sidebar { padding-inline: 10px; }
+.app-shell.nav-collapsed .primary-navigation button,
+.app-shell.nav-collapsed .primary-navigation .teacher-chat-nav { grid-template-columns: 1fr; justify-items: center; padding-inline: 0; }
+.app-shell.nav-collapsed .primary-navigation button b,
+.app-shell.nav-collapsed .primary-navigation .teacher-chat-nav b { display: none; }
+.main-content { min-width: 0; overflow: auto; }
+@media (max-width: 1050px) {
+  .topbar, .app-shell.nav-collapsed .topbar { grid-template-columns: 38px 1fr auto auto auto auto; }
+}
+@media (max-width: 760px) {
+  .app-shell, .app-shell.nav-collapsed { display: block; }
+  .topbar, .app-shell.nav-collapsed .topbar { position: sticky; height: 60px; grid-template-columns: 38px minmax(0, 1fr) 38px 38px 38px; }
+  .brand { justify-content: flex-start; }
+  .app-shell.nav-collapsed .brand span { display: block; }
+  .app-shell.nav-collapsed .sidebar { display: none; }
+  .sidebar { display: none; }
+  .main-content { padding: 22px 14px 46px; }
 }
 @media (max-width: 440px) {
   .topbar { grid-template-columns: 42px minmax(0, 1fr) 38px 38px 38px; }
@@ -648,8 +694,8 @@ button { cursor: pointer; }
 }
 
 /* ---- bilingual button subtitles ---- */
-.primary-navigation button b small, .primary-navigation a b small { display: block; font-size: 10px; font-weight: 650; color: #8aa1a3; }
-.primary-navigation button.active b small, .primary-navigation a.active b small { color: #c3e2df; }
+.primary-navigation button b small { display: block; font-size: 10px; font-weight: 650; color: #8aa1a3; }
+.primary-navigation button.active b small { color: #c3e2df; }
 .mobile-navigation button b small { display: block; font-size: 8px; font-weight: 600; opacity: .8; }
 .logout-button b small { display: block; font-size: 9px; font-weight: 600; opacity: .8; }
 .auth-tabs button small { margin-left: 4px; font-size: 9px; font-weight: 650; opacity: .8; }
@@ -913,7 +959,7 @@ button.primary-button small, a.primary-button small, .quiet-button small, .dange
   .instructor-profile > img, .instructor-photo-placeholder { width: min(230px, 72vw); margin: 0 auto; }
 }
 
-/* Stable, collapsible shell navigation. */
+/* Final shell layout overrides: keep the primary content position stable. */
 .nav-toggle { width: 38px; height: 38px; display: grid; place-items: center; color: #d8eeeb; border: 1px solid rgba(255,255,255,.28); border-radius: 8px; background: rgba(255,255,255,.08); font-size: 21px; line-height: 1; }
 .nav-toggle:hover { background: rgba(255,255,255,.16); }
 .app-shell { grid-template-columns: 220px minmax(0, 1fr); }
