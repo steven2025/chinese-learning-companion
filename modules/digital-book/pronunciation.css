@@ -1332,10 +1332,11 @@
     border-radius: 999px;
     background: rgba(237,248,246,.94);
   }
-  .pronunciation-book .pron-chart-section .pron-focus-stage > .pron-focus-actions {
+  .pronunciation-book .pron-focus-stage > .pron-focus-actions {
     position: absolute;
     top: 50%;
-    right: clamp(175px, 16vw, 280px);
+    left: clamp(52%, 54%, 57%);
+    right: auto;
     width: auto;
     margin: 0;
     padding: 0;
@@ -1343,17 +1344,18 @@
     flex-direction: column;
     gap: 8px;
     transform: translateY(-50%);
+    z-index: 2;
   }
-  .pronunciation-book .pron-chart-section .pron-focus-stage > .pron-focus-actions .pron-action {
+  .pronunciation-book .pron-focus-stage > .pron-focus-actions .pron-action {
     width: 138px;
     min-width: 138px;
     min-height: 52px;
     padding-inline: 12px;
     white-space: nowrap;
   }
-  .pronunciation-book .pron-chart-section .pron-focus-stage > .pron-focus-actions .bilingual-button-label,
-  .pronunciation-book .pron-chart-section .pron-focus-stage > .pron-focus-actions .bilingual-button-label strong,
-  .pronunciation-book .pron-chart-section .pron-focus-stage > .pron-focus-actions .bilingual-button-label small {
+  .pronunciation-book .pron-focus-stage > .pron-focus-actions .bilingual-button-label,
+  .pronunciation-book .pron-focus-stage > .pron-focus-actions .bilingual-button-label strong,
+  .pronunciation-book .pron-focus-stage > .pron-focus-actions .bilingual-button-label small {
     white-space: nowrap;
     overflow-wrap: normal;
   }
