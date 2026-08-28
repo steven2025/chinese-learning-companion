@@ -159,12 +159,49 @@
 .pron-item-button.active { border-color: var(--pron-coral); background: #fff3ef; box-shadow: 0 3px 0 #ae3d2c; color: #9e2f20; }
 
 .pron-focus-stage {
+  position: relative;
   margin: 12px 0;
   padding: 17px 18px 15px;
   border: 1px solid #b7cbc8;
   border-radius: 8px;
   background: #f6faf9;
   box-shadow: inset 0 5px 12px rgb(22 55 58 / .13), inset 0 -3px 0 #fff, 0 5px 0 #afc1be;
+}
+
+/* Desktop pronunciation actions: keep controls beside the large pinyin.
+   This final override intentionally wins over the legacy two-column grid
+   rules that otherwise push the buttons to the far right edge. */
+@media (min-width: 901px) {
+  .pronunciation-book .pron-focus-stage > .pron-focus-actions {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + 80px);
+    right: auto;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    gap: 8px;
+    width: 138px;
+    margin: 0;
+    padding: 0;
+    transform: translateY(-50%);
+  }
+
+  .pronunciation-book .pron-focus-stage > .pron-focus-actions .pron-action {
+    width: 138px;
+    min-width: 138px;
+    min-height: 52px;
+    padding: 6px 10px;
+    white-space: nowrap;
+    line-height: 1.05;
+  }
+
+  .pronunciation-book .pron-focus-stage > .pron-focus-actions .pron-action small,
+  .pronunciation-book .pron-focus-stage > .pron-focus-actions .bilingual-button-label {
+    white-space: nowrap;
+  }
 }
 
 .pron-focus-stage > header { display: flex; align-items: center; justify-content: space-between; max-width: 1050px; margin: 0 auto 4px; color: var(--pron-muted); }
@@ -971,392 +1008,4 @@
   .pron-focus-content h2 { font-size: clamp(116px, 15vw, 140px); }
   .beginner-text-focus { min-height: clamp(280px, 31dvh, 350px); }
   .beginner-sentence-focus { min-height: clamp(300px, 34dvh, 380px); }
-}
-
-/* 2026-08-28: first visual pass for the beginner pronunciation toolbar.
-   Keep the whole control band calm and single-line without changing lesson flow. */
-@media (min-width: 1101px) {
-  .pronunciation-book .book-toolbar {
-    grid-template-columns: minmax(190px, .62fr) minmax(390px, 1fr) minmax(480px, 1.2fr);
-    gap: 12px;
-    padding-inline: clamp(14px, 2vw, 28px);
-  }
-  .pronunciation-book .section-tabs,
-  .pronunciation-book .toolbar-settings { min-width: 0; }
-  .pronunciation-book .section-tabs {
-    justify-self: center;
-    gap: 3px;
-    border-color: rgba(117, 225, 213, .32);
-    background: rgba(6, 51, 54, .48);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
-  }
-  .pronunciation-book .toolbar-settings {
-    gap: 7px;
-    padding-left: 10px;
-    border-left: 1px solid rgba(255,255,255,.18);
-  }
-  .pronunciation-book .assist-switch {
-    gap: 3px;
-    border-color: rgba(255, 205, 124, .34);
-    background: rgba(73, 45, 20, .34);
-  }
-  .pronunciation-book .section-tabs button,
-  .pronunciation-book .assist-switch button {
-    min-height: 37px;
-    padding-inline: 10px;
-  }
-  .pronunciation-book .section-tabs .bilingual-button-label strong,
-  .pronunciation-book .assist-switch .bilingual-button-label strong { font-size: 12px; }
-  .pronunciation-book .section-tabs .bilingual-button-label small,
-  .pronunciation-book .assist-switch .bilingual-button-label small { font-size: 9px; }
-}
-
-@media (min-width: 701px) {
-  .pronunciation-book .pron-focus-content h2 {
-    margin: 0 0 8px;
-    color: #087d76;
-    font-size: clamp(82px, 8vw, 132px);
-    letter-spacing: .015em;
-    line-height: 1.05;
-    text-shadow: 0 2px 0 rgba(255,255,255,.85), 0 8px 18px rgba(8,125,118,.12);
-  }
-  .pronunciation-book .beginner-character-actions {
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .pronunciation-book .beginner-character-actions .pron-action { min-width: 112px; }
-}
-
-@media (min-width: 701px) and (max-width: 1100px) {
-  .pronunciation-book .book-toolbar {
-    grid-template-columns: minmax(170px, .55fr) minmax(0, 1fr);
-    gap: 8px;
-    padding: 7px 12px;
-  }
-  .pronunciation-book .section-tabs { grid-column: 2; grid-row: 1; width: 100%; }
-  .pronunciation-book .toolbar-settings { grid-column: 1 / -1; justify-content: center; padding-top: 3px; border-top: 1px solid rgba(255,255,255,.14); }
-  .pronunciation-book .section-tabs button,
-  .pronunciation-book .assist-switch button { min-height: 34px; padding-inline: 8px; }
-}
-
-@media (max-width: 700px) {
-  .pronunciation-book .book-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    min-height: 58px;
-    padding: 6px 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .pronunciation-book .book-toolbar::-webkit-scrollbar { display: none; }
-  .pronunciation-book .brand-link { flex: 0 0 auto; gap: 6px; }
-  .pronunciation-book .brand-link img { width: 34px; height: 34px; }
-  .pronunciation-book .brand-link strong { font-size: 12px; }
-  .pronunciation-book .brand-link small { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
-  .pronunciation-book .section-tabs,
-  .pronunciation-book .toolbar-settings,
-  .pronunciation-book .assist-switch { flex: 0 0 auto; }
-  .pronunciation-book .section-tabs { gap: 2px; padding: 2px; border-color: rgba(117,225,213,.3); background: rgba(6,51,54,.48); }
-  .pronunciation-book .toolbar-settings { display: flex; gap: 4px; padding: 0; border-left: 1px solid rgba(255,255,255,.18); }
-  .pronunciation-book .assist-switch { gap: 2px; padding: 2px; border-color: rgba(255,205,124,.3); background: rgba(73,45,20,.34); }
-  .pronunciation-book .section-tabs button,
-  .pronunciation-book .assist-switch button { min-height: 38px; padding: 3px 8px; }
-  .pronunciation-book .section-tabs .bilingual-button-label strong,
-  .pronunciation-book .assist-switch .bilingual-button-label strong { font-size: 11px; white-space: nowrap; }
-  .pronunciation-book .section-tabs .bilingual-button-label small,
-  .pronunciation-book .assist-switch .bilingual-button-label small { font-size: 8px; white-space: nowrap; }
-  .pronunciation-book .language-select { min-width: 86px; padding: 3px 6px; }
-  .pronunciation-book .language-select span { font-size: 8px; }
-  .pronunciation-book .language-select select { font-size: 10px; }
-  .pronunciation-book .pron-focus-content h2 {
-    margin: 8px 0 4px;
-    color: #087d76;
-    font-size: clamp(58px, 17vw, 94px);
-    line-height: 1.05;
-    letter-spacing: .015em;
-  }
-  .pronunciation-book .beginner-character-actions { gap: 6px; margin-top: 8px; }
-  .pronunciation-book .beginner-character-actions .pron-action { min-width: 0; padding-inline: 10px; }
-}
-
-/* Mobile voice workbench: one focused card with horizontal selectors. */
-@media (max-width: 700px) {
-  .pronunciation-book { height: 100dvh; overflow: hidden; }
-  .pronunciation-book .lesson-main { height: calc(100dvh - 58px); min-height: 0; overflow: hidden; }
-  .pronunciation-book .unit-shell {
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    padding: 8px 8px 6px;
-  }
-  .pronunciation-book .unit-heading { gap: 8px; padding: 0 2px 7px; }
-  .pronunciation-book .unit-heading h1 { margin-top: 2px; font-size: 26px; }
-  .pronunciation-book .unit-heading p { font-size: 11px; }
-  .pronunciation-book .unit-jump { width: 42%; min-width: 126px; gap: 3px; }
-  .pronunciation-book .unit-jump select { min-height: 34px; padding-left: 8px; font-size: 12px; }
-  .pronunciation-book .learning-workspace { min-height: 0; height: 100%; margin-top: 6px; overflow: hidden; }
-  .pronunciation-book .lesson-column { height: 100%; min-height: 0; grid-template-rows: minmax(0, 1fr) auto; gap: 5px; }
-  .pronunciation-book .learning-unit { min-height: 0; height: 100%; overflow-x: hidden; overflow-y: auto; }
-  .pronunciation-book .pron-exercise-layout.pron-workbench {
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 0 5px 8px;
-  }
-  .pronunciation-book .pron-exercise-layout.pron-workbench > .pron-selector-panel {
-    flex: 0 0 auto;
-    padding: 5px 0 6px;
-    border: 0;
-    border-bottom: 1px solid var(--pron-line);
-  }
-  .pronunciation-book .pron-selector-panel > header { margin-bottom: 5px; }
-  .pronunciation-book .pron-selector-panel > header small { font-size: 10px; }
-  .pronunciation-book .pron-item-strip { gap: 6px; padding-bottom: 3px; }
-  .pronunciation-book .pron-item-button { flex: 0 0 auto; min-width: 76px; min-height: 42px; padding: 5px 9px; }
-  .pronunciation-book .pron-pair-grid { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 3px; }
-  .pronunciation-book .pron-pair-row { flex: 0 0 auto; width: 208px; }
-  .pronunciation-book .pron-workbench-main { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
-  .pronunciation-book .pron-focus-stage { margin: 5px 0 8px; padding: 12px 10px 11px; }
-  .pronunciation-book .pron-focus-main { min-height: 0; padding: 4px 0; }
-  .pronunciation-book .pron-focus-content h2 { margin-bottom: 7px; font-size: clamp(66px, 20vw, 100px); }
-  .pronunciation-book .pron-equation { gap: 5px; }
-  .pronunciation-book .pron-equation-part { min-width: 74px; min-height: 66px; padding: 6px 8px; }
-  .pronunciation-book .pron-equation-part strong { font-size: 28px; }
-  .pronunciation-book .pron-focus-actions { gap: 6px; margin-top: 5px; }
-  .pronunciation-book .pron-focus-actions .pron-action { flex: 1 1 0; min-width: 0; padding-inline: 7px; font-size: 13px; }
-  .pronunciation-book .pron-focus-actions .pron-action small { font-size: 9px; }
-  .pronunciation-book .unit-navigation { margin-top: 4px; }
-}
-
-/* 2026-08-28: calm visual language — style-only, no interaction changes. */
-.pronunciation-book {
-  --pron-radius: 12px;
-  --pron-shadow-soft: 0 8px 22px rgba(23, 52, 54, .08);
-}
-.pronunciation-book .unit-heading,
-.pronunciation-book .pron-focus-stage,
-.pronunciation-book .pron-selector-panel,
-.pronunciation-book .pron-knowledge,
-.pronunciation-book .beginner-text-focus,
-.pronunciation-book .beginner-character-focus,
-.pronunciation-book .beginner-practice-stage {
-  border-color: rgba(31, 76, 76, .18);
-}
-.pronunciation-book .pron-focus-stage,
-.pronunciation-book .beginner-text-focus,
-.pronunciation-book .beginner-character-focus {
-  border-radius: var(--pron-radius);
-  box-shadow: var(--pron-shadow-soft);
-}
-.pronunciation-book .pron-action,
-.pronunciation-book .pron-challenge-start,
-.pronunciation-book .pron-item-button,
-.pronunciation-book .pron-group-tabs button,
-.pronunciation-book .beginner-section-tabs button,
-.pronunciation-book .beginner-group-tabs button {
-  border-radius: 10px;
-  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
-}
-.pronunciation-book .pron-action:hover:not(:disabled),
-.pronunciation-book .pron-challenge-start:hover:not(:disabled),
-.pronunciation-book .pron-item-button:hover:not(:disabled),
-.pronunciation-book .pron-group-tabs button:hover:not(:disabled),
-.pronunciation-book .beginner-section-tabs button:hover:not(:disabled) {
-  filter: brightness(1.04);
-  transform: translateY(-1px);
-}
-.pronunciation-book .pron-action:active:not(:disabled),
-.pronunciation-book .pron-challenge-start:active:not(:disabled),
-.pronunciation-book .pron-item-button:active:not(:disabled) { transform: translateY(1px); }
-.pronunciation-book .pron-action {
-  min-height: 46px;
-  padding-inline: 16px;
-  letter-spacing: .01em;
-}
-.pronunciation-book .pron-action.primary { background: #d85e45; }
-.pronunciation-book .pron-action.compare { background: #326b98; }
-.pronunciation-book .pron-action.record { background: #ad781c; }
-.pronunciation-book .pron-action.submit { background: #16877e; }
-.pronunciation-book .pron-action small { opacity: .9; }
-.pronunciation-book .pron-focus-actions { align-items: center; }
-.pronunciation-book .pron-focus-actions .pron-action { box-shadow: 0 3px 0 rgb(23 52 54 / .18); }
-.pronunciation-book .pron-focus-actions .pron-action:focus-visible { outline-color: rgba(20,125,117,.55); }
-.pronunciation-book .pron-item-button.active,
-.pronunciation-book .beginner-section-tabs button.active,
-.pronunciation-book .beginner-group-tabs button.active {
-  box-shadow: 0 3px 0 rgba(7, 95, 89, .3), 0 0 0 2px rgba(20, 125, 117, .1);
-}
-.pronunciation-book .pron-focus-stage > header span,
-.pronunciation-book .pron-selector-panel > header span,
-.pronunciation-book .beginner-practice-heading span { letter-spacing: .02em; }
-.pronunciation-book .pron-tone-note,
-.pronunciation-book .unit-heading p,
-.pronunciation-book .pron-selector-panel > header small { color: #6e7f80; }
-
-/* Make the audio dock read as a utility area rather than a second toolbar. */
-.pronunciation-book .audio-dock {
-  border-top-color: rgba(255,255,255,.08);
-  box-shadow: 0 -6px 18px rgba(15,41,44,.1);
-}
-.pronunciation-book .audio-main-button { box-shadow: 0 3px 0 rgba(23,52,54,.25); }
-.pronunciation-book .audio-dock-toggle { border-radius: 10px; }
-
-@media (max-width: 700px) {
-  .pronunciation-book .pron-focus-stage { box-shadow: 0 5px 14px rgba(23,52,54,.08); }
-  .pronunciation-book .pron-focus-actions .pron-action { min-height: 43px; padding-inline: 6px; }
-  .pronunciation-book .pron-action small { font-size: 8px; }
-}
-
-/* 2026-08-28: keep knowledge explanations together and easy to translate. */
-.pronunciation-book .pron-knowledge-copy {
-  grid-template-columns: minmax(0, 1fr);
-  width: 100%;
-  max-width: 1600px;
-}
-.pronunciation-book .pron-knowledge-explanation {
-  min-height: 0;
-  padding: 10px 42px 10px 14px;
-  line-height: 1.45;
-  background: linear-gradient(110deg, rgba(237,248,246,.82), rgba(255,255,255,.98));
-}
-.pronunciation-book .pron-knowledge-explanation p.zh {
-  font-size: clamp(15px, 1.35vw, 19px);
-  line-height: 1.55;
-  letter-spacing: .01em;
-}
-.pronunciation-book .pron-knowledge-explanation p {
-  overflow-wrap: normal;
-  word-break: keep-all;
-}
-.pronunciation-book .pron-knowledge-explanation p.translation {
-  margin-top: 4px;
-  font-size: clamp(11px, .95vw, 13px);
-  line-height: 1.4;
-}
-.pronunciation-book .pron-translation-label {
-  color: var(--pron-coral);
-  font-weight: 800;
-}
-.pronunciation-book .pron-translation-fallback {
-  color: var(--pron-muted);
-  font-size: .9em;
-}
-
-/* Bring the phoneme actions under the large letter instead of centering them
-   across the whole preview stage. */
-@media (min-width: 701px) {
-  .pronunciation-book .pron-focus-stage > .pron-focus-actions {
-    width: min(650px, calc(100% - 170px));
-    justify-content: flex-start;
-    margin: 5px auto 0;
-    padding-left: clamp(0px, 5vw, 68px);
-  }
-}
-
-/* Progress counters are utility metadata: keep them at the edge of the
-   preview so they never sit on top of the letter, chart, or explanation. */
-.pronunciation-book .pron-focus-stage > header b,
-.pronunciation-book .pron-listening-choice > header > strong {
-  margin-left: auto;
-  align-self: flex-start;
-  white-space: nowrap;
-}
-.pronunciation-book .pron-focus-stage { position: relative; }
-.pronunciation-book .pron-focus-stage > header b {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  margin-left: 0;
-}
-.pronunciation-book .pron-listening-choice { position: relative; }
-.pronunciation-book .pron-listening-choice > header > strong {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-.pronunciation-book .beginner-oral-focus,
-.pronunciation-book .beginner-text-focus,
-.pronunciation-book .beginner-character-focus {
-  position: relative;
-}
-.pronunciation-book .beginner-word-index {
-  top: 10px;
-  right: 14px;
-  left: auto;
-  z-index: 1;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(237,248,246,.9);
-  color: #547576;
-}
-
-@media (max-width: 700px) {
-  .pronunciation-book .pron-knowledge-explanation {
-    padding: 9px 34px 9px 10px;
-  }
-  .pronunciation-book .pron-knowledge-copy {
-    max-width: 100%;
-  }
-  .pronunciation-book .pron-knowledge-explanation p {
-    overflow-wrap: anywhere;
-    word-break: normal;
-  }
-  .pronunciation-book .pron-focus-stage > header b {
-    top: 8px;
-    right: 10px;
-  }
-  .pronunciation-book .pron-focus-stage > .pron-focus-actions {
-    width: 100%;
-    justify-content: center;
-    padding-left: 0;
-  }
-  .pronunciation-book .beginner-word-index {
-    top: 8px;
-    right: 10px;
-  }
-}
-
-/* Keep the global unit counter out of the learning preview. The side arrows
-   remain centred, while the small counter sits beside the right arrow. */
-@media (min-width: 901px) {
-  .pronunciation-book .unit-navigation strong {
-    top: 10px;
-    right: 58px;
-    left: auto;
-    transform: none;
-    padding: 3px 7px;
-    border-radius: 999px;
-    background: rgba(237,248,246,.94);
-  }
-  .pronunciation-book .pron-focus-stage > .pron-focus-actions {
-    position: absolute;
-    top: 50%;
-    left: clamp(52%, 54%, 57%);
-    right: auto;
-    width: auto;
-    margin: 0;
-    padding: 0;
-    justify-content: flex-start;
-    flex-direction: column;
-    gap: 8px;
-    transform: translateY(-50%);
-    z-index: 2;
-  }
-  .pronunciation-book .pron-focus-stage > .pron-focus-actions .pron-action {
-    width: 138px;
-    min-width: 138px;
-    min-height: 52px;
-    padding-inline: 12px;
-    white-space: nowrap;
-  }
-  .pronunciation-book .pron-focus-stage > .pron-focus-actions .bilingual-button-label,
-  .pronunciation-book .pron-focus-stage > .pron-focus-actions .bilingual-button-label strong,
-  .pronunciation-book .pron-focus-stage > .pron-focus-actions .bilingual-button-label small {
-    white-space: nowrap;
-    overflow-wrap: normal;
-  }
 }
