@@ -1214,6 +1214,8 @@
 /* 2026-08-28: keep knowledge explanations together and easy to translate. */
 .pronunciation-book .pron-knowledge-copy {
   grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 1600px;
 }
 .pronunciation-book .pron-knowledge-explanation {
   min-height: 0;
@@ -1225,6 +1227,10 @@
   font-size: clamp(15px, 1.35vw, 19px);
   line-height: 1.55;
   letter-spacing: .01em;
+}
+.pronunciation-book .pron-knowledge-explanation p {
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 .pronunciation-book .pron-knowledge-explanation p.translation {
   margin-top: 4px;
@@ -1259,6 +1265,19 @@
   align-self: flex-start;
   white-space: nowrap;
 }
+.pronunciation-book .pron-focus-stage { position: relative; }
+.pronunciation-book .pron-focus-stage > header b {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  margin-left: 0;
+}
+.pronunciation-book .pron-listening-choice { position: relative; }
+.pronunciation-book .pron-listening-choice > header > strong {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
 .pronunciation-book .beginner-oral-focus,
 .pronunciation-book .beginner-text-focus,
 .pronunciation-book .beginner-character-focus {
@@ -1278,6 +1297,17 @@
 @media (max-width: 700px) {
   .pronunciation-book .pron-knowledge-explanation {
     padding: 9px 34px 9px 10px;
+  }
+  .pronunciation-book .pron-knowledge-copy {
+    max-width: 100%;
+  }
+  .pronunciation-book .pron-knowledge-explanation p {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .pronunciation-book .pron-focus-stage > header b {
+    top: 8px;
+    right: 10px;
   }
   .pronunciation-book .pron-focus-stage > .pron-focus-actions {
     width: 100%;
