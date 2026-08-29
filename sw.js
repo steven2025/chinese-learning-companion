@@ -38,7 +38,7 @@ const APP_SHELL = [
   "./modules/pinyin-generator/index.html",
   "./modules/digital-book/index.html",
   "./modules/digital-book/styles.css?v=20260828-2",
-  "./modules/digital-book/pronunciation.css?v=20260828-8",
+  "./modules/digital-book/pronunciation.css?v=20260828-9",
   "./modules/digital-book/app.js?v=20260828-1",
   "./modules/digital-book/pronunciation.js?v=20260824-1"
 ];
