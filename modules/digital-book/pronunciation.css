@@ -1023,6 +1023,39 @@
   .pron-focus-stage > .pron-focus-actions .bilingual-button-label {
     white-space: nowrap !important;
   }
+
+  /* Tone-marking pages reserve the far-right column for the four tone choices. */
+  .tone-marking-stage,
+  .initial-writing-stage {
+    grid-template-columns: minmax(0, 1fr) 148px 260px !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    column-gap: 14px;
+  }
+  .tone-marking-stage .pron-focus-main,
+  .initial-writing-stage .pron-focus-main {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    min-width: 0;
+  }
+  .tone-marking-stage > .pron-focus-actions,
+  .initial-writing-stage > .pron-focus-actions {
+    position: static !important;
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    align-self: center !important;
+    width: auto !important;
+    transform: none !important;
+  }
+  .tone-marking-stage .pron-tone-options,
+  .initial-writing-stage .pron-initial-options {
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    align-self: center !important;
+    margin: 0 !important;
+  }
+  .tone-marking-stage > .pron-focus-actions {
+    right: auto !important;
+  }
 }
 
 @media (max-width: 900px) {
