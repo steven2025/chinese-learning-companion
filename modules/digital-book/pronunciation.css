@@ -996,8 +996,8 @@
   .pron-focus-stage > .pron-focus-actions {
     position: absolute !important;
     top: 50% !important;
-    left: calc(50% + 70px) !important;
-    right: auto !important;
+    left: auto !important;
+    right: 26% !important;
     z-index: 4;
     display: flex !important;
     flex-direction: column !important;
