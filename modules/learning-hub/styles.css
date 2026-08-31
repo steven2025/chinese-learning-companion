@@ -438,6 +438,12 @@ button { cursor: pointer; }
 .admin-inline-form label span { color: var(--muted); font-size: 10px; font-weight: 750; }
 .admin-inline-form input { min-height: 40px; padding: 0 10px; border: 1px solid #b9c9c5; border-radius: 6px; background: #fff; }
 .admin-inline-form .primary-button, .admin-inline-form .quiet-button { min-height: 40px; }
+.admin-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.admin-stat-card { min-height: 112px; display: grid; align-content: center; gap: 3px; padding: 15px; border: 1px solid #c9dbd7; border-radius: 10px; background: linear-gradient(145deg, #f7fbfa, #edf6f3); }
+.admin-stat-card span { color: var(--muted); font-size: 11px; font-weight: 800; }
+.admin-stat-card strong { color: var(--teal); font-size: 30px; line-height: 1; }
+.admin-stat-card small { color: var(--muted); font-size: 10px; }
+.admin-overview-note { margin-top: 12px; padding: 10px 12px; color: var(--muted); border-left: 3px solid var(--gold); background: #fffbf1; font-size: 11px; }
 .publish-level h3 { margin: 0 0 6px; color: var(--teal); font-size: 12px; }
 .publish-level + .publish-level { margin-top: 18px; }
 .publish-controls { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
@@ -456,6 +462,48 @@ button { cursor: pointer; }
 .lang-badge.reviewed { color: #7a5200; border-color: #e6cd92; background: #fff7df; }
 .muted { color: var(--muted); }
 
+/* 管理员工作区：导航与内容共享同一主显示区，后续面板可继续接入。 */
+@media (min-width: 761px) {
+  #adminView {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 0 18px;
+    align-items: start;
+  }
+  #adminView > .page-heading { grid-column: 1 / -1; }
+  #adminView > .admin-tabs {
+    grid-column: 1;
+    grid-row: 2;
+    position: sticky;
+    top: 14px;
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #f4f8f6;
+  }
+  #adminView > .admin-tabs button {
+    min-height: 52px;
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: 2px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    text-align: left;
+  }
+  #adminView > .admin-tabs button small { margin-left: 0; }
+  #adminView > .admin-content {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+  }
+  #adminView > .management-list { grid-column: 1 / -1; }
+}
+
 @media (max-width: 760px) {
   .teacher-tabs button, .admin-tabs button { flex: 1 1 40%; }
   .admin-inline-form { grid-template-columns: 1fr; }
@@ -463,6 +511,7 @@ button { cursor: pointer; }
   .class-list-toolbar { flex-direction: column; align-items: stretch; }
   .class-list-toolbar .quiet-button { width: 100%; }
   .student-row-actions { width: 100%; justify-content: flex-end; }
+  .admin-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ===== 学生：我的课程卡片 ===== */

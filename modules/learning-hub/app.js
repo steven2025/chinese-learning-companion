@@ -188,6 +188,11 @@ const elements = {
   adminTeacherList: document.querySelector("#adminTeacherList"),
   adminPublishingList: document.querySelector("#adminPublishingList"),
   adminReviewList: document.querySelector("#adminReviewList"),
+  adminStatTeachers: document.querySelector("#adminStatTeachers"),
+  adminStatClasses: document.querySelector("#adminStatClasses"),
+  adminStatStudents: document.querySelector("#adminStatStudents"),
+  adminStatBooks: document.querySelector("#adminStatBooks"),
+  adminOverviewNote: document.querySelector("#adminOverviewNote"),
   writingInputMode: document.querySelector("#writingInputModeSelect"),
   saveWritingPolicy: document.querySelector("#saveWritingPolicyButton"),
   writingPolicyStatus: document.querySelector("#writingPolicyStatus"),
@@ -1742,9 +1747,29 @@ function showAdminTab(tab) {
 }
 
 function renderAdminView() {
+  renderAdminOverview();
   void loadAdminTeachers();
   renderAdminPublishing();
   renderAdminReview();
+}
+
+function renderAdminOverview() {
+  const teachers = adminIsCloud() ? (state.adminTeachers || []) : (state.teachers || []);
+  const localCourses = state.localCourses || [];
+  const classCount = adminIsCloud()
+    ? teachers.reduce((total, teacher) => total + (Array.isArray(teacher.assignments) ? teacher.assignments.filter((item) => item.className).length : 0), 0)
+    : localCourses.length;
+  const studentCount = adminIsCloud()
+    ? null
+    : localCourses.reduce((total, course) => total + (Array.isArray(course.students) ? course.students.length : 0), 0);
+  const openBooks = books.filter((book) => effectiveBookOpen(book.id)).length;
+  if (elements.adminStatTeachers) elements.adminStatTeachers.textContent = String(teachers.length);
+  if (elements.adminStatClasses) elements.adminStatClasses.textContent = String(classCount);
+  if (elements.adminStatStudents) elements.adminStatStudents.textContent = studentCount === null ? "待接入" : String(studentCount);
+  if (elements.adminStatBooks) elements.adminStatBooks.textContent = String(openBooks);
+  if (elements.adminOverviewNote) elements.adminOverviewNote.textContent = adminIsCloud()
+    ? "当前为云端管理员会话；班级与学生汇总将在下一步接入管理员统计接口。"
+    : "当前显示本机管理数据；连接云端后将自动切换为云端汇总。";
 }
 
 function adminIsCloud() {
@@ -1766,6 +1791,7 @@ async function loadAdminTeachers() {
     const result = await window.LearningApi.adminTeachers();
     state.adminTeachers = result.teachers || [];
     renderAdminUsersCloud();
+    renderAdminOverview();
   } catch (error) {
     showToast(error.message || "教师列表读取失败");
     elements.adminTeacherList.innerHTML = `<p class="empty-approval">${escapeHtml(error.message || "教师列表读取失败")}</p>`;
@@ -1788,6 +1814,7 @@ function renderAdminUsersLocal() {
   elements.adminTeacherList.innerHTML = teachers.length
     ? teachers.map((teacher) => `<div class="admin-row"><span><strong>${escapeHtml(teacher.name)}</strong><small>登录账号 ${escapeHtml(teacher.account)} · ${teacher.active ? "已启用" : "已停用"} · ${new Date(teacher.createdAt).toLocaleDateString() || ""} 开通${teacher.inviteCode ? `<br>邀请码 <code class="admin-invite-code">${escapeHtml(teacher.inviteCode)}</code>` : ""}</small></span><span class="teacher-row-actions">${teacher.inviteCode ? `<button class="quiet-button" type="button" data-copy-teacher-invite="${escapeHtml(teacher.id)}">复制邀请码 <small>Copy</small></button><button class="quiet-button" type="button" data-reset-teacher-invite="${escapeHtml(teacher.id)}">重置邀请码 <small>Reset</small></button>` : ""}<button class="quiet-button" type="button" data-action="toggle-teacher" data-id="${escapeHtml(teacher.id)}">${teacher.active ? "停用 <small>Disable</small>" : "启用 <small>Enable</small>"}</button><button class="quiet-button danger-button" type="button" data-remove-teacher="${escapeHtml(teacher.id)}">删除 <small>Delete</small></button></span></div>`).join("")
     : '<p class="empty-approval">还没有教师账号，请点击“新增教师”。</p>';
+  renderAdminOverview();
 }
 
 function renderAdminPublishing() {
