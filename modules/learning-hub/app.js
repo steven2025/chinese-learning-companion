@@ -108,6 +108,7 @@ const state = {
   teachers: readStored("learningHubTeachers", []),
   publishing: readStored("learningHubPublishing", {}),
   contentReview: readStored("learningHubContentReview", {}),
+  localeSettings: readStored("learningHubLocaleSettings", Object.fromEntries(["en", "es", "fr", "id", "ja", "ko", "lo", "ms", "my", "ru", "th"].map((code) => [code, true]))),
   teacherContext: { teacher: "", term: terms[0], book: "intermediate-comprehensive-1" },
   studentProfile: null,
   studentCourses: [],
@@ -188,6 +189,7 @@ const elements = {
   adminTeacherList: document.querySelector("#adminTeacherList"),
   adminPublishingList: document.querySelector("#adminPublishingList"),
   adminReviewList: document.querySelector("#adminReviewList"),
+  adminLocaleList: document.querySelector("#adminLocaleList"),
   adminStatTeachers: document.querySelector("#adminStatTeachers"),
   adminStatClasses: document.querySelector("#adminStatClasses"),
   adminStatStudents: document.querySelector("#adminStatStudents"),
@@ -1751,6 +1753,42 @@ function renderAdminView() {
   void loadAdminTeachers();
   renderAdminPublishing();
   renderAdminReview();
+  void loadAdminLocales();
+}
+
+const adminLocaleCodes = ["en", "es", "fr", "id", "ja", "ko", "lo", "ms", "my", "ru", "th"];
+const adminLocaleNames = { en: ["英语", "English"], es: ["西班牙语", "Español"], fr: ["法语", "Français"], id: ["印尼语", "Bahasa Indonesia"], ja: ["日语", "日本語"], ko: ["韩语", "한국어"], lo: ["老挝语", "ລາວ"], ms: ["马来语", "Bahasa Melayu"], my: ["缅甸语", "မြန်မာ"], ru: ["俄语", "Русский"], th: ["泰语", "ไทย"] };
+
+async function loadAdminLocales() {
+  if (adminIsCloud() && window.LearningApi?.adminLocales) {
+    try {
+      const result = await window.LearningApi.adminLocales();
+      state.localeSettings = { ...state.localeSettings, ...(result.locales || {}) };
+    } catch (error) { if (elements.adminLocaleList) elements.adminLocaleList.innerHTML = `<p class="empty-approval">${escapeHtml(error.message || "语种配置读取失败")}</p>`; return; }
+  }
+  renderAdminLocales();
+}
+
+function renderAdminLocales() {
+  if (!elements.adminLocaleList) return;
+  elements.adminLocaleList.innerHTML = adminLocaleCodes.map((code) => {
+    const names = adminLocaleNames[code] || [code, code];
+    const enabled = state.localeSettings[code] !== false;
+    return `<div class="admin-row locale-row"><span><strong>${names[0]}</strong><small>${names[1]} · ${enabled ? "已开放" : "已关闭"}</small></span><button class="switch-button${enabled ? " on" : ""}" type="button" data-action="toggle-locale" data-locale="${code}" role="switch" aria-checked="${enabled}"${code === "en" ? " disabled title=\"英语为保底语言\"" : ""}><i></i><span>${enabled ? "已开放" : "已关闭"}</span></button></div>`;
+  }).join("");
+}
+
+async function toggleAdminLocale(code) {
+  if (!adminLocaleCodes.includes(code) || code === "en") return;
+  const next = { ...state.localeSettings, [code]: state.localeSettings[code] === false };
+  if (adminIsCloud() && window.LearningApi?.updateAdminLocales) {
+    try { await window.LearningApi.updateAdminLocales({ locales: next }); }
+    catch (error) { showToast(error.message || "语种配置保存失败"); return; }
+  }
+  state.localeSettings = next;
+  localStorage.setItem("learningHubLocaleSettings", JSON.stringify(next));
+  renderAdminLocales();
+  showToast(`${adminLocaleNames[code][0]}已${next[code] ? "开放" : "关闭"}`);
 }
 
 function renderAdminOverview() {
@@ -2178,6 +2216,8 @@ document.addEventListener("click", (event) => {
   if (resetTeacherInviteBtn) { void resetAdminTeacherInvite(resetTeacherInviteBtn.dataset.resetTeacherInvite); return; }
   const togglePublish = event.target.closest("[data-action='toggle-publish']");
   if (togglePublish) { toggleBookPublish(togglePublish.dataset.id); return; }
+  const toggleLocale = event.target.closest("[data-action='toggle-locale']");
+  if (toggleLocale) { void toggleAdminLocale(toggleLocale.dataset.locale); return; }
   const resetPublish = event.target.closest("[data-action='reset-publish']");
   if (resetPublish) { resetBookPublish(resetPublish.dataset.id); return; }
   const refreshReview = event.target.closest("[data-action='refresh-review']");

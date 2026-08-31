@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260831-2">
+  <link rel="stylesheet" href="styles.css?v=20260831-3">
   <link rel="stylesheet" href="writing-zone.css?v=20260826-2">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
 </head>
@@ -251,6 +251,7 @@
           <button type="button" data-admin-tab="users">用户与角色管理<small>Users &amp; roles</small></button>
           <button type="button" data-admin-tab="publishing">教材与课程发布<small>Publishing</small></button>
           <button type="button" data-admin-tab="review">多语言内容审核<small>Review</small></button>
+          <button type="button" data-admin-tab="locales">语种管理<small>Languages</small></button>
         </nav>
         <main class="admin-content" aria-live="polite">
         <section class="admin-panel" data-admin-panel="overview">
@@ -282,6 +283,11 @@
           <div class="admin-panel-heading"><div><span>语种</span><h2>多语言内容审核</h2><p>从云端数据统计已开放课次的语种覆盖，并标记审核状态。</p></div></div>
           <div class="admin-toolbar"><strong>覆盖语种：中文 · 拼音 · 英 · 西 · 法 · 印尼 · 日 · 韩 · 老挝 · 马来 · 缅 · 俄 · 泰</strong><button class="quiet-button" type="button" data-action="review-refresh-all">全部刷新统计 <small>Refresh all</small></button></div>
           <div class="admin-list" id="adminReviewList"></div>
+        </section>
+        <section class="admin-panel" data-admin-panel="locales" hidden>
+          <div class="admin-panel-heading"><div><span>全局配置</span><h2>语种管理</h2><p>统一控制学生端和教师端可选择的辅助语种。关闭语种不会删除已有内容。</p></div></div>
+          <div class="admin-list" id="adminLocaleList"></div>
+          <div class="admin-overview-note">英语是系统保底语言，不能关闭。修改后会记录到云端配置。</div>
         </section>
         </main>
         <div class="management-list"><button>系统配置 <small>Settings</small> <span>待接入</span></button></div>
@@ -615,7 +621,7 @@
   <script src="../shared/learning-api-client.js?v=20260825-1"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260826-1"></script>
-  <script src="app.js?v=20260831-1" defer></script>
+  <script src="app.js?v=20260831-2" defer></script>
   <script src="writing-zone.js?v=20260826-2" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
