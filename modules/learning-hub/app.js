@@ -190,6 +190,10 @@ const elements = {
   adminPublishingList: document.querySelector("#adminPublishingList"),
   adminReviewList: document.querySelector("#adminReviewList"),
   adminLocaleList: document.querySelector("#adminLocaleList"),
+  adminCourseList: document.querySelector("#adminCourseList"),
+  adminCourseStudentsPanel: document.querySelector("#adminCourseStudentsPanel"),
+  adminCourseStudentsTitle: document.querySelector("#adminCourseStudentsTitle"),
+  adminCourseStudentsList: document.querySelector("#adminCourseStudentsList"),
   adminStatTeachers: document.querySelector("#adminStatTeachers"),
   adminStatClasses: document.querySelector("#adminStatClasses"),
   adminStatStudents: document.querySelector("#adminStatStudents"),
@@ -1750,10 +1754,66 @@ function showAdminTab(tab) {
 
 function renderAdminView() {
   renderAdminOverview();
+  void loadAdminOverview();
   void loadAdminTeachers();
+  void loadAdminCourses();
   renderAdminPublishing();
   renderAdminReview();
   void loadAdminLocales();
+}
+
+async function loadAdminOverview() {
+  if (!adminIsCloud() || !window.LearningApi?.adminOverview) return;
+  try {
+    const result = await window.LearningApi.adminOverview();
+    const summary = result || {};
+    if (elements.adminStatTeachers) elements.adminStatTeachers.textContent = String(summary.teachers?.total ?? 0);
+    if (elements.adminStatClasses) elements.adminStatClasses.textContent = String(summary.courses?.total ?? 0);
+    if (elements.adminStatStudents) elements.adminStatStudents.textContent = String(summary.students?.total ?? 0);
+    if (elements.adminOverviewNote) elements.adminOverviewNote.textContent = `云端数据已更新：${summary.generatedAt ? new Date(summary.generatedAt).toLocaleString() : "刚刚"}。`;
+  } catch (error) {
+    if (elements.adminOverviewNote) elements.adminOverviewNote.textContent = `云端统计暂时不可用：${error.message || "请稍后重试"}`;
+  }
+}
+
+async function loadAdminCourses() {
+  if (!elements.adminCourseList) return;
+  if (adminIsCloud() && window.LearningApi?.adminCourses) {
+    try {
+      const result = await window.LearningApi.adminCourses();
+      state.adminCourses = result.courses || [];
+    } catch (error) {
+      elements.adminCourseList.innerHTML = `<p class="empty-approval">${escapeHtml(error.message || "班级列表读取失败")}</p>`;
+      return;
+    }
+  } else {
+    state.adminCourses = (state.localCourses || []).map((course) => ({ ...course, studentCount: Array.isArray(course.students) ? course.students.length : 0 }));
+  }
+  renderAdminCourses();
+}
+
+function renderAdminCourses() {
+  const courses = state.adminCourses || [];
+  elements.adminCourseList.innerHTML = courses.length
+    ? courses.map((course) => `<div class="admin-row"><span><strong>${escapeHtml(course.className || "未命名班级")}</strong><small>${escapeHtml(course.teacher || "未绑定教师")} · ${escapeHtml(course.term || "")} · ${escapeHtml(bookById(course.bookId || "")?.label || course.bookId || "")} · ${course.studentCount || 0}名学生</small></span><button class="quiet-button" type="button" data-admin-course-students="${escapeHtml(course.courseId)}">查看学生 <small>Students</small></button></div>`).join("")
+    : '<p class="empty-approval">当前还没有教师班级数据。</p>';
+}
+
+async function openAdminCourseStudents(courseId) {
+  const course = (state.adminCourses || []).find((item) => item.courseId === courseId);
+  if (!course || !elements.adminCourseStudentsPanel) return;
+  let students = Array.isArray(course.students) ? course.students : [];
+  if (adminIsCloud() && window.LearningApi?.adminCourseStudents) {
+    try {
+      const result = await window.LearningApi.adminCourseStudents({ courseId });
+      students = result.students || [];
+    } catch (error) { showToast(error.message || "学生列表读取失败"); return; }
+  }
+  elements.adminCourseStudentsPanel.hidden = false;
+  elements.adminCourseStudentsTitle.textContent = `${course.className || "班级"} · ${course.teacher || ""}`;
+  elements.adminCourseStudentsList.innerHTML = students.length
+    ? students.map((student) => `<div class="admin-row"><span><strong>${escapeHtml(student.chineseName || student.studentId || "未命名学生")}</strong><small>${escapeHtml(student.englishName || "")} · 学号 ${escapeHtml(student.studentId || "")} · ${student.active === false ? "已停用" : "已启用"}</small></span></div>`).join("")
+    : '<p class="empty-approval">该班级还没有学生。</p>';
 }
 
 const adminLocaleCodes = ["en", "es", "fr", "id", "ja", "ko", "lo", "ms", "my", "ru", "th"];
@@ -2204,6 +2264,8 @@ document.addEventListener("click", (event) => {
   }
   const adminTab = event.target.closest("[data-admin-tab]")?.dataset.adminTab;
   if (adminTab) { showAdminTab(adminTab); return; }
+  const adminCourseStudents = event.target.closest("[data-admin-course-students]");
+  if (adminCourseStudents) { void openAdminCourseStudents(adminCourseStudents.dataset.adminCourseStudents); return; }
   if (event.target.closest("[data-action='open-add-teacher']")) { elements.addTeacherForm.hidden = false; elements.addTeacherForm.querySelector('[name="teacherName"]')?.focus(); return; }
   if (event.target.closest("[data-action='cancel-add-teacher']")) { elements.addTeacherForm.hidden = true; elements.addTeacherForm.reset(); return; }
   const removeTeacherBtn = event.target.closest("[data-remove-teacher]");

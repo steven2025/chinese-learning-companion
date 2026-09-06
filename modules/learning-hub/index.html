@@ -248,6 +248,7 @@
         <header class="page-heading"><div><span>管理员身份</span><h1>系统管理</h1><p>管理教师账号、教材开放与多语言内容审核。</p></div></header>
         <nav class="admin-tabs" aria-label="系统管理功能">
           <button class="active" type="button" data-admin-tab="overview">系统总览<small>Overview</small></button>
+          <button type="button" data-admin-tab="classes">教师与班级<small>Classes</small></button>
           <button type="button" data-admin-tab="users">用户与角色管理<small>Users &amp; roles</small></button>
           <button type="button" data-admin-tab="publishing">教材与课程发布<small>Publishing</small></button>
           <button type="button" data-admin-tab="review">多语言内容审核<small>Review</small></button>
@@ -263,6 +264,14 @@
             <article class="admin-stat-card"><span>开放教材</span><strong id="adminStatBooks">—</strong><small>Published books</small></article>
           </div>
           <div class="admin-overview-note" id="adminOverviewNote">正在读取本地管理数据…</div>
+        </section>
+        <section class="admin-panel" data-admin-panel="classes" hidden>
+          <div class="admin-panel-heading"><div><span>组织</span><h2>教师与班级</h2><p>查看教师新建的班级和每个班级的学生名单。管理员仅有只读权限。</p></div></div>
+          <div class="admin-list" id="adminCourseList"></div>
+          <section class="admin-detail-panel" id="adminCourseStudentsPanel" hidden>
+            <div class="admin-panel-heading"><div><span>班级学生</span><h2 id="adminCourseStudentsTitle">学生列表</h2></div></div>
+            <div class="admin-list" id="adminCourseStudentsList"></div>
+          </section>
         </section>
         <section class="admin-panel" data-admin-panel="users">
           <div class="admin-panel-heading"><div><span>角色</span><h2>用户与角色管理</h2><p>教师负责本班学生名单；管理员负责教师账号的开通、停用与删除。</p></div></div>
@@ -618,10 +627,10 @@
   <div class="toast" id="toast" role="status" hidden></div>
   <script src="../../vendor/xlsx.full.min.js"></script>
   <script src="../../config.js?v=20260823-1"></script>
-  <script src="../shared/learning-api-client.js?v=20260825-1"></script>
+  <script src="../shared/learning-api-client.js?v=20260906-1"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="practice-analytics.js?v=20260826-1"></script>
-  <script src="app.js?v=20260831-2" defer></script>
+  <script src="app.js?v=20260906-1" defer></script>
   <script src="writing-zone.js?v=20260826-2" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
