@@ -276,37 +276,43 @@
         contextLabel: "朗读词语",
       };
     }
-    if (unit.type === "syllableReading" && item?.category === "initial") {
-      return {
-        id: `${unit.id}-${item.id}`,
-        display: item.display,
-        referencePinyin: item.display,
-        referenceText: item.display,
-        cueId: item.cueId,
-        mode: "pinyin",
-        unitType: "pinyin-initial",
-        title: "声母跟读测评",
-        contextLabel: "当前声母",
-        analysis: { display: item.display, initial: item.display, final: "", tone: 0, toneShown: false },
-      };
-    }
+    if (!item) return null;
     const analysis = analysisForItem(item, unit);
-    if (!analysis?.final || unit.type === "soundChart") return null;
     if (unit.type === "toneMarking" && !(state.toneAnswers[item.id]?.correct || state.toneAnswers[item.id]?.revealed)) return null;
+    if (!analysis) return null;
     const initial = String(analysis.initial || "").trim().toLowerCase();
     const final = String(analysis.final || "").trim().toLowerCase();
     const tone = Number(analysis.tone || 0);
+    // Practice stays available even when the scoring reference is not validated.
+    const practiceOnly = unit.type === "soundChart" || !final || item.category === "initial" || item.category === "final" || ![1, 2, 3, 4].includes(tone);
+    let reference = `${initial}${final}`.replaceAll("ü", "v");
+    if (/^[ln]ve$/.test(reference)) reference = reference.replace("v", "u");
     return {
       id: `${unit.id}-${item.id || item.cueId || itemKey(item)}`.replace(/[^a-zA-Z0-9_-]+/g, "-"),
       display: String(analysis.display || item.display || ""),
-      referencePinyin: `${initial ? `${initial} ` : ""}${final}${tone || ""}`,
+      referencePinyin: `${reference}${tone || ""}`,
+      practiceOnly,
+      practiceReason: "此项的评分标准尚未验证，或属于未标调/轻声练习。可录音、试听和对照标准音，暂不上传或评分。",
       toneDetection: tone > 0,
       referenceText: String(analysis.display || item.display || ""),
       cueId: item.cueId,
       mode: "pinyin",
       unitType: "pinyin-syllable",
-      title: "完整音节跟读测评",
+      title: practiceOnly ? "拼音跟读练习" : "完整音节跟读测评",
       analysis,
+    };
+  }
+
+  function knowledgeRecordingTarget(unit, example, index) {
+    const item = { ...example, id: example.id || `${unit.id}-example-${index}` };
+    if (unit.id === "syllable" && item.final && [1, 2, 3, 4].includes(item.tone)) return pinyinAssessmentTarget(unit, item);
+    return {
+      id: item.id, display: item.hanzi || item.display,
+      referenceText: item.hanzi || item.display,
+      referencePinyin: item.spokenPinyin || item.pinyin || item.display,
+      cueId: item.cueId || "", mode: "pinyin", unitType: "pinyin-rule-example",
+      title: "语音知识跟读练习", contextLabel: "规则例词", practiceOnly: true,
+      practiceReason: "此项涉及拼写、轻声或变调等专项读法，评分尚未验证。可录音、试听和对照标准音，暂不上传或评分。",
     };
   }
 
@@ -620,7 +626,7 @@
       <header><span>语音知识 <small>Phonetic Notes</small></span><h2>${escapeHtml(localize(unit.title, "zh-CN"))}</h2><p>${escapeHtml(localize(unit.title, "en"))}</p></header>
       ${comparisonButtons(unit)}
       ${renderKnowledgeParagraphs(unit)}
-      ${examples.length ? `<div class="pron-example-grid">${examples.map((example) => `<section><h3>${escapeHtml(example.display)}</h3>${example.hanzi && example.hanzi !== example.display ? `<p class="pron-example-hanzi">${escapeHtml(example.hanzi)}</p>` : ""}${renderDecomposition(example)}${renderToneCurve(example.tone, true)}<div class="pron-example-actions">${example.cueId ? `<button type="button" data-pron-play="${example.cueId}">▶ 播放 <small>Play</small></button>` : ""}<button type="button" data-knowledge-repeat="${escapeHtml(example.id)}">● 跟读测评 <small>Repeat</small></button></div></section>`).join("")}</div>` : ""}
+      ${examples.length ? `<div class="pron-example-grid">${examples.map((example) => `<section><h3>${escapeHtml(example.display)}</h3>${example.hanzi && example.hanzi !== example.display ? `<p class="pron-example-hanzi">${escapeHtml(example.hanzi)}</p>` : ""}${renderDecomposition(example)}${renderToneCurve(example.tone, true)}<div class="pron-example-actions">${example.cueId ? `<button type="button" data-pron-play="${example.cueId}">▶ 播放 <small>Play</small></button>` : ""}<button type="button" data-knowledge-repeat="${escapeHtml(example.id || example.display)}">● 跟读 <small>Repeat</small></button></div></section>`).join("")}</div>` : ""}
       ${unit.items ? `<section class="pron-chart-section"><div class="pron-chart-grid">${unit.items.map((item) => `<button type="button" class="${itemKey(item) === itemKey(selected || {}) ? "active" : ""}" data-pron-select="${escapeHtml(itemKey(item))}"><strong>${escapeHtml(item.display)}</strong><span>选择 <small>Select</small></span></button>`).join("")}</div>${selected ? renderFocusStage(unit, null, selected) : ""}</section>` : ""}
     </article>`;
   }
@@ -1655,13 +1661,14 @@
     const recording = state.pinyinRecording;
     const target = recording.target;
     if (!target) return;
+    const practiceOnly = target.practiceOnly === true;
     const quota = assessmentQuota(target);
     const exhausted = quota.remaining <= 0;
     const result = recording.result;
     const advice = result?.advice || {};
     const statusText = {
       idle: "先听标准音，再开始录音。", recording: "正在录音，请清楚地读出这个音节……",
-      ready: "录音完成，可以试听或提交正式测评。", working: "录音已提交，正在测评。",
+      ready: practiceOnly ? "录音完成，请试听并与标准音对照。本项暂不评分。" : "录音完成，可以试听或提交正式测评。", working: "录音已提交，正在测评。",
       error: recording.message || "测评没有完成，请保留录音后重试。", complete: "测评完成。",
     }[recording.status] || "";
     elements.assistContent.innerHTML = `<article class="pron-assessment">
@@ -1675,10 +1682,10 @@
         <button type="button" class="pron-action primary" data-pron-play="${escapeHtml(target.cueId || "")}"${target.cueId ? "" : " disabled"}>▶ ${bilingual(target.cueId ? "听标准音" : "自主回答", target.cueId ? "Model" : "My answer")}</button>
         <button type="button" class="pron-action record" data-pinyin-record>${recording.active ? "■ " + bilingual("停止录音", "Stop") : "● " + bilingual("开始录音", "Record")}</button>
         <button type="button" class="pron-action compare" data-pinyin-preview${recording.previewUrl ? "" : " disabled"}>▶ ${bilingual("试听录音", "Playback")}</button>
-        <button type="button" class="pron-action submit" data-pinyin-submit${recording.wavBlob && !recording.active && !exhausted ? "" : " disabled"}>✓ ${bilingual(exhausted ? "次数已用完" : "正式测评", exhausted ? "No attempts left" : "Assess")}</button>
+        ${practiceOnly ? "" : `<button type="button" class="pron-action submit" data-pinyin-submit${recording.wavBlob && !recording.active && !exhausted ? "" : " disabled"}>✓ ${bilingual(exhausted ? "次数已用完" : "正式测评", exhausted ? "No attempts left" : "Assess")}</button>`}
       </div>
-      <label class="pron-assessment-consent"><input type="checkbox" data-pinyin-consent><span>我同意将本次录音保存到个人 COS 学习记录并用于 AI 测评。<small>I consent to saving and assessing this recording.</small></span></label>
-      <p class="pron-assessment-policy"><strong>剩余 ${quota.remaining} / 2 次正式测评</strong>；录音和试听不计次数。<small>${quota.remaining} of 2 formal assessments remaining; recording and playback do not count.</small></p>
+      ${practiceOnly ? `<p class="pron-assessment-policy">${escapeHtml(target.practiceReason)}<small>Practice only: record locally, replay and compare. No upload or score.</small></p>` : `<label class="pron-assessment-consent"><input type="checkbox" data-pinyin-consent><span>我同意将本次录音保存到个人 COS 学习记录并用于 AI 测评。<small>I consent to saving and assessing this recording.</small></span></label>
+      <p class="pron-assessment-policy"><strong>剩余 ${quota.remaining} / 2 次正式测评</strong>；录音和试听不计次数。<small>${quota.remaining} of 2 formal assessments remaining; recording and playback do not count.</small></p>`}
       ${result ? `<section class="pron-assessment-result">
         <header><span>智聆测评 <small>Pronunciation assessment</small></span><strong>${scoreValue(result.scores?.suggestedScore)}</strong></header>
         <div class="pron-score-grid">
@@ -1771,6 +1778,11 @@
 
   async function submitPinyinAssessment() {
     const recording = state.pinyinRecording;
+    if (recording.target?.practiceOnly) {
+      recording.status = "error";
+      recording.message = "本项仅供跟读练习，暂不上传或评分。";
+      return renderPinyinAssessment();
+    }
     const consent = elements.assistContent.querySelector("[data-pinyin-consent]")?.checked;
     if (!consent) { recording.status = "error"; recording.message = "请先勾选同意上传和测评。"; return renderPinyinAssessment(); }
     if (!window.LearningApi?.isConfigured() || !window.LearningApi.token()) { recording.status = "error"; recording.message = "请先登录，再使用正式拼音测评。"; return renderPinyinAssessment(); }
@@ -2029,8 +2041,8 @@
       }
       const knowledgeRepeat = event.target.closest("[data-knowledge-repeat]")?.dataset.knowledgeRepeat;
       if (knowledgeRepeat) {
-        const example = currentUnit()?.examples?.find((entry) => entry.id === knowledgeRepeat);
-        if (example) openPinyinAssessment({ id: example.id, display: example.hanzi || example.display, referencePinyin: example.spokenPinyin || example.pinyin || example.display, referenceText: example.hanzi || example.display, cueId: example.cueId || "", mode: "sentence", unitType: "pinyin-rule-example", title: "语音知识例词跟读测评", contextLabel: "规则例词" });
+        const example = currentUnit()?.examples?.find((entry) => (entry.id || entry.display) === knowledgeRepeat);
+        if (example) openPinyinAssessment(knowledgeRecordingTarget(currentUnit(), example, currentUnit().examples.indexOf(example)));
         return;
       }
       const practiceItem = event.target.closest("[data-practice-item]")?.dataset.practiceItem;
