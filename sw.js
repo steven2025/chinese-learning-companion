@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v117-course-archive-1";
+const CACHE_VERSION = "diandian-chinese-v119-mobile-logout-1";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -21,13 +21,13 @@ const APP_SHELL = [
   "./modules/shared/draggable.js?v=20260823-1",
   "./modules/learning-hub/index.html",
   "./modules/learning-hub/templates/student-import-template.xlsx",
-  "./modules/learning-hub/styles.css?v=20260920-archive-1",
+  "./modules/learning-hub/styles.css?v=20260920-mobile-logout-1",
   "./modules/learning-hub/teacher-insights.css?v=20260920-1",
   "./modules/learning-hub/writing-zone.css?v=20260826-2",
   "./modules/learning-hub/practice-analytics.css?v=20260811-6",
   "./modules/learning-hub/insight-model.js?v=20260920-1",
-  "./modules/learning-hub/teacher-insights.js?v=20260920-2",
-  "./modules/learning-hub/app.js?v=20260920-archive-1",
+  "./modules/learning-hub/teacher-insights.js?v=20260920-3",
+  "./modules/learning-hub/app.js?v=20260920-context-1",
   "./modules/learning-hub/writing-zone.js?v=20260826-2",
   "./modules/learning-hub/practice-analytics.js?v=20260826-1",
   "./modules/character-hit/index.html",
