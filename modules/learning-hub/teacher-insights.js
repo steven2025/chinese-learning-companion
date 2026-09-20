@@ -62,7 +62,8 @@
     const course=window.__activeTeacherCourse;
     const courseId=window.__activeTeacherCourseId;
     if(profile?.role!=='teacher' || !courseId) {status.textContent='请在课程管理中打开一个班级，再查看学情。';refresh.disabled=false;return;}
-    const prefix=course?.bookId==='elementary-comprehensive-1'?'cjzh-1-':course?.bookId==='intermediate-comprehensive-1'?'zjzh-1-':'';
+    const bookId=course?.bookId==='elementary-comprehensive-1'?'beginner-comprehensive-1':course?.bookId;
+    const prefix=bookId==='beginner-comprehensive-1'?'cjzh-1-':bookId==='intermediate-comprehensive-1'?'zjzh-1-':'';
     if(!prefix) {status.textContent='当前教材暂未接入详细学情。';refresh.disabled=false;return;}
     if(contextKey!==courseId) {contextKey=courseId; selected=''; lesson.innerHTML=Array.from({length:5},(_,i)=>`<option value="${prefix}${i+1}">第${i+1}课</option>`).join('');}
     const lessonId=lesson.value;

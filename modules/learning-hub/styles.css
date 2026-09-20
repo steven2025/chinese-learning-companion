@@ -294,7 +294,7 @@ button { cursor: pointer; }
 }
 @media (max-width: 760px) {
   .app-shell { display: block; padding-bottom: 66px; }
-  .topbar { width: 100%; height: 60px; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr) 38px 38px 38px; gap: 6px; padding: 0 10px; }
+  .topbar { width: 100%; height: 60px; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr) 38px 38px 38px 38px; gap: 6px; padding: 0 10px; }
   .brand img { width: 34px; height: 34px; }
   .brand small, .current-location, .language-button, .profile-button > span:not(.profile-avatar), .profile-button i { display: none; }
   .course-switcher-button { min-height: 40px; grid-template-columns: minmax(0, 1fr) 16px; padding: 4px 8px; }
@@ -380,7 +380,7 @@ button { cursor: pointer; }
 }
 @media (max-width: 760px) {
   .app-shell, .app-shell.nav-collapsed { display: block; }
-  .topbar, .app-shell.nav-collapsed .topbar { position: sticky; height: 60px; grid-template-columns: 38px minmax(0, 1fr) 38px 38px 38px; }
+  .topbar, .app-shell.nav-collapsed .topbar { position: sticky; height: 60px; grid-template-columns: 38px minmax(0, 1fr) 38px 38px 38px 38px; }
   .brand { justify-content: flex-start; }
   .app-shell.nav-collapsed .brand span { display: block; }
   .app-shell.nav-collapsed .sidebar { display: none; }
@@ -388,7 +388,7 @@ button { cursor: pointer; }
   .main-content { padding: 22px 14px 46px; }
 }
 @media (max-width: 440px) {
-  .topbar { grid-template-columns: 42px minmax(0, 1fr) 38px 38px 38px; }
+  .topbar { grid-template-columns: 42px minmax(0, 1fr) 38px 38px 38px 38px; }
   .brand > span { display: none; }
   .catalog-filters { grid-template-columns: 1fr; }
   .lesson-directory { padding: 15px; }
@@ -1040,7 +1040,7 @@ button.primary-button small, a.primary-button small, .quiet-button small, .dange
 @media (max-width: 1050px) { .topbar, .app-shell.nav-collapsed .topbar { grid-template-columns: 38px 1fr auto auto auto auto; } }
 @media (max-width: 760px) {
   .app-shell, .app-shell.nav-collapsed { display: block; }
-  .topbar, .app-shell.nav-collapsed .topbar { position: sticky; height: 60px; grid-template-columns: 38px minmax(0, 1fr) 38px 38px 38px; }
+  .topbar, .app-shell.nav-collapsed .topbar { position: sticky; height: 60px; grid-template-columns: 38px minmax(0, 1fr) 38px 38px 38px 38px; }
   .brand { justify-content: flex-start; }
   .app-shell.nav-collapsed .brand span { display: block; }
   .sidebar, .app-shell.nav-collapsed .sidebar { display: none; }

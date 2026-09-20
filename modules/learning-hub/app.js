@@ -312,6 +312,20 @@ function bookById(id) {
   return books.find((book) => book.id === id) || books.find((book) => book.id === "intermediate-comprehensive-1");
 }
 
+function canonicalBookId(id) {
+  return id === "elementary-comprehensive-1" ? "beginner-comprehensive-1" : id;
+}
+
+function applyTeacherContextControls(context) {
+  const term = context.term || terms[0];
+  const book = canonicalBookId(context.book || context.bookId) || "intermediate-comprehensive-1";
+  if (term && !Array.from(elements.teacherTerm.options).some((option) => option.value === term)) {
+    elements.teacherTerm.add(new Option(term, term));
+  }
+  elements.teacherTerm.value = term;
+  elements.teacherBook.value = book;
+}
+
 function bookOptionMarkup(selected = "") {
   return catalog.map((level) => `<optgroup label="${level.label} · ${BOOK_EN_LEVEL[level.id] || ""}">${level.books.map(([id, label]) => {
     const available = effectiveBookOpen(id);
@@ -1102,6 +1116,14 @@ async function openCourseStudents(courseId) {
   }
   if (!course) return;
   state.activeTeacherCourse = { ...course, students };
+  state.teacherContext = {
+    ...state.teacherContext,
+    teacher: course.teacher || state.teacherContext.teacher,
+    term: course.term || state.teacherContext.term,
+    book: canonicalBookId(course.bookId) || state.teacherContext.book,
+    courseId: course.courseId,
+  };
+  applyTeacherContextControls(state.teacherContext);
   window.__activeTeacherCourseId = courseId;
   window.__activeTeacherCourse = state.activeTeacherCourse;
   elements.teacherCourseList.hidden = true;
@@ -1441,18 +1463,22 @@ async function importStudentExcel(file) {
 function renderTeacherWorkspace() {
   const cloudProfile = window.LearningApi?.isConfigured() ? window.LearningApi.profile() : null;
   if (cloudProfile?.role === "teacher") {
-    state.teacherContext = { teacher: cloudProfile.teacher, term: cloudProfile.term, book: cloudProfile.bookId };
+    const activeCourse = state.activeTeacherCourse;
+    state.teacherContext = {
+      teacher: activeCourse?.teacher || cloudProfile.teacher || state.teacherContext.teacher,
+      term: activeCourse?.term || cloudProfile.term || state.teacherContext.term || terms[0],
+      book: canonicalBookId(activeCourse?.bookId || cloudProfile.bookId || state.teacherContext.book) || "intermediate-comprehensive-1",
+      courseId: activeCourse?.courseId || state.teacherContext.courseId || cloudProfile.courseId || "",
+    };
   }
   const context = state.teacherContext;
-  elements.teacherTerm.value = context.term;
-  elements.teacherBook.value = context.book;
+  applyTeacherContextControls(context);
   elements.teacherTerm.disabled = Boolean(cloudProfile?.role === "teacher");
   elements.teacherBook.disabled = Boolean(cloudProfile?.role === "teacher");
   elements.teacherName.textContent = context.teacher || state.userName || "—";
   window.WritingZone?.renderTeacherSummary();
   window.PracticeAnalytics?.render();
   if (cloudProfile?.role === "teacher") {
-    state.teacherContext = { teacher: cloudProfile.teacher, term: cloudProfile.term, book: cloudProfile.bookId, courseId: cloudProfile.courseId || "" };
     renderTeacherCoursePanel();
     void loadTeacherCourses();
     void loadCloudClassSettings();
