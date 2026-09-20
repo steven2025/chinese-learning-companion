@@ -1102,6 +1102,7 @@ async function openCourseStudents(courseId) {
   if (!course) return;
   state.activeTeacherCourse = { ...course, students };
   window.__activeTeacherCourseId = courseId;
+  window.__activeTeacherCourse = state.activeTeacherCourse;
   elements.teacherCourseList.hidden = true;
   elements.courseStudentPanel.hidden = false;
   elements.courseStudentTitle.textContent = `${course.className || "班"} · ${bookById(course.bookId).label} · ${bookById(course.bookId).en}`;
@@ -1115,6 +1116,7 @@ async function openCourseStudents(courseId) {
 
 function backCourseList() {
   window.__activeTeacherCourseId = "";
+  window.__activeTeacherCourse = null;
   state.activeTeacherCourse = null;
   elements.courseStudentPanel.hidden = true;
   elements.teacherCourseList.hidden = false;

@@ -1,0 +1,32 @@
+#teacherView .class-context select, #teacherView .class-context select:disabled,
+#teacherView .class-context option {color:#152e32;background:#fff;-webkit-text-fill-color:#152e32;opacity:1;color-scheme:light;}
+#teacherView > .page-heading {margin:0 0 8px;padding:0;}
+#teacherView > .page-heading p, #teacherView > .page-heading span {display:none;}
+#teacherView > .page-heading h1 {font-size:22px;margin:0;}
+#teacherView .class-context {padding:8px 12px;margin-bottom:8px;}
+#teacherView .teacher-tabs {margin-bottom:8px;}
+#teacherPracticePanel {padding:12px;min-width:0;}
+#teacherPracticePanel > header {margin-bottom:8px;gap:12px;}
+#teacherPracticePanel > header h2 {font-size:20px;margin:0;}
+#teacherPracticePanel > header p,#teacherPracticePanel > header > div > span {display:none;}
+.insight-toolbar {display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+.insight-toolbar > div,.insight-areas {display:flex;gap:6px;flex-wrap:wrap;}
+.insight-toolbar button,.insight-students button,.insight-areas button {padding:7px 12px;border:1px solid #bdcfcb;border-radius:6px;background:#fff;color:#152e32;}
+.insight-toolbar button[aria-pressed=true],.insight-students button[aria-pressed=true],.insight-areas button[aria-pressed=true] {background:#147d75;color:white;border-color:#147d75;}
+.insight-toolbar button:disabled {opacity:.55;cursor:not-allowed;}
+.insight-students {display:flex;gap:5px;flex-wrap:wrap;max-height:118px;overflow:auto;margin:6px 0;}
+.insight-students small,.insight-table small {display:block;font-size:12px;line-height:1.6;}
+.insight-note,#teacherPracticePanel .practice-report-status {font-size:12px;color:#526967;margin:6px 0;}
+.insight-scroll {max-width:100%;height:clamp(300px,calc(100dvh - 310px),850px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;border:1px solid #cbdad6;border-radius:6px;}
+.insight-table {border-collapse:separate;border-spacing:0;min-width:1250px;width:100%;font-size:14px;}
+.insight-table th,.insight-table td {text-align:left;padding:9px 12px;border-bottom:1px solid #dce6e2;border-right:1px solid #e4ece9;vertical-align:top;min-width:135px;background:white;}
+.insight-table thead th {position:sticky;top:0;z-index:3;background:#e8f4f1;white-space:nowrap;}
+.insight-table tr > :first-child {position:sticky;left:0;z-index:2;background:#f5faf8;min-width:160px;max-width:190px;}
+.insight-table thead tr > :first-child {z-index:4;}
+.insight-table .insight-wide {min-width:320px;max-width:450px;}
+.insight-table button {background:transparent;border:0;color:#126d67;text-align:left;padding:0;}
+.insight-table pre {font:inherit;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;max-width:430px;}
+.insight-table details {margin-top:5px;min-width:150px;}
+.insight-table summary {cursor:pointer;color:#126d67;}
+.insight-table td {white-space:pre-wrap;overflow-wrap:anywhere;}
+@media(max-width:700px){#teacherPracticePanel{padding:8px}.insight-toolbar{align-items:flex-start}.insight-scroll{height:55dvh}.insight-students{flex-wrap:nowrap;max-height:70px}.insight-students button{flex-shrink:0}#teacherView .class-context{grid-template-columns:1fr 1fr}#teacherView .class-context > div{grid-column:1/-1}}
