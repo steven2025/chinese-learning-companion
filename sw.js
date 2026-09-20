@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v115-teacher-insights-1";
+const CACHE_VERSION = "diandian-chinese-v116-teacher-insights-2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -13,7 +13,7 @@ const APP_SHELL = [
   "./icons/icon-512.png",
   "./icons/maskable-192.png",
   "./icons/maskable-512.png",
-  "./modules/shared/learning-api-client.js?v=20260920-1",
+  "./modules/shared/learning-api-client.js?v=20260920-2",
   "./modules/shared/voice-orb.js?v=20260801-1",
   "./modules/ai-teacher/index.html",
   "./modules/ai-teacher/styles.css?v=20260827-1",
@@ -26,7 +26,7 @@ const APP_SHELL = [
   "./modules/learning-hub/writing-zone.css?v=20260826-2",
   "./modules/learning-hub/practice-analytics.css?v=20260811-6",
   "./modules/learning-hub/insight-model.js?v=20260920-1",
-  "./modules/learning-hub/teacher-insights.js?v=20260920-1",
+  "./modules/learning-hub/teacher-insights.js?v=20260920-2",
   "./modules/learning-hub/app.js?v=20260920-1",
   "./modules/learning-hub/writing-zone.js?v=20260826-2",
   "./modules/learning-hub/practice-analytics.js?v=20260826-1",
