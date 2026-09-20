@@ -313,7 +313,9 @@ function bookById(id) {
 }
 
 function canonicalBookId(id) {
-  return id === "elementary-comprehensive-1" ? "beginner-comprehensive-1" : id;
+  if (["elementary-comprehensive-1", "cjzh-1"].includes(id)) return "beginner-comprehensive-1";
+  if (id === "zjzh-1") return "intermediate-comprehensive-1";
+  return id;
 }
 
 function applyTeacherContextControls(context) {
