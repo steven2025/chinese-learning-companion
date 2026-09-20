@@ -494,9 +494,9 @@
     <form class="auth-dialog-shell" id="addStudentForm">
       <header><div><span>教学工作台</span><h2 id="addStudentDialogTitle">新增学生 <small>Add student</small></h2></div><button type="button" data-add-student-close aria-label="关闭">×</button></header>
       <div class="form-grid two-columns">
-        <label><span>姓名 / Name</span><input name="chineseName" required maxlength="40" placeholder="学生中文姓名"></label>
+        <label><span>中文名 / Chinese name（可选）</span><input name="chineseName" maxlength="40" placeholder="有中文名时优先显示"></label>
         <label><span>学号 / Student ID</span><input name="studentId" required maxlength="40" placeholder="唯一学号，用于登录"></label>
-        <label><span>英文名 / English name（可选）</span><input name="englishName" maxlength="40" placeholder="English name"></label>
+        <label><span>英文名 / English name（中文名为空时必填）</span><input name="englishName" maxlength="40" placeholder="English name"></label>
         <label><span>邀请码 / Invitation code（可选）</span><input name="inviteCode" maxlength="12" placeholder="留空则自动生成"></label>
       </div>
       <p>添加后将立即确认加入：<strong id="addStudentContextLabel"></strong></p>
@@ -632,8 +632,8 @@
   <script src="../shared/learning-api-client.js?v=20260920-2"></script>
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="insight-model.js?v=20260920-1"></script>
-  <script src="teacher-insights.js?v=20260920-5"></script>
-  <script src="app.js?v=20260920-context-2" defer></script>
+  <script src="teacher-insights.js?v=20260920-6"></script>
+  <script src="app.js?v=20260920-name-fallback-1" defer></script>
   <script src="writing-zone.js?v=20260826-2" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>

@@ -673,7 +673,13 @@ function findStudentEnrollment(studentId, teacherHint) {
 
 function renderStudentRow(student, pending) {
   const sourceLabel = student.source === "teacher" ? "教师录入" : "自助加入";
-  return `<div class="student-row"><span><strong>${escapeHtml(student.chineseName)}${student.englishName ? ` · ${escapeHtml(student.englishName)}` : ""}</strong><small>学号 ${escapeHtml(student.studentId)} · ${sourceLabel}${pending ? " · 待确认" : ""}</small></span><span class="student-row-actions">${pending ? `<button class="confirm-button" type="button" data-action="confirm-student" data-id="${escapeHtml(student.id)}">确认加入 <small>Confirm</small></button>` : ""}<button class="danger-button" type="button" data-action="remove-student" data-id="${escapeHtml(student.id)}">移除 <small>Remove</small></button></span></div>`;
+  const displayName = studentDisplayName(student);
+  const englishSuffix = student.chineseName && student.englishName ? ` · ${escapeHtml(student.englishName)}` : "";
+  return `<div class="student-row"><span><strong>${escapeHtml(displayName)}${englishSuffix}</strong><small>学号 ${escapeHtml(student.studentId)} · ${sourceLabel}${pending ? " · 待确认" : ""}</small></span><span class="student-row-actions">${pending ? `<button class="confirm-button" type="button" data-action="confirm-student" data-id="${escapeHtml(student.id)}">确认加入 <small>Confirm</small></button>` : ""}<button class="danger-button" type="button" data-action="remove-student" data-id="${escapeHtml(student.id)}">移除 <small>Remove</small></button></span></div>`;
+}
+
+function studentDisplayName(student) {
+  return student?.chineseName || student?.name || student?.englishName || student?.studentId || student?.userId || "未命名学生";
 }
 
 async function handleStudentLogin(form) {
@@ -1151,10 +1157,10 @@ function renderCourseStudentsTable(students) {
   const activeStudents = students.filter((student) => student.active !== false);
   const removedStudents = students.filter((student) => student.active === false);
   const header = '<div class="course-student-row head"><span>姓名</span><span>英文名</span><span>学号</span><span>邀请码</span><span>操作</span></div>';
-  const activeRows = activeStudents.map((student) => `<div class="course-student-row"><span><strong>${escapeHtml(student.chineseName || "—")}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="invite-cell"><code>${escapeHtml(student.inviteCode)}</code><button class="quiet-button" type="button" data-copy-invite="${escapeHtml(student.studentId)}">复制信息 <small>Copy</small></button></span><span class="course-student-actions"><button class="quiet-button" type="button" data-reset-invite="${escapeHtml(student.studentId)}">重置码 <small>Reset</small></button><button class="quiet-button" type="button" data-edit-student="${escapeHtml(student.studentId)}">编辑 <small>Edit</small></button><button class="danger-button" type="button" data-remove-student-course="${escapeHtml(student.studentId)}">移除 <small>Remove</small></button></span></div>`).join("");
+  const activeRows = activeStudents.map((student) => `<div class="course-student-row"><span><strong>${escapeHtml(studentDisplayName(student))}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="invite-cell"><code>${escapeHtml(student.inviteCode)}</code><button class="quiet-button" type="button" data-copy-invite="${escapeHtml(student.studentId)}">复制信息 <small>Copy</small></button></span><span class="course-student-actions"><button class="quiet-button" type="button" data-reset-invite="${escapeHtml(student.studentId)}">重置码 <small>Reset</small></button><button class="quiet-button" type="button" data-edit-student="${escapeHtml(student.studentId)}">编辑 <small>Edit</small></button><button class="danger-button" type="button" data-remove-student-course="${escapeHtml(student.studentId)}">移除 <small>Remove</small></button></span></div>`).join("");
   const activeSection = activeStudents.length ? header + activeRows : '<p class="empty-approval">还没有在班学生，点击“＋新增学生”或“导入 Excel”。</p>';
   const removedSection = removedStudents.length
-    ? `<details class="removed-students"><summary>已移除学生 ${removedStudents.length} 名（可恢复）</summary>${header}${removedStudents.map((student) => `<div class="course-student-row removed"><span><strong>${escapeHtml(student.chineseName || "—")}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="muted">学习数据已保留</span><span class="course-student-actions"><button class="quiet-button" type="button" data-restore-student-course="${escapeHtml(student.studentId)}">恢复 <small>Restore</small></button></span></div>`).join("")}</details>`
+    ? `<details class="removed-students"><summary>已移除学生 ${removedStudents.length} 名（可恢复）</summary>${header}${removedStudents.map((student) => `<div class="course-student-row removed"><span><strong>${escapeHtml(studentDisplayName(student))}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="muted">学习数据已保留</span><span class="course-student-actions"><button class="quiet-button" type="button" data-restore-student-course="${escapeHtml(student.studentId)}">恢复 <small>Restore</small></button></span></div>`).join("")}</details>`
     : "";
   elements.courseStudentTable.innerHTML = activeSection + removedSection;
 }
@@ -1203,7 +1209,7 @@ async function addCourseStudentByForm(data) {
   const studentId = data.get("studentId").trim();
   const englishName = data.get("englishName").trim();
   const inviteCode = data.get("inviteCode").trim();
-  if (!chineseName || !studentId) throw new Error("姓名和学号不能为空");
+  if ((!chineseName && !englishName) || !studentId) throw new Error("中文名、英文名至少填写一个，并填写学号");
   if (teacherIsCloud()) {
     const result = await window.LearningApi.addCourseStudents({ courseId: course.courseId, students: [{ studentId, chineseName, englishName, inviteCode }] });
     if (result.imported !== 1) throw new Error(result.results?.[0]?.message || "添加失败");
@@ -1225,7 +1231,7 @@ async function updateCourseStudentByForm(data) {
   const chineseName = data.get("chineseName").trim();
   const englishName = data.get("englishName").trim();
   const inviteCode = data.get("inviteCode").trim();
-  if (!chineseName) throw new Error("姓名不能为空");
+  if (!chineseName && !englishName) throw new Error("中文名和英文名至少填写一个");
   if (teacherIsCloud()) {
     const result = await window.LearningApi.updateCourseStudent({ courseId: course.courseId, studentId: entry.studentId, chineseName, englishName, ...(inviteCode ? { inviteCode } : {}) });
     return result;
@@ -1897,7 +1903,7 @@ async function openAdminCourseStudents(courseId) {
   elements.adminCourseStudentsPanel.hidden = false;
   elements.adminCourseStudentsTitle.textContent = `${course.className || "班级"} · ${course.teacher || ""}`;
   elements.adminCourseStudentsList.innerHTML = students.length
-    ? students.map((student) => `<div class="admin-row"><span><strong>${escapeHtml(student.chineseName || student.studentId || "未命名学生")}</strong><small>${escapeHtml(student.englishName || "")} · 学号 ${escapeHtml(student.studentId || "")} · ${student.active === false ? "已停用" : "已启用"}</small></span></div>`).join("")
+    ? students.map((student) => `<div class="admin-row"><span><strong>${escapeHtml(studentDisplayName(student))}</strong><small>${escapeHtml(student.englishName || "")} · 学号 ${escapeHtml(student.studentId || "")} · ${student.active === false ? "已停用" : "已启用"}</small></span></div>`).join("")
     : '<p class="empty-approval">该班级还没有学生。</p>';
 }
 
@@ -2297,7 +2303,7 @@ document.addEventListener("click", (event) => {
   const removeStudentCourse = event.target.closest("[data-remove-student-course]");
   if (removeStudentCourse) {
     const entry = (state.activeTeacherCourse?.students || []).find((item) => item.studentId === removeStudentCourse.dataset.removeStudentCourse);
-    openConfirmation(`确定将“${entry?.chineseName || removeStudentCourse.dataset.removeStudentCourse}”移出本班？学生将不能再进入本班，但历史学习数据会保留。`, async () => {
+    openConfirmation(`确定将“${studentDisplayName(entry || { studentId: removeStudentCourse.dataset.removeStudentCourse })}”移出本班？学生将不能再进入本班，但历史学习数据会保留。`, async () => {
       await removeCourseStudentEntry(state.activeTeacherCourse?.courseId, removeStudentCourse.dataset.removeStudentCourse);
       showToast("已移出本班，学习数据已保留");
       await refreshActiveCourseStudents();

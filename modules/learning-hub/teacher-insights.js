@@ -104,7 +104,7 @@
     const students=scope==='student'?report.students.filter(s=>s.userId===selected):report.students.filter(s=>scope==='removed'?s.active===false:s.active!==false);
     const ids=new Set(students.map(s=>s.userId));
     const data=allRows.filter(r=>ids.has(r.studentId));
-    const summary=[['姓名','学号',...areas.map(a=>`${M.labels[a]}有记录项目数`)],...students.map(s=>[s.name || s.englishName,s.userId,...areas.map(a=>data.filter(r=>r.studentId===s.userId&&r.area===a&&r.recorded).length)])];
+    const summary=[['姓名','学号',...areas.map(a=>`${M.labels[a]}有记录项目数`)],...students.map(s=>[s.name || s.englishName || s.userId,s.userId,...areas.map(a=>data.filter(r=>r.studentId===s.userId&&r.area===a&&r.recorded).length)])];
     const sheets=[['本课汇总',summary],['逐题答案',M.detailTable(data)],['提交记录',M.historyTable(data)],['测评反馈',[['姓名','学号','部分','项目ID','AI使用','反馈'],...data.filter(r=>r.feedback!=='反馈未记录').map(r=>[r.name,r.studentId,M.labels[r.area],r.id,r.ai,r.feedback])]],['数据说明',[['项目','内容'],['班级',report.courseName],['课次',report.lessonId],['读取时间',report.generatedAt],...(report.limitations || []).map(t=>['范围说明',t])]]];
     const wb=XLSX.utils.book_new();
     const overflow=[['工作表','数据行','列','分段序号','完整内容分段（顺序拼接）']];
