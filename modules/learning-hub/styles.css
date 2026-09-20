@@ -645,6 +645,7 @@ button { cursor: pointer; }
   gap: 10px;
   flex-wrap: wrap;
 }
+.archive-course-button { margin-left: auto; }
 .file-import-label {
   display: inline-flex;
   align-items: center;
@@ -709,6 +710,20 @@ button { cursor: pointer; }
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+.removed-students {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+.removed-students summary {
+  cursor: pointer;
+  color: #64748b;
+  font-weight: 700;
+}
+.removed-students[open] summary { margin-bottom: 8px; }
+.course-student-row.removed { opacity: .78; background: #f1f5f9; }
 @media (max-width: 760px) {
   .course-student-row {
     grid-template-columns: 1fr 1fr;
@@ -716,6 +731,7 @@ button { cursor: pointer; }
   .course-student-row.head {
     display: none;
   }
+  .archive-course-button { margin-left: 0; }
 }
 
 

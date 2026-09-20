@@ -119,7 +119,7 @@ const state = {
   authenticationOptions: { student: null, teacher: null },
 };
 
-let pendingRemoveEnrollment = null;
+let pendingConfirmation = null;
 
 const viewLabels = { home: "首页", courses: "我的课程", writing: "写作专区", games: "趣味游戏", tools: "学习工具", progress: "学习记录", about: "关于点点", teacher: "教学工作台", admin: "系统管理" };
 const STUDENT_SESSION_KEY = "chineseLearningStudentSession";
@@ -210,6 +210,7 @@ const elements = {
   courseStudentTitle: document.querySelector("#courseStudentTitle"),
   courseStudentMeta: document.querySelector("#courseStudentMeta"),
   courseStudentTable: document.querySelector("#courseStudentTable"),
+  archiveCourseButton: document.querySelector("#archiveCourseButton"),
   courseImportResult: document.querySelector("#courseImportResult"),
   homeProgressBar: document.querySelector("#homeProgressBar"),
   homeProgressText: document.querySelector("#homeProgressText"),
@@ -1034,14 +1035,14 @@ async function loadTeacherCourses() {
   if (teacherIsCloud()) {
     try {
       const result = await window.LearningApi.teacherCourses();
-      courses = result.courses || [];
+      courses = (result.courses || []).filter((course) => course.active !== false);
     } catch (error) {
       showToast(error.message || "课程列表读取失败");
       return;
     }
   } else {
     const teacher = state.teacherContext.teacher || state.userName;
-    courses = state.localCourses.filter((course) => course.teacher === teacher).map((course) => ({ ...course, studentCount: (course.students || []).length })).sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+    courses = state.localCourses.filter((course) => course.teacher === teacher && course.active !== false).map((course) => ({ ...course, studentCount: (course.students || []).filter((student) => student.active !== false).length })).sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
   }
   state.teacherCourses = courses;
   renderTeacherCourses(courses);
@@ -1106,7 +1107,7 @@ async function openCourseStudents(courseId) {
   elements.teacherCourseList.hidden = true;
   elements.courseStudentPanel.hidden = false;
   elements.courseStudentTitle.textContent = `${course.className || "班"} · ${bookById(course.bookId).label} · ${bookById(course.bookId).en}`;
-  elements.courseStudentMeta.textContent = `${course.term} · ${course.teacher} 老师 · ${students.length}名学生`;
+  updateCourseStudentSummary(course, students);
   renderCourseStudentsTable(students);
   if (cloud) {
     void loadCloudClassSettings();
@@ -1123,11 +1124,25 @@ function backCourseList() {
 }
 
 function renderCourseStudentsTable(students) {
-  if (!students.length) {
-    elements.courseStudentTable.innerHTML = '<p class="empty-approval">还没有学生，点击“＋新增学生”或“导入 Excel”。</p>';
-    return;
-  }
-  elements.courseStudentTable.innerHTML = `<div class="course-student-row head"><span>姓名</span><span>英文名</span><span>学号</span><span>邀请码</span><span>操作</span></div>` + students.map((student) => `<div class="course-student-row"><span><strong>${escapeHtml(student.chineseName || "—")}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="invite-cell"><code>${escapeHtml(student.inviteCode)}</code><button class="quiet-button" type="button" data-copy-invite="${escapeHtml(student.studentId)}">复制信息 <small>Copy</small></button></span><span class="course-student-actions"><button class="quiet-button" type="button" data-reset-invite="${escapeHtml(student.studentId)}">重置码 <small>Reset</small></button><button class="quiet-button" type="button" data-edit-student="${escapeHtml(student.studentId)}">编辑 <small>Edit</small></button><button class="danger-button" type="button" data-remove-student-course="${escapeHtml(student.studentId)}">移除 <small>Remove</small></button></span></div>`).join("");
+  const activeStudents = students.filter((student) => student.active !== false);
+  const removedStudents = students.filter((student) => student.active === false);
+  const header = '<div class="course-student-row head"><span>姓名</span><span>英文名</span><span>学号</span><span>邀请码</span><span>操作</span></div>';
+  const activeRows = activeStudents.map((student) => `<div class="course-student-row"><span><strong>${escapeHtml(student.chineseName || "—")}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="invite-cell"><code>${escapeHtml(student.inviteCode)}</code><button class="quiet-button" type="button" data-copy-invite="${escapeHtml(student.studentId)}">复制信息 <small>Copy</small></button></span><span class="course-student-actions"><button class="quiet-button" type="button" data-reset-invite="${escapeHtml(student.studentId)}">重置码 <small>Reset</small></button><button class="quiet-button" type="button" data-edit-student="${escapeHtml(student.studentId)}">编辑 <small>Edit</small></button><button class="danger-button" type="button" data-remove-student-course="${escapeHtml(student.studentId)}">移除 <small>Remove</small></button></span></div>`).join("");
+  const activeSection = activeStudents.length ? header + activeRows : '<p class="empty-approval">还没有在班学生，点击“＋新增学生”或“导入 Excel”。</p>';
+  const removedSection = removedStudents.length
+    ? `<details class="removed-students"><summary>已移除学生 ${removedStudents.length} 名（可恢复）</summary>${header}${removedStudents.map((student) => `<div class="course-student-row removed"><span><strong>${escapeHtml(student.chineseName || "—")}</strong></span><span>${escapeHtml(student.englishName || "—")}</span><span>${escapeHtml(student.studentId)}</span><span class="muted">学习数据已保留</span><span class="course-student-actions"><button class="quiet-button" type="button" data-restore-student-course="${escapeHtml(student.studentId)}">恢复 <small>Restore</small></button></span></div>`).join("")}</details>`
+    : "";
+  elements.courseStudentTable.innerHTML = activeSection + removedSection;
+}
+
+function updateCourseStudentSummary(course, students) {
+  const activeCount = students.filter((student) => student.active !== false).length;
+  const removedCount = students.length - activeCount;
+  elements.courseStudentMeta.textContent = `${course.term} · ${course.teacher} 老师 · ${activeCount}名学生${removedCount ? ` · ${removedCount}名已移除` : ""}`;
+  if (!elements.archiveCourseButton) return;
+  elements.archiveCourseButton.disabled = activeCount > 0;
+  elements.archiveCourseButton.textContent = activeCount > 0 ? `归档班级（请先移除 ${activeCount} 名学生）` : "归档班级";
+  elements.archiveCourseButton.title = activeCount > 0 ? "必须先逐一移除班级中的全部学生" : "归档后默认不再显示，学习数据仍会保留";
 }
 
 function openAddStudentDialog(entry) {
@@ -1203,13 +1218,43 @@ async function updateCourseStudentByForm(data) {
 
 async function removeCourseStudentEntry(courseId, studentId) {
   if (teacherIsCloud()) {
-    await window.LearningApi.removeCourseStudent({ courseId, studentId });
+    await window.LearningApi.updateCourseStudent({ courseId, studentId, active: false });
     return;
   }
   const local = state.localCourses.find((item) => item.courseId === courseId);
-  if (!local) return;
-  local.students = local.students.filter((item) => item.studentId !== studentId);
+  const target = local?.students.find((item) => item.studentId === studentId);
+  if (!target) return;
+  target.active = false;
   saveLocalCourses();
+}
+
+async function restoreCourseStudentEntry(courseId, studentId) {
+  if (teacherIsCloud()) {
+    await window.LearningApi.updateCourseStudent({ courseId, studentId, active: true });
+    return;
+  }
+  const local = state.localCourses.find((item) => item.courseId === courseId);
+  const target = local?.students.find((item) => item.studentId === studentId);
+  if (!target) return;
+  target.active = true;
+  saveLocalCourses();
+}
+
+async function archiveActiveTeacherCourse() {
+  const course = state.activeTeacherCourse;
+  if (!course) throw new Error("请先选择班级");
+  const activeCount = (course.students || []).filter((student) => student.active !== false).length;
+  if (activeCount) throw new Error(`请先移除班级中的 ${activeCount} 名学生`);
+  if (teacherIsCloud()) {
+    await window.LearningApi.updateTeacherCourse({ courseId: course.courseId, active: false });
+  } else {
+    const local = state.localCourses.find((item) => item.courseId === course.courseId);
+    if (!local) throw new Error("班级不存在");
+    local.active = false;
+    saveLocalCourses();
+  }
+  backCourseList();
+  await loadTeacherCourses();
 }
 
 async function resetCourseStudentInvite(courseId, studentId) {
@@ -1256,7 +1301,7 @@ async function refreshActiveCourseStudents() {
   course.students = students;
   state.activeTeacherCourse = course;
   renderCourseStudentsTable(students);
-  elements.courseStudentMeta.textContent = `${course.term} · ${course.teacher} 老师 · ${students.length}名学生`;
+  updateCourseStudentSummary(course, students);
 }
 
 function studentInviteText(entry) {
@@ -1291,7 +1336,7 @@ async function copyStudentInvite(studentId) {
 }
 
 async function copyAllInvites() {
-  const students = state.activeTeacherCourse?.students || [];
+  const students = (state.activeTeacherCourse?.students || []).filter((student) => student.active !== false);
   if (!students.length) {
     showToast("该课程还没有学生");
     return;
@@ -1464,20 +1509,30 @@ function confirmEnrollment(id) {
 function removeEnrollment(id) {
   const enrollment = state.enrollments.find((item) => item.id === id);
   if (!enrollment) return;
-  pendingRemoveEnrollment = enrollment;
-  elements.confirmDialogMessage.textContent = `确定移除学生“${enrollment.chineseName}”（学号 ${enrollment.studentId}）？`;
+  openConfirmation(`确定移除学生“${enrollment.chineseName}”（学号 ${enrollment.studentId}）？`, async () => {
+    state.enrollments = state.enrollments.filter((item) => item.id !== enrollment.id);
+    saveEnrollments();
+    renderTeacherWorkspace();
+    showToast("已移除该学生");
+  });
+}
+
+function openConfirmation(message, action) {
+  pendingConfirmation = action;
+  elements.confirmDialogMessage.textContent = message;
   elements.confirmDialog.showModal();
 }
 
-function confirmPendingRemoveEnrollment() {
+async function confirmPendingAction() {
+  const action = pendingConfirmation;
+  pendingConfirmation = null;
   elements.confirmDialog.close();
-  const enrollment = pendingRemoveEnrollment;
-  pendingRemoveEnrollment = null;
-  if (!enrollment) return;
-  state.enrollments = state.enrollments.filter((item) => item.id !== enrollment.id);
-  saveEnrollments();
-  renderTeacherWorkspace();
-  showToast("已移除该学生");
+  if (!action) return;
+  try {
+    await action();
+  } catch (error) {
+    showToast(error.message || "操作失败");
+  }
 }
 
 async function loadCloudClassSettings() {
@@ -2213,9 +2268,30 @@ document.addEventListener("click", (event) => {
   }
   const removeStudentCourse = event.target.closest("[data-remove-student-course]");
   if (removeStudentCourse) {
-    void removeCourseStudentEntry(state.activeTeacherCourse?.courseId, removeStudentCourse.dataset.removeStudentCourse)
-      .then(() => { showToast("已移除该学生"); return refreshActiveCourseStudents(); })
-      .catch((error) => showToast(error.message || "移除失败"));
+    const entry = (state.activeTeacherCourse?.students || []).find((item) => item.studentId === removeStudentCourse.dataset.removeStudentCourse);
+    openConfirmation(`确定将“${entry?.chineseName || removeStudentCourse.dataset.removeStudentCourse}”移出本班？学生将不能再进入本班，但历史学习数据会保留。`, async () => {
+      await removeCourseStudentEntry(state.activeTeacherCourse?.courseId, removeStudentCourse.dataset.removeStudentCourse);
+      showToast("已移出本班，学习数据已保留");
+      await refreshActiveCourseStudents();
+    });
+    return;
+  }
+  const restoreStudentCourse = event.target.closest("[data-restore-student-course]");
+  if (restoreStudentCourse) {
+    void restoreCourseStudentEntry(state.activeTeacherCourse?.courseId, restoreStudentCourse.dataset.restoreStudentCourse)
+      .then(() => { showToast("已恢复该学生"); return refreshActiveCourseStudents(); })
+      .catch((error) => showToast(error.message || "恢复失败"));
+    return;
+  }
+  if (event.target.closest("[data-action='archive-course']")) {
+    const course = state.activeTeacherCourse;
+    if (!course) return;
+    const activeCount = (course.students || []).filter((student) => student.active !== false).length;
+    if (activeCount) { showToast(`请先移除班级中的 ${activeCount} 名学生`); return; }
+    openConfirmation(`确定归档班级“${course.className || "班"}”？班级及学生历史数据会保留，教师端课程列表将不再显示。`, async () => {
+      await archiveActiveTeacherCourse();
+      showToast("班级已归档，历史数据已保留");
+    });
     return;
   }
   if (event.target.closest("[data-add-student-close]")) { elements.addStudentDialog.close(); return; }
@@ -2224,8 +2300,8 @@ document.addEventListener("click", (event) => {
   if (confirmStudent) { confirmEnrollment(confirmStudent.dataset.id); return; }
   const removeStudent = event.target.closest("[data-action='remove-student']");
   if (removeStudent) { removeEnrollment(removeStudent.dataset.id); return; }
-  if (event.target.closest("[data-confirm-cancel]")) { elements.confirmDialog.close(); pendingRemoveEnrollment = null; return; }
-  if (event.target.closest("[data-confirm-ok]")) { confirmPendingRemoveEnrollment(); return; }
+  if (event.target.closest("[data-confirm-cancel]")) { elements.confirmDialog.close(); pendingConfirmation = null; return; }
+  if (event.target.closest("[data-confirm-ok]")) { void confirmPendingAction(); return; }
   const teacherTab = event.target.closest("[data-teacher-tab]")?.dataset.teacherTab;
   if (teacherTab) { showTeacherTab(teacherTab); return; }
   const aboutTab = event.target.closest("[data-about-tab]")?.dataset.aboutTab;
@@ -2306,7 +2382,7 @@ elements.teacherTerm.addEventListener("change", () => { state.teacherContext.ter
 elements.teacherBook.addEventListener("change", () => { state.teacherContext.book = elements.teacherBook.value; renderTeacherWorkspace(); });
 elements.saveWritingPolicy.addEventListener("click", () => { void saveCloudClassSettings(); });
 elements.addStudentDialog.addEventListener("click", (event) => { if (event.target === elements.addStudentDialog) elements.addStudentDialog.close(); });
-elements.confirmDialog.addEventListener("click", (event) => { if (event.target === elements.confirmDialog) { elements.confirmDialog.close(); pendingRemoveEnrollment = null; } });
+elements.confirmDialog.addEventListener("click", (event) => { if (event.target === elements.confirmDialog) { elements.confirmDialog.close(); pendingConfirmation = null; } });
 [["roleDialog", "header"], ["courseDialog", "header"], ["addStudentDialog", "header"], ["confirmDialog", "header"], ["newCourseDialog", "header"]].forEach(([key, handle]) => {
   if (elements[key]) window.attachDraggable?.({ element: elements[key], handle });
 });

@@ -8,7 +8,7 @@
   <link rel="manifest" href="../../manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../../icons/favicon-32.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon-180.png">
-  <link rel="stylesheet" href="styles.css?v=20260831-3">
+  <link rel="stylesheet" href="styles.css?v=20260920-archive-1">
   <link rel="stylesheet" href="writing-zone.css?v=20260826-2">
   <link rel="stylesheet" href="practice-analytics.css?v=20260811-6">
   <link rel="stylesheet" href="teacher-insights.css?v=20260920-1">
@@ -207,6 +207,7 @@
               <button class="quiet-button" type="button" data-action="open-add-student">＋ 新增学生 <small>Add student</small></button>
               <a class="quiet-button" href="templates/student-import-template.xlsx" download="学生导入模板.xlsx" data-action="download-student-template">下载 Excel 模板 <small>Template</small></a>
               <label class="file-import-label"><span>导入 Excel</span><input type="file" id="studentExcelInput" accept=".xlsx,.xls,.csv" hidden></label>
+              <button class="danger-button archive-course-button" id="archiveCourseButton" type="button" data-action="archive-course" disabled>归档班级</button>
             </div>
             <p class="course-import-result" id="courseImportResult" role="status" hidden></p>
             <div class="course-student-table" id="courseStudentTable"></div>
@@ -632,7 +633,7 @@
   <script src="../shared/draggable.js?v=20260823-1"></script>
   <script src="insight-model.js?v=20260920-1"></script>
   <script src="teacher-insights.js?v=20260920-2"></script>
-  <script src="app.js?v=20260920-1" defer></script>
+  <script src="app.js?v=20260920-archive-1" defer></script>
   <script src="writing-zone.js?v=20260826-2" defer></script>
 
   <section class="pwa-update-banner" id="pwaUpdateBanner" aria-live="polite" hidden>
