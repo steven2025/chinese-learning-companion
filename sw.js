@@ -1,4 +1,4 @@
-const CACHE_VERSION = "diandian-chinese-v119-mobile-logout-1";
+const CACHE_VERSION = "diandian-chinese-v120-book-aliases-1";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -26,8 +26,8 @@ const APP_SHELL = [
   "./modules/learning-hub/writing-zone.css?v=20260826-2",
   "./modules/learning-hub/practice-analytics.css?v=20260811-6",
   "./modules/learning-hub/insight-model.js?v=20260920-1",
-  "./modules/learning-hub/teacher-insights.js?v=20260920-3",
-  "./modules/learning-hub/app.js?v=20260920-context-1",
+  "./modules/learning-hub/teacher-insights.js?v=20260920-4",
+  "./modules/learning-hub/app.js?v=20260920-context-2",
   "./modules/learning-hub/writing-zone.js?v=20260826-2",
   "./modules/learning-hub/practice-analytics.js?v=20260826-1",
   "./modules/character-hit/index.html",
