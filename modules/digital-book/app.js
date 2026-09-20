@@ -3043,6 +3043,14 @@ async function requestDeepAssist(request) {
   try {
     const response = await window.LearningApi.resolveAssist({ lessonId: LESSON_ID, locale: state.locale, ...request });
     state.deepAssist[key] = { status: "ready", result: response.content?.content || response.content };
+    void window.LearningApi.learningEvent?.({
+      lessonId: LESSON_ID,
+      itemId: request.unitId,
+      area: request.unitType || "practice",
+      action: "ai-help",
+      assistType: request.assistType || request.type || "explain",
+      locale: state.locale,
+    }).catch(() => {});
   } catch (error) {
     state.deepAssist[key] = { status: "error", message: error.message || "深度解释暂时不可用" };
   } finally {
@@ -3507,10 +3515,18 @@ function trackTextView(unit) {
 const TRACKED_PRACTICE_TYPES = new Set(["choice", "fillBlank", "dialogueFill", "wordBankFill", "readingCloze"]);
 const SUBJECTIVE_PRACTICE_TYPES = new Set(["rewrite", "openDialogue", "shortAnswer", "personalReflection", "guidedProduction", "guidedWriting", "dialogueCompletion", "cultureComparison", "needsReview"]);
 
+function practiceAnswerSnapshot(item) {
+  return { answer: state.answers[item.id] ?? null,
+    fields: Object.fromEntries(Object.entries(state.answers).filter(([key]) => key.startsWith(`${item.id}:`))),
+    blanks: state.clozeAnswers[item.id] || null,
+    options: item.options || item.choices || null };
+}
+
 function recordObjectivePractice(item, score) {
   const profile = window.LearningApi?.profile?.();
   if (!window.LearningApi?.isConfigured?.() || profile?.role !== "student" || !TRACKED_PRACTICE_TYPES.has(item.type)) return;
   window.LearningApi.practiceRecord({
+    answerSnapshot: practiceAnswerSnapshot(item),
     lessonId: LESSON_ID,
     itemId: item.id,
     itemType: item.type,
@@ -3527,6 +3543,7 @@ function recordSubjectivePractice(item, action, inputMode, characterCount, score
   const profile = window.LearningApi?.profile?.();
   if (!window.LearningApi?.isConfigured?.() || profile?.role !== "student" || !SUBJECTIVE_PRACTICE_TYPES.has(item.type)) return;
   window.LearningApi.subjectivePracticeRecord({
+    answerSnapshot: practiceAnswerSnapshot(item),
     lessonId: LESSON_ID,
     itemId: item.id,
     itemType: item.type,
