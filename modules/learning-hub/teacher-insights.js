@@ -68,6 +68,7 @@
     const lessonId=lesson.value;
     status.textContent='正在读取本课题目和已保存的学习记录…';
     try {
+      if(typeof window.LearningApi?.teacherLessonDetails !== 'function') throw Error('前端学习接口客户端仍是旧版，请更新 learning-api-client.js 并刷新网站缓存');
       const [response,practice,vocabulary,text,phonetics]=await Promise.all([
         window.LearningApi.teacherLessonDetails({courseId,lessonId}),fetchSource(lessonId,'lesson-practice.json'),fetchSource(lessonId,'vocabulary-metadata.json'),fetchSource(lessonId,'text-audio.json'),fetchSource(lessonId,'pronunciation.json')]);
       if(ticket!==generation || courseId!==window.__activeTeacherCourseId) return;
